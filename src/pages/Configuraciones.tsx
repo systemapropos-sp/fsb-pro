@@ -602,11 +602,13 @@ export default function Configuraciones() {
         delay={0.22}
         borderTopColor="#0288D1"
       >
-        <SettingsItem
-          title="API-SPORTS Key"
-          description="Clave para resultados deportivos en tiempo real. Obtenga una gratis en api-sports.io"
-          delay={0.23}
-        >
+        <div className="mb-5">
+          <span className="text-sm font-medium text-text-primary block mb-1">
+            API-SPORTS Key
+          </span>
+          <span className="text-xs text-text-tertiary block mb-3">
+            Clave para resultados deportivos en tiempo real. Obtenga una gratis en api-sports.io
+          </span>
           <div className="flex gap-2">
             <input
               type="password"
@@ -627,7 +629,7 @@ export default function Configuraciones() {
           <p className="text-[10px] mt-1.5" style={{ color: '#ABABAB' }}>
             {getSavedApiKey() ? '✓ API key configurada - Resultados en tiempo real activos' : 'Sin API key - Usando datos de demostracion'}
           </p>
-        </SettingsItem>
+        </div>
       </SettingsCard>
 
       {/* Cuenta */}
