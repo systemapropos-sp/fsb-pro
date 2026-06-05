@@ -56,27 +56,40 @@ function NavItem({
   icon: Icon,
   path,
   active,
-  mobile = false,
 }: {
   label: string;
   icon: React.ElementType;
   path: string;
   active: boolean;
-  mobile?: boolean;
 }) {
   return (
     <Link
       to={path}
-      className={`flex flex-col items-center justify-center gap-0.5 transition-all duration-200 active:scale-95 min-h-[44px] min-w-[56px] no-underline select-none ${
-        active
-          ? 'text-dd-accent border-t-2 border-dd-accent bg-dd-accent/10'
-          : 'text-dd-text-secondary hover:text-dd-text hover:bg-dd-surface-hover border-t-2 border-transparent'
-      } ${mobile ? 'flex-1 py-1' : 'flex-1'}`}
+      className="flex flex-col items-center justify-center gap-1 flex-1 transition-all duration-200 active:scale-95 py-2 mx-1 my-1 rounded-2xl no-underline select-none"
+      style={{
+        color: active ? '#FFFFFF' : '#2C3E50',
+        background: active ? '#FF3008' : 'rgba(255,255,255,0.4)',
+        boxShadow: active ? '0 2px 8px rgba(255,48,8,0.3)' : 'none',
+      }}
+      onMouseEnter={(e) => {
+        if (!active) {
+          e.currentTarget.style.color = '#FFFFFF';
+          e.currentTarget.style.background = '#FF3008';
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(248,125,46,0.4)';
+          e.currentTarget.style.transform = 'translateY(-2px)';
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!active) {
+          e.currentTarget.style.color = '#444444';
+          e.currentTarget.style.background = 'rgba(255,255,255,0.25)';
+          e.currentTarget.style.boxShadow = 'none';
+          e.currentTarget.style.transform = 'translateY(0)';
+        }
+      }}
     >
-      <Icon size={mobile ? 20 : 18} strokeWidth={active ? 2 : 1.5} />
-      <span className={`font-medium leading-tight ${mobile ? 'text-[10px]' : 'text-[11px]'}`}>
-        {label}
-      </span>
+      <Icon size={18} strokeWidth={active ? 2.5 : 2} />
+      <span className="text-[12px] font-bold leading-tight" style={{ fontWeight: 700, letterSpacing: '0.03em' }}>{label}</span>
     </Link>
   );
 }
@@ -86,85 +99,70 @@ export default function Navbar() {
   const currentPath = location.pathname;
   const [moreOpen, setMoreOpen] = useState(false);
 
-  // Check if a secondary item is active
   const isSecondaryActive = secondaryItems.some((item) => item.path === currentPath);
 
   return (
     <>
-      {/* Mobile Navbar: Single row of 5 + More button */}
+      {/* Mobile Navbar */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 h-16 md:hidden bg-white border-t border-dd-border"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        className="fixed bottom-0 left-0 right-0 z-50 h-16 md:hidden border-t"
+        style={{ background: '#ededed', borderColor: '#BDC3C7', paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div className="flex items-center h-full">
           {primaryItems.map((item) => (
-            <NavItem
-              key={item.path}
-              {...item}
-              active={currentPath === item.path}
-              mobile
-            />
+            <NavItem key={item.path} {...item} active={currentPath === item.path} />
           ))}
-          {/* More button */}
           <button
             onClick={() => setMoreOpen(true)}
-            className={`flex flex-col items-center justify-center gap-0.5 flex-1 min-h-[44px] min-w-[56px] active:scale-95 transition-all duration-200 ${
-              isSecondaryActive
-                ? 'text-dd-accent bg-dd-accent/10'
-                : 'text-dd-text-secondary hover:text-dd-text'
-            }`}
+            className="flex flex-col items-center justify-center gap-1 flex-1 min-h-[44px] active:scale-95 transition-all duration-200 mx-1 my-1 rounded-2xl"
+            style={{
+              color: isSecondaryActive ? '#FFFFFF' : '#2C3E50',
+              background: isSecondaryActive ? '#FF3008' : 'rgba(255,255,255,0.4)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.background = '#F87D2E'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = isSecondaryActive ? '#FFFFFF' : '#2C3E50'; e.currentTarget.style.background = isSecondaryActive ? '#FF3008' : 'rgba(255,255,255,0.4)'; e.currentTarget.style.transform = 'translateY(0)'; }}
           >
-            <MoreHorizontal size={20} strokeWidth={isSecondaryActive ? 2 : 1.5} />
-            <span className="text-[10px] font-medium leading-tight">Mas</span>
+            <MoreHorizontal size={18} strokeWidth={isSecondaryActive ? 2.5 : 2} />
+            <span className="text-[12px] font-bold leading-tight" style={{ fontWeight: 700 }}>Mas</span>
           </button>
         </div>
       </nav>
 
-      {/* Tablet Navbar: 2 rows, compact */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 h-20 bg-white border-t border-dd-border hidden md:block xl:hidden">
-        <div className="flex h-10">
+      {/* Tablet/Desktop: 2 rows - EXPANDED */}
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-50 h-24 hidden md:block xl:hidden border-t"
+        style={{ background: '#ededed', borderColor: '#BDC3C7' }}
+      >
+        <div className="flex h-12">
           {tabletRow1.map((item) => (
-            <NavItem
-              key={item.path}
-              {...item}
-              active={currentPath === item.path}
-            />
+            <NavItem key={item.path} {...item} active={currentPath === item.path} />
           ))}
         </div>
-        <div className="flex h-10">
+        <div className="flex h-12">
           {tabletRow2.map((item) => (
-            <NavItem
-              key={item.path}
-              {...item}
-              active={currentPath === item.path}
-            />
+            <NavItem key={item.path} {...item} active={currentPath === item.path} />
           ))}
         </div>
       </nav>
 
-      {/* Desktop Navbar: Original 2-row layout */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 h-[96px] bg-white border-t border-dd-border hidden xl:block">
-        <div className="flex h-[48px]">
+      {/* Desktop: 2-row layout - EXPANDED */}
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-50 h-[120px] hidden xl:block border-t"
+        style={{ background: '#ededed', borderColor: '#BDC3C7' }}
+      >
+        <div className="flex h-[60px]">
           {tabletRow1.map((item) => (
-            <NavItem
-              key={item.path}
-              {...item}
-              active={currentPath === item.path}
-            />
+            <NavItem key={item.path} {...item} active={currentPath === item.path} />
           ))}
         </div>
-        <div className="flex h-[48px]">
+        <div className="flex h-[60px]">
           {tabletRow2.map((item) => (
-            <NavItem
-              key={item.path}
-              {...item}
-              active={currentPath === item.path}
-            />
+            <NavItem key={item.path} {...item} active={currentPath === item.path} />
           ))}
         </div>
       </nav>
 
-      {/* Mobile "More" Menu Overlay */}
+      {/* Mobile "More" Menu */}
       <AnimatePresence>
         {moreOpen && (
           <>
@@ -180,25 +178,24 @@ export default function Navbar() {
               initial={{ opacity: 0, y: 100 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 100 }}
-              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
-              className="fixed bottom-0 left-0 right-0 z-[70] bg-white rounded-t-2xl shadow-lg md:hidden"
-              style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+              transition={{ duration: 0.2 }}
+              className="fixed bottom-0 left-0 right-0 z-[70] rounded-t-2xl shadow-xl md:hidden"
+              style={{ background: '#FFFFFF', paddingBottom: 'env(safe-area-inset-bottom)' }}
             >
-              {/* Handle */}
               <div className="flex items-center justify-center pt-3 pb-2">
-                <div className="w-10 h-1 rounded-full bg-dd-text-muted/40" />
+                <div className="w-10 h-1 rounded-full" style={{ background: '#ABABAB' }} />
               </div>
-              {/* Close button */}
-              <div className="flex items-center justify-between px-4 pb-2 border-b border-dd-border-light">
-                <span className="text-sm font-semibold text-dd-text">Mas opciones</span>
+              <div className="flex items-center justify-between px-4 pb-2 border-b" style={{ borderColor: '#EEEEEE' }}>
+                <span className="text-sm font-semibold" style={{ color: '#191919' }}>Mas opciones</span>
                 <button
                   onClick={() => setMoreOpen(false)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-dd-surface transition-colors"
+                  className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#F7F7F7'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                 >
-                  <X size={18} className="text-dd-text-secondary" />
+                  <X size={18} style={{ color: '#767676' }} />
                 </button>
               </div>
-              {/* Menu items */}
               <div className="grid grid-cols-3 gap-2 p-4">
                 {secondaryItems.map((item) => {
                   const Icon = item.icon;
@@ -208,13 +205,14 @@ export default function Navbar() {
                       key={item.path}
                       to={item.path}
                       onClick={() => setMoreOpen(false)}
-                      className={`flex flex-col items-center justify-center gap-2 rounded-xl p-4 transition-all active:scale-95 min-h-[80px] no-underline ${
-                        isActive
-                          ? 'bg-dd-accent/10 text-dd-accent border border-dd-accent/25'
-                          : 'bg-dd-surface text-dd-text-secondary hover:bg-dd-surface-hover'
-                      }`}
+                      className="flex flex-col items-center justify-center gap-2 rounded-xl p-4 transition-all active:scale-95 min-h-[80px] no-underline"
+                      style={{
+                        background: isActive ? 'rgba(255,48,8,0.08)' : '#F7F7F7',
+                        color: isActive ? '#FF3008' : '#767676',
+                        border: isActive ? '1px solid rgba(255,48,8,0.25)' : '1px solid transparent',
+                      }}
                     >
-                      <Icon size={24} strokeWidth={isActive ? 2 : 1.5} />
+                      <Icon size={24} strokeWidth={isActive ? 2.5 : 1.5} />
                       <span className="text-xs font-medium text-center">{item.label}</span>
                     </Link>
                   );

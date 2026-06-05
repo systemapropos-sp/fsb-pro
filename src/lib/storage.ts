@@ -149,8 +149,9 @@ function seedUsers(): User[] {
   return users;
 }
 
-function seedLines(): BettingLine[] {
+export function seedLines(): BettingLine[] {
   const sports = ['NBA', 'MLB', 'NFL', 'WNBA', 'CFL'];
+  // [awayName, awayCode, homeName, homeCode] — 4-digit numeric codes
   const teams: Record<string, [string, string, string, string][]> = {
     NBA: [
       ['Lakers', '2001', 'Boston', '2002'],
@@ -301,12 +302,18 @@ function seedSettings(): Setting[] {
 }
 
 export function seedInitialData(): void {
+  // Clear old data to ensure fresh numeric team codes
+  localStorage.removeItem('fsb_lines');
+  localStorage.removeItem('fsb_lines_v2');
+  localStorage.removeItem('fsb_lines_v3');
+  localStorage.removeItem('fsb_lines_v4');
+
   const existingUsers = localStorage.getItem(STORAGE_KEYS.USERS);
   if (!existingUsers) {
     seedUsers();
   }
 
-  // Always seed lines to ensure fresh data
+  // Always seed lines with fresh 4-digit numeric team codes
   seedLines();
 
   const existingContacts = localStorage.getItem(STORAGE_KEYS.CONTACTS);

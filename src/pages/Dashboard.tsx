@@ -19,6 +19,7 @@ import {
   formatDate,
   formatTime,
   getLines,
+  seedLines,
   getSports,
   getPeriods,
   getSelectedPlays,
@@ -34,6 +35,8 @@ import confetti from 'canvas-confetti';
 type TabMode = 'teaser' | 'teaserIF';
 type PlaysTab = 'jugadas' | 'jugadasIF';
 type MobileTab = 'apuesta' | 'jugadas' | 'lineas';
+
+
 
 export default function Dashboard() {
   // --- State ---
@@ -56,6 +59,7 @@ export default function Dashboard() {
   const [successTicket, setSuccessTicket] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const linesScrollRef = useRef<HTMLDivElement>(null);
+  const jugadaInputRef = useRef<HTMLInputElement>(null);
 
   // --- Load data ---
   useEffect(() => {
@@ -69,7 +73,13 @@ export default function Dashboard() {
   }, []);
 
   const loadLines = () => {
-    setLines(getLines(selectedSport, selectedPeriod));
+    let data = getLines(selectedSport, selectedPeriod);
+    if (data.length === 0) {
+      // Force re-seed if no data
+      seedLines();
+      data = getLines(selectedSport, selectedPeriod);
+    }
+    setLines(data);
   };
 
   useEffect(() => {
@@ -143,7 +153,7 @@ export default function Dashboard() {
         particleCount: 40,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#00C853', '#FF3008', '#00B0FF'],
+        colors: ['#22C55E', '#3B82F6', '#06B6D4'],
         disableForReducedMotion: true,
       });
 
@@ -168,7 +178,7 @@ export default function Dashboard() {
 
   // --- Mobile Tab Bar ---
   const MobileTabBar = () => (
-    <div className="sticky top-0 z-20 bg-white border-b border-dd-border-light flex md:hidden">
+    <div className="sticky top-0 z-20 bg-white border-b border-border-subtle flex md:hidden">
       {(
         [
           ['apuesta', 'Apuesta'],
@@ -181,8 +191,8 @@ export default function Dashboard() {
           onClick={() => setMobileTab(key)}
           className={`flex-1 py-3 text-sm font-medium transition-all min-h-[44px] active:scale-95 ${
             mobileTab === key
-              ? 'text-dd-accent border-b-2 border-dd-accent bg-dd-accent/5'
-              : 'text-dd-text-muted hover:text-dd-text-secondary'
+              ? 'text-accent-blue border-b-2 border-accent-blue bg-accent-blue/5'
+              : 'text-text-muted hover:text-text-secondary'
           }`}
         >
           {label}
@@ -193,36 +203,36 @@ export default function Dashboard() {
 
   // --- Sales Form Content (shared) ---
   const SalesForm = () => (
-    <div className="flex flex-col gap-3 p-3 md:p-4">
+    <div className="flex flex-col gap-2 p-2 md:p-3">
       {/* Seller Info */}
       <div className="space-y-1.5">
         <div className="flex items-center gap-2">
-          <User size={14} className="text-dd-text-muted shrink-0" />
-          <span className="text-xs text-dd-text-muted w-16">Vendedor:</span>
-          <span className="text-sm font-semibold text-dd-text font-mono">
+          <User size={14} className="text-text-tertiary shrink-0" />
+          <span className="text-xs text-text-tertiary w-16">Vendedor:</span>
+          <span className="text-sm font-semibold text-text-primary font-mono">
             mmw03
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <Calendar size={14} className="text-dd-text-muted shrink-0" />
-          <span className="text-xs text-dd-text-muted w-16">Fecha:</span>
-          <span className="text-xs text-dd-text-secondary">
+          <Calendar size={14} className="text-text-tertiary shrink-0" />
+          <span className="text-xs text-text-tertiary w-16">Fecha:</span>
+          <span className="text-xs text-text-secondary">
             {formatDate(currentTime)}
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <Clock size={14} className="text-dd-text-muted shrink-0" />
-          <span className="text-xs text-dd-text-muted w-16">Hora:</span>
-          <span className="text-xs text-dd-text-secondary font-mono">
+          <Clock size={14} className="text-text-tertiary shrink-0" />
+          <span className="text-xs text-text-tertiary w-16">Hora:</span>
+          <span className="text-xs text-text-secondary font-mono">
             {formatTime(currentTime)}
           </span>
         </div>
       </div>
 
-      <div className="border-t border-dd-border-light" />
+      <div className="border-t border-border-subtle" />
 
       {/* Mode Tabs */}
-      <div className="flex gap-1 p-1 rounded-lg bg-dd-surface/80">
+      <div className="flex gap-1 p-1 rounded-md bg-bg-secondary/80">
         {(
           [
             ['teaser', 'Teaser'],
@@ -232,10 +242,10 @@ export default function Dashboard() {
           <button
             key={key}
             onClick={() => setModeTab(key)}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 min-h-[40px] active:scale-95 ${
+            className={`flex-1 py-2 px-4 rounded-sm text-sm font-medium transition-all duration-200 min-h-[40px] active:scale-95 ${
               modeTab === key
-                ? 'bg-dd-accent/15 text-dd-text border border-dd-accent/30'
-                : 'text-dd-text-muted hover:text-dd-text-secondary'
+                ? 'bg-accent-blue/15 text-text-primary border border-accent-blue/30'
+                : 'text-text-muted hover:text-text-secondary'
             }`}
           >
             {label}
@@ -243,81 +253,85 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Form Fields */}
-      <div className="space-y-3 md:space-y-2.5">
-        <div>
-          <label className="block text-xs text-dd-text-muted mb-1">
-            Equipo
-          </label>
-          <input
-            type="text"
-            value={equipo}
-            onChange={(e) => setEquipo(e.target.value)}
-            placeholder="Nombre del equipo"
-            className="input-clean w-full h-12 md:h-10"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs text-dd-text-muted mb-1">
-            Jugada
-          </label>
-          <input
-            type="text"
-            value={jugada}
-            onChange={(e) => setJugada(e.target.value)}
-            placeholder="Tipo de jugada"
-            className="input-clean w-full h-12 md:h-10"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs text-dd-text-muted mb-1">
-            #Jug.Reg
-          </label>
-          <input
-            type="text"
-            readOnly
-            value={selectedPlays.length.toString()}
-            className="w-full rounded-lg border border-dd-border bg-dd-accent/5 px-3.5 py-2.5 text-sm font-mono text-dd-text h-12 md:h-10"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs text-dd-text-muted mb-1">
-            Cantidad
-          </label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-dd-text-muted font-mono text-lg">
-              $
-            </span>
+      {/* Compact Form Fields - 2 column grid */}
+      <div className="space-y-2">
+        {/* Row 1: Equipo + Jugada side by side */}
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="block text-[11px] font-bold mb-1 tracking-wide" style={{ color: '#555555' }}>EQUIPO</label>
             <input
               type="text"
-              inputMode="decimal"
-              value={cantidad}
-              onChange={(e) => {
-                const val = e.target.value.replace(/[^0-9.]/g, '');
-                setCantidad(val);
+              value={equipo}
+              onChange={(e) => setEquipo(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  jugadaInputRef.current?.focus();
+                }
               }}
-              placeholder="0.00"
-              className="input-clean w-full pl-8 pr-4 py-2.5 text-right font-mono text-lg h-12 md:h-10"
+              placeholder="2001"
+              className="input-standard w-full h-9 text-sm font-bold font-mono"
+              style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-bold mb-1 tracking-wide" style={{ color: '#555555' }}>JUGADA</label>
+            <input
+              type="text"
+              ref={jugadaInputRef}
+              name="jugada"
+              value={jugada}
+              onChange={(e) => setJugada(e.target.value)}
+              placeholder="ML"
+              className="input-standard w-full h-9 text-sm font-semibold"
             />
           </div>
         </div>
 
-        <div>
-          <label className="block text-xs text-dd-text-muted mb-1">Pago</label>
-          <div className="w-full rounded-lg border border-dd-border bg-dd-surface/40 px-3.5 py-2.5 text-right font-mono text-sm text-dd-green h-12 md:h-10 flex items-center justify-end">
-            {formatAmount(pago)}
+        {/* Row 2: #Jug.Reg + Cantidad side by side */}
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="block text-[11px] font-bold mb-1 tracking-wide" style={{ color: '#555555' }}>#JUG.REG</label>
+            <input
+              type="text"
+              readOnly
+              value={selectedPlays.length.toString()}
+              className="w-full h-9 rounded-md border px-2.5 text-sm font-mono"
+              style={{ borderColor: '#E0E0E0', background: 'rgba(0,176,255,0.05)', color: '#191919' }}
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-bold mb-1 tracking-wide" style={{ color: '#555555' }}>CANTIDAD</label>
+            <div className="relative">
+              <span className="absolute left-2 top-1/2 -translate-y-1/2 font-mono text-sm" style={{ color: '#ABABAB' }}>$</span>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={cantidad}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9.]/g, '');
+                  setCantidad(val);
+                }}
+                placeholder="0.00"
+                className="input-standard w-full h-9 pl-6 pr-2 text-right font-mono text-sm font-semibold"
+              />
+            </div>
           </div>
         </div>
 
-        <div>
-          <label className="block text-xs text-dd-text-muted mb-1">
-            Ganancia
-          </label>
-          <div className="w-full rounded-lg border border-dd-border bg-dd-surface/40 px-3.5 py-2.5 text-right font-mono text-sm text-dd-green h-12 md:h-10 flex items-center justify-end">
-            {formatAmount(ganancia)}
+        {/* Row 3: Pago + Ganancia side by side */}
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="block text-[11px] font-bold mb-1 tracking-wide" style={{ color: '#555555' }}>PAGO</label>
+            <div className="w-full h-9 rounded-md border px-2.5 text-right font-mono text-sm flex items-center justify-end" style={{ borderColor: '#E0E0E0', background: '#F7F7F7', color: '#00C853' }}>
+              {formatAmount(pago)}
+            </div>
+          </div>
+          <div>
+            <label className="block text-[11px] font-bold mb-1 tracking-wide" style={{ color: '#555555' }}>GANANCIA</label>
+            <div className="w-full h-9 rounded-md border px-2.5 text-right font-mono text-sm flex items-center justify-end" style={{ borderColor: '#E0E0E0', background: '#F7F7F7', color: '#00C853' }}>
+              {formatAmount(ganancia)}
+            </div>
           </div>
         </div>
 
@@ -328,38 +342,24 @@ export default function Dashboard() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="space-y-3 md:space-y-2.5 border-t border-dd-accent/30 pt-2.5"
+              className="space-y-2 border-t pt-2"
+              style={{ borderColor: 'rgba(139,92,246,0.3)' }}
             >
-              <div>
-                <label className="block text-xs text-dd-accent mb-1">
-                  Monto IF
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-dd-text-muted font-mono text-lg">
-                    $
-                  </span>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="0.00"
-                    className="input-clean w-full pl-8 pr-4 py-2.5 text-right font-mono text-lg border-dd-accent/30 focus:border-dd-accent focus:shadow-[0_0_0_3px_rgba(255,48,8,0.1)] h-12 md:h-10"
-                  />
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-[11px] font-bold mb-1 tracking-wide" style={{ color: '#8B5CF6' }}>MONTO IF</label>
+                  <div className="relative">
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2 font-mono text-xs" style={{ color: '#ABABAB' }}>$</span>
+                    <input type="text" inputMode="decimal" placeholder="0" className="input-standard w-full h-8 pl-5 pr-1 text-right font-mono text-xs" />
+                  </div>
                 </div>
-              </div>
-              <div>
-                <label className="block text-xs text-dd-accent mb-1">
-                  Pago con IF
-                </label>
-                <div className="w-full rounded-lg border border-dd-accent/30 bg-dd-accent-light px-3.5 py-2.5 text-right font-mono text-sm text-dd-accent h-12 md:h-10 flex items-center justify-end">
-                  $0.00
+                <div>
+                  <label className="block text-[11px] font-bold mb-1 tracking-wide" style={{ color: '#8B5CF6' }}>PAGO IF</label>
+                  <div className="w-full h-8 rounded-md border px-1 text-right font-mono text-xs flex items-center justify-end" style={{ borderColor: 'rgba(139,92,246,0.3)', background: 'rgba(139,92,246,0.05)', color: '#8B5CF6' }}>$0</div>
                 </div>
-              </div>
-              <div>
-                <label className="block text-xs text-dd-accent mb-1">
-                  Ganancia IF
-                </label>
-                <div className="w-full rounded-lg border border-dd-accent/30 bg-dd-accent-light px-3.5 py-2.5 text-right font-mono text-sm text-dd-accent h-12 md:h-10 flex items-center justify-end">
-                  $0.00
+                <div>
+                  <label className="block text-[11px] font-bold mb-1 tracking-wide" style={{ color: '#8B5CF6' }}>GAN. IF</label>
+                  <div className="w-full h-8 rounded-md border px-1 text-right font-mono text-xs flex items-center justify-end" style={{ borderColor: 'rgba(139,92,246,0.3)', background: 'rgba(139,92,246,0.05)', color: '#8B5CF6' }}>$0</div>
                 </div>
               </div>
             </motion.div>
@@ -369,30 +369,30 @@ export default function Dashboard() {
 
       {/* Action Buttons */}
       <div className="flex flex-wrap gap-2 pt-2">
-        <button className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-semibold bg-dd-accent/10 text-dd-accent border border-dd-accent/25 hover:bg-dd-accent/20 transition-colors min-h-[40px] active:scale-95">
+        <button className="flex items-center gap-1.5 px-3 py-2.5 rounded-md text-xs font-semibold bg-accent-blue/10 text-accent-blue border border-accent-blue/25 hover:bg-accent-blue/20 transition-colors min-h-[40px] active:scale-95">
           <Calculator size={14} />
           Calc
         </button>
         <button
           onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
-          className="px-3 py-2.5 rounded-lg text-xs font-semibold bg-dd-surface text-dd-text-secondary hover:text-dd-text transition-colors min-h-[40px] active:scale-95"
+          className="px-3 py-2.5 rounded-md text-xs font-semibold bg-bg-tertiary text-text-secondary hover:text-text-primary transition-colors min-h-[40px] active:scale-95"
         >
           {language === 'es' ? 'ES | EN' : 'EN | ES'}
         </button>
         {showConfirmClear ? (
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-dd-text-muted">
+            <span className="text-xs text-text-tertiary">
               Seguro? {selectedPlays.length} jugadas
             </span>
             <button
               onClick={handleClearAll}
-              className="px-3 py-2 rounded text-xs bg-dd-red text-white min-h-[36px] active:scale-95"
+              className="px-3 py-2 rounded text-xs bg-accent-red text-white min-h-[36px] active:scale-95"
             >
               Si
             </button>
             <button
               onClick={() => setShowConfirmClear(false)}
-              className="px-3 py-2 rounded text-xs bg-dd-surface text-dd-text-secondary min-h-[36px] active:scale-95"
+              className="px-3 py-2 rounded text-xs bg-bg-tertiary text-text-secondary min-h-[36px] active:scale-95"
             >
               No
             </button>
@@ -402,7 +402,7 @@ export default function Dashboard() {
             onClick={() =>
               selectedPlays.length > 0 && setShowConfirmClear(true)
             }
-            className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-semibold text-dd-red hover:bg-dd-red/10 transition-colors min-h-[40px] active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-2.5 rounded-md text-xs font-semibold text-accent-red hover:bg-accent-red/10 transition-colors min-h-[40px] active:scale-95"
           >
             <Trash2 size={14} />
             Eliminar
@@ -414,10 +414,10 @@ export default function Dashboard() {
       <button
         onClick={handleProcessTicket}
         disabled={selectedPlays.length === 0 || cantidadNum <= 0 || processingTicket}
-        className={`w-full mt-2 py-4 md:py-3 rounded-lg text-sm font-bold transition-all duration-200 min-h-[56px] active:scale-[0.98] ${
+        className={`w-full mt-2 py-4 md:py-3 rounded-lg text-sm font-bold transition-all duration-200 min-h-[56px] active:scale-[0.98] touch-ripple ${
           selectedPlays.length > 0 && cantidadNum > 0 && !processingTicket
-            ? 'bg-dd-green hover:bg-[#00B34A] text-white shadow-md hover:shadow-lg hover:brightness-105'
-            : 'bg-dd-text-muted/20 text-dd-text-muted cursor-not-allowed'
+            ? 'bg-gradient-to-r from-accent-green to-accent-green-dim text-white shadow-winner hover:shadow-lg hover:brightness-105'
+            : 'bg-text-muted/20 text-text-muted cursor-not-allowed'
         }`}
       >
         {processingTicket ? (
@@ -439,10 +439,10 @@ export default function Dashboard() {
 
   // --- Selected Plays Content (shared) ---
   const SelectedPlays = () => (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" style={{ background: '#EBF5FB' }}>
       {/* Header */}
-      <div className="p-3 md:p-4 border-b border-dd-border-light shrink-0">
-        <h2 className="text-base md:text-lg text-dd-text font-semibold mb-2">
+      <div className="p-3 md:p-4 border-b shrink-0" style={{ borderColor: '#AED6F1' }}>
+        <h2 className="text-base md:text-h4 font-bold mb-2" style={{ color: '#1A5276' }}>
           Jugadas Seleccionadas
         </h2>
         <div className="flex gap-1">
@@ -457,8 +457,8 @@ export default function Dashboard() {
               onClick={() => setPlaysTab(key)}
               className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all min-h-[36px] active:scale-95 ${
                 playsTab === key
-                  ? 'bg-dd-accent/15 text-dd-accent border border-dd-accent/25'
-                  : 'text-dd-text-muted hover:text-dd-text-secondary hover:bg-dd-surface/50'
+                  ? 'bg-accent-blue/15 text-accent-blue border border-accent-blue/25'
+                  : 'text-text-muted hover:text-text-secondary hover:bg-white/[0.02]'
               }`}
             >
               {label}
@@ -473,12 +473,12 @@ export default function Dashboard() {
           <div className="flex flex-col items-center justify-center h-48 md:h-64 text-center px-8">
             <ClipboardList
               size={48}
-              className="text-dd-text-muted/30 mb-3"
+              className="text-text-muted/30 mb-3"
             />
-            <p className="text-sm text-dd-text-secondary">
+            <p className="text-sm text-text-tertiary">
               Seleccione jugadas del panel derecho
             </p>
-            <p className="text-xs text-dd-text-muted mt-1">
+            <p className="text-xs text-text-muted mt-1">
               Haga clic en una linea para agregarla
             </p>
           </div>
@@ -486,7 +486,7 @@ export default function Dashboard() {
           <div className="w-full overflow-x-auto">
             <table className="w-full min-w-[400px]">
               <thead className="sticky top-0 z-10">
-                <tr className="bg-dd-surface/90 text-xs font-semibold text-dd-text-secondary uppercase tracking-wider">
+                <tr className="bg-bg-secondary/90 text-xs font-semibold text-text-secondary uppercase tracking-wider">
                   <th className="text-left px-3 py-2">Equipo</th>
                   <th className="text-left px-3 py-2">Jugada</th>
                   <th className="text-left px-3 py-2 hidden md:table-cell">Dato</th>
@@ -495,48 +495,46 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                <AnimatePresence>
-                  {displayPlays.map((play, index) => (
-                    <motion.tr
-                      key={play.id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.25 }}
-                      className={`border-b border-dd-border-light hover:bg-dd-surface/50 transition-colors ${
-                        index % 2 === 0 ? 'bg-white' : 'bg-dd-surface/30'
-                      }`}
+                {displayPlays.map((play, index) => (
+                  <tr
+                    key={play.id}
+                    className="border-b transition-colors hover:bg-white/60"
+                    style={{
+                      borderColor: '#AED6F1',
+                      background: index % 2 === 0 ? '#FFFFFF' : '#F2F9FC',
+                    }}
+                  >
+                    <td className="px-3 py-2 text-sm" style={{ color: '#191919' }}>
+                      <div className="font-bold font-mono text-xs">{play.teamCode}</div>
+                      <div className="text-[10px] font-medium truncate max-w-[120px] md:max-w-none" style={{ color: '#5D6D7E' }}>
+                        {play.team}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 text-sm font-bold font-mono" style={{ color: '#2874A6' }}>
+                      {play.playType}
+                    </td>
+                    <td className="px-3 py-2 text-[10px] font-medium hidden md:table-cell" style={{ color: '#5D6D7E' }}>
+                      {play.detail}
+                    </td>
+                    <td
+                      className="px-3 py-2 text-sm font-bold font-mono text-right"
+                      style={{ color: play.odds >= 0 ? '#00C853' : '#E53935' }}
                     >
-                      <td className="px-3 py-2.5 text-sm text-dd-text">
-                        <div className="font-medium">{play.teamCode}</div>
-                        <div className="text-xs text-dd-text-muted truncate max-w-[120px] md:max-w-none">
-                          {play.team}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2.5 text-sm font-mono text-dd-accent">
-                        {play.playType}
-                      </td>
-                      <td className="px-3 py-2.5 text-xs text-dd-text-secondary hidden md:table-cell">
-                        {play.detail}
-                      </td>
-                      <td
-                        className={`px-3 py-2.5 text-sm font-mono text-right ${
-                          play.odds >= 0 ? 'text-dd-green' : 'text-dd-red'
-                        }`}
+                      {formatOdds(play.line)}
+                    </td>
+                    <td className="px-2 py-2 text-center">
+                      <button
+                        onClick={() => handleRemovePlay(play.id)}
+                        className="w-8 h-8 rounded-full flex items-center justify-center transition-colors active:scale-95"
+                        style={{ color: '#ABABAB' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = '#E53935'; e.currentTarget.style.background = 'rgba(229,57,53,0.1)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = '#ABABAB'; e.currentTarget.style.background = 'transparent'; }}
                       >
-                        {formatOdds(play.line)}
-                      </td>
-                      <td className="px-2 py-2.5 text-center">
-                        <button
-                          onClick={() => handleRemovePlay(play.id)}
-                          className="w-10 h-10 rounded-full flex items-center justify-center text-dd-text-muted hover:text-dd-red hover:bg-dd-red/10 transition-colors active:scale-95"
-                        >
-                          <X size={16} />
-                        </button>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </AnimatePresence>
+                        <X size={14} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -545,10 +543,13 @@ export default function Dashboard() {
 
       {/* Delete All */}
       {displayPlays.length > 0 && (
-        <div className="p-3 border-t border-dd-border-light shrink-0">
+        <div className="p-3 border-t shrink-0" style={{ borderColor: '#AED6F1' }}>
           <button
             onClick={() => setShowConfirmClear(true)}
-            className="flex items-center gap-1.5 text-xs text-dd-red hover:bg-dd-red/10 px-3 py-2.5 rounded-md transition-colors min-h-[40px] active:scale-95"
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-md transition-colors min-h-[36px] active:scale-95"
+            style={{ color: '#E53935' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(229,57,53,0.1)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
           >
             <Trash2 size={14} />
             Eliminar Todas
@@ -562,7 +563,7 @@ export default function Dashboard() {
   const BettingLines = () => (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Sticky Header */}
-      <div className="shrink-0 bg-white/95 backdrop-blur-lg border-b border-dd-border-light z-10">
+      <div className="shrink-0 bg-bg-secondary/95 backdrop-blur-lg border-b border-border-subtle z-10">
         {/* View Toggle + Refresh */}
         <div className="flex items-center justify-between px-3 md:px-4 py-2">
           <div className="flex gap-1">
@@ -577,8 +578,8 @@ export default function Dashboard() {
                 onClick={() => setLineView(key)}
                 className={`px-3 py-1.5 rounded text-xs font-medium transition-colors min-h-[36px] active:scale-95 ${
                   lineView === key
-                    ? 'bg-dd-accent/15 text-dd-accent'
-                    : 'text-dd-text-muted hover:text-dd-text-secondary'
+                    ? 'bg-accent-blue/15 text-accent-blue'
+                    : 'text-text-muted hover:text-text-secondary'
                 }`}
               >
                 {label}
@@ -586,18 +587,18 @@ export default function Dashboard() {
             ))}
           </div>
           <div className="flex items-center gap-1.5 md:gap-2">
-            <span className="text-[10px] md:text-xs text-dd-text-muted font-mono hidden sm:inline">
+            <span className="text-[10px] md:text-xs text-text-tertiary font-mono hidden sm:inline">
               Actualizado: {formatTime(currentTime)}
             </span>
             <button
               onClick={handleRefresh}
-              className={`w-10 h-10 md:w-8 md:h-8 rounded-lg flex items-center justify-center hover:bg-dd-surface text-dd-text-secondary transition-colors active:scale-95 ${
+              className={`w-10 h-10 md:w-8 md:h-8 rounded-md flex items-center justify-center hover:bg-black/5 text-text-secondary transition-colors active:scale-95 ${
                 refreshing ? 'animate-spin-once' : ''
               }`}
             >
               <RefreshCw size={15} />
             </button>
-            <button className="w-10 h-10 md:w-8 md:h-8 rounded-lg flex items-center justify-center hover:bg-dd-surface text-dd-text-secondary transition-colors active:scale-95">
+            <button className="w-10 h-10 md:w-8 md:h-8 rounded-md flex items-center justify-center hover:bg-black/5 text-text-secondary transition-colors active:scale-95">
               <Printer size={15} />
             </button>
           </div>
@@ -611,8 +612,8 @@ export default function Dashboard() {
               onClick={() => setSelectedSport(sport)}
               className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all min-h-[36px] active:scale-95 ${
                 selectedSport === sport
-                  ? 'bg-dd-accent/15 text-dd-accent border border-dd-accent/25'
-                  : 'text-dd-text-muted hover:text-dd-text-secondary hover:bg-dd-surface/50'
+                  ? 'bg-accent-blue/15 text-accent-blue border border-accent-blue/25'
+                  : 'text-text-muted hover:text-text-secondary hover:bg-white/[0.02]'
               }`}
             >
               {sport}
@@ -628,8 +629,8 @@ export default function Dashboard() {
               onClick={() => setSelectedPeriod(period)}
               className={`pb-1 text-xs font-medium transition-colors whitespace-nowrap min-h-[28px] active:scale-95 ${
                 selectedPeriod === period
-                  ? 'text-dd-accent border-b-2 border-dd-accent'
-                  : 'text-dd-text-muted hover:text-dd-text-secondary'
+                  ? 'text-accent-blue border-b-2 border-accent-blue'
+                  : 'text-text-muted hover:text-text-secondary'
               }`}
             >
               {period}
@@ -639,24 +640,25 @@ export default function Dashboard() {
       </div>
 
       {/* Game Cards */}
-      <div ref={linesScrollRef} className="flex-1 overflow-y-auto min-h-0 py-2 bg-dd-dark">
+      <div ref={linesScrollRef} className="flex-1 overflow-y-auto min-h-0 py-2">
         {lines.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 md:h-64 text-center px-8">
-            <CalendarIcon size={48} className="text-dd-text-muted/30 mb-3" />
-            <p className="text-sm text-dd-text-secondary">
+            <CalendarIcon size={48} className="text-text-muted/30 mb-3" />
+            <p className="text-sm text-text-tertiary">
               No hay juegos disponibles
             </p>
-            <p className="text-xs text-dd-text-muted mt-1">
+            <p className="text-xs text-text-muted mt-1">
               Seleccione otro deporte o periodo
             </p>
           </div>
         ) : (
-          <div className="space-y-1 px-2 md:px-3">
+          <div className="space-y-2 px-2 md:px-4">
             {lines.map((line) => (
               <GameCard
                 key={line.id}
                 line={line}
                 onAddPlay={handleAddPlay}
+                setEquipo={setEquipo}
               />
             ))}
           </div>
@@ -664,16 +666,16 @@ export default function Dashboard() {
       </div>
 
       {/* Scroll buttons */}
-      <div className="shrink-0 flex justify-end gap-1 p-2 border-t border-dd-dark-hover bg-dd-dark">
+      <div className="shrink-0 flex justify-end gap-1 p-2 border-t border-border-subtle">
         <button
           onClick={() => linesScrollRef.current?.scrollBy({ top: -200, behavior: 'smooth' })}
-          className="w-9 h-9 md:w-7 md:h-7 rounded flex items-center justify-center hover:bg-dd-dark-hover text-dd-text-secondary active:scale-95"
+          className="w-9 h-9 md:w-7 md:h-7 rounded flex items-center justify-center hover:bg-black/5 text-text-secondary active:scale-95"
         >
           <ChevronUp size={14} />
         </button>
         <button
           onClick={() => linesScrollRef.current?.scrollBy({ top: 200, behavior: 'smooth' })}
-          className="w-9 h-9 md:w-7 md:h-7 rounded flex items-center justify-center hover:bg-dd-dark-hover text-dd-text-secondary active:scale-95"
+          className="w-9 h-9 md:w-7 md:h-7 rounded flex items-center justify-center hover:bg-black/5 text-text-secondary active:scale-95"
         >
           <ChevronDown size={14} />
         </button>
@@ -689,14 +691,14 @@ export default function Dashboard() {
 
       {/* Content Area */}
       <div className="flex-1 overflow-hidden">
-        {/* Desktop Layout: 3 columns */}
-        <div className="hidden xl:grid h-full grid-cols-[300px_1fr_1.2fr] gap-px bg-dd-border-light">
+        {/* Desktop Layout: 3 columns - Form large, Plays medium, Lines small */}
+        <div className="hidden xl:grid h-full grid-cols-[0.85fr_0.9fr_0.7fr] gap-px bg-bg-primary">
           {/* Left Panel */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.1 }}
-            className="bg-white border-r border-dd-border-light overflow-y-auto"
+            className="gradient-panel border-r border-border-subtle overflow-y-auto"
           >
             <SalesForm />
           </motion.div>
@@ -706,32 +708,32 @@ export default function Dashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.2 }}
-            className="bg-white border-r border-dd-border-light overflow-hidden"
+            className="gradient-panel border-r border-border-subtle overflow-hidden"
           >
             <SelectedPlays />
           </motion.div>
 
-          {/* Right Panel - DARK betting lines */}
+          {/* Right Panel */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.3 }}
-            className="bg-dd-dark overflow-hidden"
+            className="gradient-panel overflow-hidden"
           >
             <BettingLines />
           </motion.div>
         </div>
 
         {/* Tablet Layout: 2 columns */}
-        <div className="hidden md:grid xl:hidden h-full grid-cols-[3fr_2fr] gap-px bg-dd-border-light">
+        <div className="hidden md:grid xl:hidden h-full grid-cols-[3fr_2fr] gap-px bg-bg-primary">
           {/* Left+Center Combined */}
-          <div className="flex flex-col border-r border-dd-border-light overflow-hidden">
+          <div className="flex flex-col border-r border-border-subtle overflow-hidden">
             {/* Sales Form (top half) */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4, delay: 0.1 }}
-              className="bg-white border-b border-dd-border-light overflow-y-auto shrink-0 max-h-[45%]"
+              className="gradient-panel border-b border-border-subtle overflow-y-auto shrink-0 max-h-[45%]"
             >
               <SalesForm />
             </motion.div>
@@ -740,7 +742,7 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.2 }}
-              className="bg-white flex-1 overflow-hidden min-h-0"
+              className="gradient-panel flex-1 overflow-hidden min-h-0"
             >
               <SelectedPlays />
             </motion.div>
@@ -751,14 +753,14 @@ export default function Dashboard() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, delay: 0.3 }}
-            className="bg-dd-dark overflow-hidden"
+            className="gradient-panel overflow-hidden"
           >
             <BettingLines />
           </motion.div>
         </div>
 
         {/* Mobile Layout: Tab-based single column */}
-        <div className="md:hidden h-full bg-white overflow-y-auto">
+        <div className="md:hidden h-full bg-bg-primary overflow-y-auto">
           <AnimatePresence mode="wait">
             {mobileTab === 'apuesta' && (
               <motion.div
@@ -767,7 +769,7 @@ export default function Dashboard() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
                 transition={{ duration: 0.15 }}
-                className="bg-white"
+                className="gradient-panel"
               >
                 <SalesForm />
               </motion.div>
@@ -779,7 +781,7 @@ export default function Dashboard() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
                 transition={{ duration: 0.15 }}
-                className="bg-white h-full"
+                className="gradient-panel h-full"
               >
                 <SelectedPlays />
               </motion.div>
@@ -791,7 +793,7 @@ export default function Dashboard() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
                 transition={{ duration: 0.15 }}
-                className="bg-dd-dark h-full flex flex-col"
+                className="gradient-panel h-full flex flex-col"
               >
                 <BettingLines />
               </motion.div>
@@ -803,156 +805,120 @@ export default function Dashboard() {
   );
 }
 
-// --- GameCard: Dark panel with cyan header ---
+// --- Sub-components ---
 
 function GameCard({
   line,
   onAddPlay,
+  setEquipo,
 }: {
   line: BettingLine;
   onAddPlay: (line: BettingLine, type: string, value: number, points?: number) => void;
+  setEquipo: (v: string) => void;
 }) {
   const [flash, setFlash] = useState(false);
 
-  const handleCellClick = (type: string, value: number, points?: number) => {
+  const handleCellClick = (type: string, value: number, teamCode: string, teamName: string, points?: number) => {
     setFlash(true);
     setTimeout(() => setFlash(false), 200);
+    setEquipo(`${teamCode} - ${teamName}`);
     onAddPlay(line, type, value, points);
   };
 
   return (
     <motion.div
       whileHover={{ y: -1 }}
-      className={`transition-all duration-150 ${
-        flash ? 'bg-dd-dark-hover/50' : ''
-      }`}
+      className="rounded-lg overflow-hidden transition-all duration-150 shadow-md hover:shadow-lg"
+      style={{
+        background: flash ? '#37474F' : '#2D2D2D',
+        border: flash ? '1px solid #00B0FF' : '1px solid #3A3A3A',
+      }}
     >
       {/* Cyan Header */}
-      <div className="flex items-center justify-between px-3 py-1.5 bg-dd-cyan/20 border-b border-dd-dark-hover">
+      <div className="flex items-center justify-between px-3 py-1.5" style={{ background: '#00B0FF' }}>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-dd-cyan uppercase">
-            {line.sport}
-          </span>
-          <span className="text-xs text-dd-text-muted">{line.time}</span>
+          <span className="text-[11px] font-bold text-white">{line.sport}</span>
+          <span className="text-[11px] text-white/80">{line.time}</span>
         </div>
-        <span className="text-[10px] text-dd-text-muted uppercase tracking-wider">
-          {line.period}
-        </span>
+        <span className="text-[10px] text-white/70 uppercase tracking-wider">{line.period}</span>
       </div>
 
-      {/* Column Headers */}
-      <div className="grid grid-cols-[1fr_56px_56px_56px_56px_56px] gap-px bg-dd-dark-hover">
-        <div className="bg-dd-dark px-2 py-1">
-          <span className="text-[9px] text-dd-text-muted uppercase font-semibold"></span>
-        </div>
-        {['M.L', 'R.L', 'Spread', 'Solo', 'Puntos'].map((label) => (
-          <div key={label} className="bg-dd-dark px-1 py-1 text-center">
-            <span className="text-[9px] text-dd-text-muted uppercase font-semibold">{label}</span>
+      {/* Lines Table */}
+      <div className="p-2">
+        <div className="grid gap-1" style={{ gridTemplateColumns: '100px 1fr 1fr 1fr 1fr 1fr' }}>
+          {/* Column Headers */}
+          <div></div>
+          {['M.L', 'R.L', 'SPREAD', 'SOLO', 'PUNTOS'].map((h) => (
+            <div key={h} className="text-[9px] font-bold text-center uppercase py-1" style={{ color: '#90A4AE' }}>{h}</div>
+          ))}
+
+          {/* Away Team Row */}
+          <div className="flex items-center gap-1 px-1 py-1">
+            <span className="font-mono text-[11px] font-bold" style={{ color: '#00B0FF' }}>{line.awayTeamCode}</span>
+            <span className="text-[10px]" style={{ color: '#757575' }}>-</span>
+            <span className="text-[11px] font-semibold text-white">{line.awayTeam}</span>
           </div>
-        ))}
-      </div>
+          <DarkLineCell value={line.moneyLine.away} onClick={() => handleCellClick('ML', line.moneyLine.away, line.awayTeamCode, line.awayTeam)} type="odds" />
+          <DarkLineCell value={`${line.runLine.away >= 0 ? '+' : ''}${line.runLine.away}`} onClick={() => handleCellClick('RL', line.runLine.away, line.awayTeamCode, line.awayTeam)} />
+          <DarkLineCell value={`${line.spread.away >= 0 ? '+' : ''}${line.spread.away}`} onClick={() => handleCellClick('Spread', line.spread.away, line.awayTeamCode, line.awayTeam, line.spread.away)} />
+          <DarkLineCell value={line.solo.away} onClick={() => handleCellClick('Solo', line.solo.away, line.awayTeamCode, line.awayTeam)} type="odds" />
+          <DarkLineCell value={`O ${line.points.over}`} onClick={() => handleCellClick('Over', line.points.over, line.awayTeamCode, line.awayTeam, line.points.value)} type="over" />
 
-      {/* Away Team Row */}
-      <div className="grid grid-cols-[1fr_56px_56px_56px_56px_56px] gap-px bg-dd-dark-hover">
-        <div className="bg-dd-dark px-2 py-2 flex items-center gap-2">
-          <span className="font-mono text-xs text-white font-medium">{line.awayTeamCode}</span>
-          <span className="text-[10px] text-dd-text-muted">-</span>
-          <span className="text-xs text-white/90">{line.awayTeam}</span>
+          {/* Home Team Row */}
+          <div className="flex items-center gap-1 px-1 py-1" style={{ background: 'rgba(255,255,255,0.03)' }}>
+            <span className="font-mono text-[11px] font-bold" style={{ color: '#00B0FF' }}>{line.homeTeamCode}</span>
+            <span className="text-[10px]" style={{ color: '#757575' }}>-</span>
+            <span className="text-[11px] font-semibold text-white">{line.homeTeam}</span>
+          </div>
+          <DarkLineCell value={line.moneyLine.home} onClick={() => handleCellClick('ML', line.moneyLine.home, line.homeTeamCode, line.homeTeam)} type="odds" />
+          <DarkLineCell value={`${line.runLine.home >= 0 ? '+' : ''}${line.runLine.home}`} onClick={() => handleCellClick('RL', line.runLine.home, line.homeTeamCode, line.homeTeam)} />
+          <DarkLineCell value={`${line.spread.home >= 0 ? '+' : ''}${line.spread.home}`} onClick={() => handleCellClick('Spread', line.spread.home, line.homeTeamCode, line.homeTeam, line.spread.home)} />
+          <DarkLineCell value={line.solo.home} onClick={() => handleCellClick('Solo', line.solo.home, line.homeTeamCode, line.homeTeam)} type="odds" />
+          <DarkLineCell value={`U ${line.points.under}`} onClick={() => handleCellClick('Under', line.points.under, line.homeTeamCode, line.homeTeam, line.points.value)} type="under" />
         </div>
-        <LineCell
-          value={line.moneyLine.away}
-          onClick={() => handleCellClick('ML', line.moneyLine.away)}
-          type="odds"
-        />
-        <LineCell
-          value={`${line.runLine.away >= 0 ? '+' : ''}${line.runLine.away}`}
-          onClick={() => handleCellClick('RL', line.runLine.away)}
-        />
-        <LineCell
-          value={`${line.spread.away >= 0 ? '+' : ''}${line.spread.away}`}
-          onClick={() => handleCellClick('Spread', line.spread.away, line.spread.away)}
-        />
-        <LineCell
-          value={line.solo.away}
-          onClick={() => handleCellClick('Solo', line.solo.away)}
-          type="odds"
-        />
-        <LineCell
-          value={`O ${line.points.over}`}
-          onClick={() => handleCellClick('Over', line.points.over, line.points.value)}
-          type="over"
-        />
-      </div>
-
-      {/* Home Team Row */}
-      <div className="grid grid-cols-[1fr_56px_56px_56px_56px_56px] gap-px bg-dd-dark-hover">
-        <div className="bg-dd-dark-row px-2 py-2 flex items-center gap-2">
-          <span className="font-mono text-xs text-white font-medium">{line.homeTeamCode}</span>
-          <span className="text-[10px] text-dd-text-muted">-</span>
-          <span className="text-xs text-white/90">{line.homeTeam}</span>
-        </div>
-        <LineCell
-          value={line.moneyLine.home}
-          onClick={() => handleCellClick('ML', line.moneyLine.home)}
-          type="odds"
-          alternateBg
-        />
-        <LineCell
-          value={`${line.runLine.home >= 0 ? '+' : ''}${line.runLine.home}`}
-          onClick={() => handleCellClick('RL', line.runLine.home)}
-          alternateBg
-        />
-        <LineCell
-          value={`${line.spread.home >= 0 ? '+' : ''}${line.spread.home}`}
-          onClick={() => handleCellClick('Spread', line.spread.home, line.spread.home)}
-          alternateBg
-        />
-        <LineCell
-          value={line.solo.home}
-          onClick={() => handleCellClick('Solo', line.solo.home)}
-          type="odds"
-          alternateBg
-        />
-        <LineCell
-          value={`U ${line.points.under}`}
-          onClick={() => handleCellClick('Under', line.points.under, line.points.value)}
-          type="under"
-          alternateBg
-        />
       </div>
     </motion.div>
   );
 }
 
-function LineCell({
+function DarkLineCell({
   value,
   onClick,
   type = 'normal',
-  alternateBg = false,
 }: {
   value: string | number;
   onClick: () => void;
   type?: 'normal' | 'odds' | 'over' | 'under';
-  alternateBg?: boolean;
 }) {
   const numVal = typeof value === 'string' ? parseFloat(value.replace(/[OU+\s]/g, '')) : value;
   const display = typeof value === 'string' ? value : formatOdds(value);
 
-  let colorClass = 'text-white/80';
+  let textColor = '#FFFFFF';
   if (type === 'odds') {
-    colorClass = numVal >= 0 ? 'text-dd-green' : 'text-dd-red';
+    textColor = numVal >= 0 ? '#00C853' : '#E53935';
   } else if (type === 'over') {
-    colorClass = 'text-dd-green';
+    textColor = '#00C853';
   } else if (type === 'under') {
-    colorClass = 'text-dd-red';
+    textColor = '#E53935';
   }
 
   return (
     <button
       onClick={onClick}
-      className={`py-2 font-mono text-[11px] hover:bg-dd-cyan/30 transition-colors min-h-[36px] flex items-center justify-center border border-transparent hover:border-dd-cyan/40 ${colorClass} ${
-        alternateBg ? 'bg-dd-dark-row' : 'bg-dd-dark'
-      }`}
+      className="py-1.5 rounded font-mono text-[11px] flex items-center justify-center transition-all duration-150"
+      style={{
+        background: 'rgba(255,255,255,0.08)',
+        color: textColor,
+        border: '1px solid rgba(255,255,255,0.1)',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = 'rgba(0,176,255,0.25)';
+        e.currentTarget.style.borderColor = 'rgba(0,176,255,0.5)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+      }}
     >
       {display}
     </button>

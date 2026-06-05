@@ -31,6 +31,7 @@ function PinInput({
   }, []);
 
   useEffect(() => {
+    // Sync display values with pin
     pin.forEach((digit, i) => {
       if (digit && !displayValues[i]) {
         setDisplayValues((prev) => {
@@ -38,6 +39,7 @@ function PinInput({
           next[i] = digit;
           return next;
         });
+        // Convert to dot after 500ms
         const timeout = window.setTimeout(() => {
           setDisplayValues((prev) => {
             const next = [...prev];
@@ -109,7 +111,7 @@ function PinInput({
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <label className="text-xs font-medium text-dd-text-muted uppercase tracking-[0.05em]">
+      <label className="text-xs font-medium text-[#94A3B8] uppercase tracking-[0.05em]">
         Ingrese su PIN de 4 digitos
       </label>
       <div className="flex gap-3" onPaste={handlePaste}>
@@ -126,17 +128,17 @@ function PinInput({
             transition={{ duration: 0.4 }}
           >
             <div
-              className={`w-14 h-14 rounded-xl flex items-center justify-center text-xl font-semibold transition-all duration-200 ${
+              className={`w-14 h-14 rounded-pin flex items-center justify-center text-h2 font-semibold transition-all duration-200 ${
                 success
-                  ? 'border-2 border-dd-green bg-dd-green/10 shadow-[0_0_16px_rgba(0,200,83,0.3)]'
+                  ? 'border-2 border-accent-green bg-accent-green/10 shadow-[0_0_16px_rgba(34,197,94,0.3)]'
                   : error
-                    ? 'border-2 border-dd-red bg-dd-red/10'
+                    ? 'border-2 border-accent-red bg-accent-red/10'
                     : pin[i]
-                      ? 'border-2 border-dd-green bg-dd-green/5'
-                      : 'border-2 border-dd-border bg-dd-surface'
+                      ? 'border-2 border-accent-green bg-accent-green/5'
+                      : 'border-2 border-gray-300 bg-white'
               } ${
                 i === pin.findIndex((d) => !d) && !success
-                  ? 'shadow-[0_0_0_4px_rgba(255,48,8,0.1)] border-dd-accent'
+                  ? 'shadow-[0_0_0_4px_rgba(59,130,246,0.2)] border-accent-blue'
                   : ''
               }`}
             >
@@ -144,19 +146,19 @@ function PinInput({
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="w-2 h-2 rounded-full bg-dd-text"
+                  className="w-2 h-2 rounded-full bg-[#1E293B]"
                 />
               ) : displayValues[i] ? (
                 <motion.span
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1.1, opacity: 1 }}
                   transition={{ duration: 0.15 }}
-                  className="text-dd-text"
+                  className="text-[#1E293B]"
                 >
                   {displayValues[i]}
                 </motion.span>
               ) : (
-                <span className="text-dd-text-muted/50">-</span>
+                <span className="text-[#CBD5E1]/50">-</span>
               )}
               <input
                 ref={(el) => {
@@ -200,60 +202,19 @@ function RateLimitOverlay({ remainingMs }: { remainingMs: number }) {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
-      className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/90 backdrop-blur-xl rounded-xl border border-dd-amber/30"
+      className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/90 backdrop-blur-xl rounded-xl border border-accent-amber/30 animate-pulse-glow"
     >
-      <Lock size={48} className="text-dd-amber mb-4" />
-      <h3 className="text-lg text-dd-text font-semibold mb-2">
+      <Lock size={48} className="text-accent-amber mb-4" />
+      <h3 className="text-h4 text-[#1E293B] font-semibold mb-2">
         Demasiados intentos fallidos
       </h3>
-      <p className="text-sm text-dd-amber mb-1">
+      <p className="text-body text-accent-amber mb-1">
         Por favor espere para reintentar.
       </p>
-      <p className="text-xl text-dd-amber font-mono">
+      <p className="text-mono-lg text-accent-amber font-mono">
         {formatCountdown(countdown)}
       </p>
     </motion.div>
-  );
-}
-
-// Subtle floating shapes for background
-function FloatingShapes() {
-  const shapes = Array.from({ length: 12 }, (_, i) => ({
-    id: i,
-    left: `${Math.random() * 100}%`,
-    top: `${Math.random() * 100}%`,
-    size: 40 + Math.random() * 120,
-    opacity: 0.03 + Math.random() * 0.04,
-    delay: Math.random() * 5,
-    duration: 8 + Math.random() * 8,
-  }));
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {shapes.map((s) => (
-        <motion.div
-          key={s.id}
-          className="absolute rounded-full bg-dd-text"
-          style={{
-            left: s.left,
-            top: s.top,
-            width: s.size,
-            height: s.size,
-            opacity: s.opacity,
-          }}
-          animate={{
-            y: [0, -20, 0, 20, 0],
-            x: [0, 10, 0, -10, 0],
-          }}
-          transition={{
-            duration: s.duration,
-            repeat: Infinity,
-            delay: s.delay,
-            ease: 'easeInOut',
-          }}
-        />
-      ))}
-    </div>
   );
 }
 
@@ -338,10 +299,53 @@ export default function Login() {
     }, 400);
   };
 
+  // Background particles
+  const particles = Array.from({ length: 30 }, (_, i) => ({
+    id: i,
+    left: `${Math.random() * 100}%`,
+    delay: Math.random() * 18,
+    duration: 15 + Math.random() * 10,
+    size: 2 + Math.random() * 2,
+  }));
+
   return (
-    <div className="fixed inset-0 min-h-[100dvh] flex items-center justify-center overflow-hidden bg-white">
-      {/* Floating background shapes */}
-      <FloatingShapes />
+    <div className="fixed inset-0 min-h-[100dvh] flex items-center justify-center overflow-hidden">
+      {/* Background image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center animate-bg-zoom"
+        style={{ backgroundImage: 'url(/login-bg.jpg)' }}
+      />
+      {/* White overlay for light theme */}
+      <div
+        className="absolute inset-0 bg-gradient-to-br from-white/85 via-white/90 to-[#F1F5F9]/95"
+      />
+
+      {/* Diagonal lines */}
+      <div
+        className="absolute inset-0 opacity-[0.04]"
+        style={{
+          backgroundImage:
+            'repeating-linear-gradient(-45deg, transparent, transparent 100px, rgba(59,130,246,0.5) 100px, rgba(59,130,246,0.5) 101px)',
+        }}
+      />
+
+      {/* Floating particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {particles.map((p) => (
+          <div
+            key={p.id}
+            className="absolute rounded-full animate-float-up"
+            style={{
+              left: p.left,
+              width: `${p.size}px`,
+              height: `${p.size}px`,
+              backgroundColor: 'rgba(59,130,246,0.2)',
+              animationDelay: `${p.delay}s`,
+              animationDuration: `${p.duration}s`,
+            }}
+          />
+        ))}
+      </div>
 
       {/* Login Card */}
       <motion.div
@@ -354,10 +358,7 @@ export default function Login() {
         }}
         className="relative z-10 w-full max-w-[420px] mx-4"
       >
-        <div
-          className="bg-white rounded-xl border border-dd-border p-9 relative overflow-hidden"
-          style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}
-        >
+        <div className="bg-white/90 backdrop-blur-xl rounded-xl border border-gray-200 p-9 shadow-xl relative overflow-hidden">
           {rateLimitRemaining > 0 && (
             <RateLimitOverlay remainingMs={rateLimitRemaining} />
           )}
@@ -373,19 +374,16 @@ export default function Login() {
             }}
             className="flex flex-col items-center mb-8"
           >
-            <div className="flex items-center gap-1 mb-2">
-              <span className="text-[2.5rem] font-bold text-dd-accent tracking-tight">
-                FSB
-              </span>
-              <span className="text-[2.5rem] font-bold text-dd-text tracking-tight">
-                Pro
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[2.5rem] font-bold text-accent-blue tracking-tight">
+                FSB Pro
               </span>
             </div>
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="text-sm text-dd-text-muted font-medium uppercase tracking-[0.08em]"
+              className="text-sm text-[#94A3B8] font-medium uppercase tracking-[0.08em]"
             >
               Sistema de Banca Deportiva
             </motion.p>
@@ -420,7 +418,7 @@ export default function Login() {
                 className="flex flex-col gap-4"
               >
                 <div>
-                  <label className="block text-xs text-dd-text-muted mb-1.5">
+                  <label className="block text-xs text-[#94A3B8] mb-1.5">
                     Usuario
                   </label>
                   <input
@@ -428,12 +426,12 @@ export default function Login() {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="Nombre de usuario"
-                    className="input-clean w-full"
+                    className="input-standard w-full"
                     autoFocus
                   />
                 </div>
                 <div className="relative">
-                  <label className="block text-xs text-dd-text-muted mb-1.5">
+                  <label className="block text-xs text-[#94A3B8] mb-1.5">
                     Contrasena
                   </label>
                   <input
@@ -441,12 +439,12 @@ export default function Login() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="********"
-                    className="input-clean w-full pr-10"
+                    className="input-standard w-full pr-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-[2.1rem] text-dd-text-muted hover:text-dd-text-secondary transition-colors"
+                    className="absolute right-3 top-[2.1rem] text-[#94A3B8] hover:text-[#475569] transition-colors"
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -462,7 +460,7 @@ export default function Login() {
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="text-xs text-dd-red text-center mt-3"
+                className="text-xs text-accent-red text-center mt-3"
               >
                 {errorMsg}
               </motion.p>
@@ -478,9 +476,9 @@ export default function Login() {
                 setError(false);
                 setErrorMsg('');
               }}
-              className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none"
+              className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
               style={{
-                backgroundColor: usePassword ? '#FF3008' : '#ABABAB',
+                backgroundColor: usePassword ? '#22C55E' : '#CBD5E1',
               }}
             >
               <span
@@ -490,7 +488,7 @@ export default function Login() {
                 }}
               />
             </button>
-            <span className="text-xs font-medium text-dd-text-secondary">
+            <span className="text-xs font-medium text-[#475569]">
               Ingresar con usuario y contrasena
             </span>
           </div>
@@ -502,11 +500,11 @@ export default function Login() {
             transition={{ delay: 0.6 }}
             onClick={usePassword ? handlePasswordSubmit : handlePinSubmit}
             disabled={loading || success}
-            className={`w-full h-12 rounded-lg font-semibold text-sm tracking-[0.1em] transition-all duration-200 flex items-center justify-center gap-2 ${
+            className={`w-full h-12 rounded-md font-semibold text-sm tracking-[0.1em] transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm ${
               success
-                ? 'bg-dd-green text-white'
-                : 'bg-dd-accent hover:bg-dd-accent-hover text-white'
-            } ${loading || success ? 'cursor-default' : 'cursor-pointer hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm'}`}
+                ? 'bg-accent-green text-white'
+                : 'gradient-accent text-white hover:brightness-110'
+            } ${loading || success ? 'cursor-default' : 'cursor-pointer'}`}
           >
             {loading ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -527,7 +525,7 @@ export default function Login() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
           href="#"
-          className="flex items-center justify-center gap-1.5 mt-4 text-xs text-dd-text-muted hover:text-dd-text-secondary hover:underline transition-colors"
+          className="flex items-center justify-center gap-1.5 mt-4 text-xs text-[#94A3B8] hover:text-[#475569] hover:underline transition-colors"
         >
           Descarga Drivers de Printers
           <ExternalLink size={12} />

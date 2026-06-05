@@ -8,9 +8,9 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-white">
+    <div className="h-screen overflow-hidden" style={{ background: '#D5D8DC' }}>
       <Header />
-      <main className="flex-1 overflow-y-auto overflow-x-hidden bg-white">
+      <main className="h-full overflow-y-auto pt-11 pb-16 md:pt-12 md:pb-24 xl:pb-[120px] overflow-x-hidden" style={{ background: '#D5D8DC' }}>
         {children}
       </main>
       <Navbar />
