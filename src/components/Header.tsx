@@ -39,9 +39,9 @@ export default function Header() {
       <div className="relative">
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-white/5 transition-colors"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-black/5 transition-colors"
         >
-          <div className="w-6 h-6 rounded-full bg-accent-blue/20 flex items-center justify-center">
+          <div className="w-6 h-6 rounded-full bg-accent-blue/15 flex items-center justify-center">
             <User size={14} className="text-accent-blue" />
           </div>
           <span className="text-sm font-medium text-text-primary">mmw03</span>
@@ -65,7 +65,7 @@ export default function Header() {
                 <div className="py-1">
                   <button
                     onClick={() => setDropdownOpen(false)}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-secondary hover:bg-white/5 hover:text-text-primary transition-colors text-left"
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-secondary hover:bg-black/5 hover:text-text-primary transition-colors text-left"
                   >
                     <Key size={16} className="text-text-tertiary" />
                     Cambiar contrasena

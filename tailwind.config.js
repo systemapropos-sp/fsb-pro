@@ -6,10 +6,10 @@ module.exports = {
     extend: {
       colors: {
         // Background colors
-        'bg-primary': '#0B1120',
-        'bg-secondary': '#111827',
-        'bg-tertiary': '#1E293B',
-        'bg-quaternary': '#273548',
+        'bg-primary': '#F1F5F9',
+        'bg-secondary': '#FFFFFF',
+        'bg-tertiary': '#F8FAFC',
+        'bg-quaternary': '#E2E8F0',
         // Accent colors
         'accent-green': '#22C55E',
         'accent-green-dim': '#16A34A',
@@ -22,14 +22,14 @@ module.exports = {
         'accent-cyan': '#06B6D4',
         'accent-purple': '#8B5CF6',
         // Text colors
-        'text-primary': '#F1F5F9',
-        'text-secondary': '#94A3B8',
-        'text-tertiary': '#64748B',
-        'text-muted': '#475569',
-        'text-inverse': '#0B1120',
+        'text-primary': '#1E293B',
+        'text-secondary': '#475569',
+        'text-tertiary': '#94A3B8',
+        'text-muted': '#CBD5E1',
+        'text-inverse': '#FFFFFF',
         // Border colors
-        'border-subtle': 'rgba(148, 163, 184, 0.08)',
-        'border-default': 'rgba(148, 163, 184, 0.15)',
+        'border-subtle': 'rgba(148, 163, 184, 0.2)',
+        'border-default': 'rgba(148, 163, 184, 0.3)',
         'border-focus': '#3B82F6',
         // Shadcn defaults (keep for compatibility)
         border: "hsl(var(--border))",
@@ -107,12 +107,16 @@ module.exports = {
       },
       boxShadow: {
         xs: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
-        'panel': '0 1px 3px rgba(0,0,0,0.2)',
-        'card': '0 4px 12px rgba(0,0,0,0.2)',
-        'modal': '0 25px 50px -12px rgba(0,0,0,0.5)',
-        'accent': '0 4px 16px rgba(59,130,246,0.3)',
-        'winner': '0 4px 16px rgba(34,197,94,0.3)',
-        'danger': '0 4px 16px rgba(239,68,68,0.3)',
+        'sm': '0 1px 2px rgba(0,0,0,0.05)',
+        'md': '0 4px 6px rgba(0,0,0,0.07)',
+        'lg': '0 10px 15px rgba(0,0,0,0.08)',
+        'xl': '0 20px 25px rgba(0,0,0,0.1)',
+        'panel': '0 1px 3px rgba(0,0,0,0.08)',
+        'card': '0 4px 12px rgba(0,0,0,0.08)',
+        'modal': '0 25px 50px -12px rgba(0,0,0,0.15)',
+        'accent': '0 4px 16px rgba(59,130,246,0.2)',
+        'winner': '0 4px 16px rgba(34,197,94,0.2)',
+        'danger': '0 4px 16px rgba(239,68,68,0.2)',
       },
       keyframes: {
         "accordion-down": {

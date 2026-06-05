@@ -6,10 +6,10 @@
 
 @layer base {
   :root {
-    --bg-primary: #0B1120;
-    --bg-secondary: #111827;
-    --bg-tertiary: #1E293B;
-    --bg-quaternary: #273548;
+    --bg-primary: #F1F5F9;
+    --bg-secondary: #FFFFFF;
+    --bg-tertiary: #F8FAFC;
+    --bg-quaternary: #E2E8F0;
     --accent-green: #22C55E;
     --accent-green-dim: #16A34A;
     --accent-red: #EF4444;
@@ -20,33 +20,33 @@
     --accent-blue-bright: #60A5FA;
     --accent-cyan: #06B6D4;
     --accent-purple: #8B5CF6;
-    --text-primary: #F1F5F9;
-    --text-secondary: #94A3B8;
-    --text-tertiary: #64748B;
-    --text-muted: #475569;
-    --text-inverse: #0B1120;
-    --border-subtle: rgba(148, 163, 184, 0.08);
-    --border-default: rgba(148, 163, 184, 0.15);
+    --text-primary: #1E293B;
+    --text-secondary: #475569;
+    --text-tertiary: #94A3B8;
+    --text-muted: #CBD5E1;
+    --text-inverse: #FFFFFF;
+    --border-subtle: rgba(148, 163, 184, 0.2);
+    --border-default: rgba(148, 163, 184, 0.3);
     --border-focus: #3B82F6;
     --radius: 0.5rem;
-    --background: 222 47% 9%;
-    --foreground: 210 40% 96%;
-    --card: 217 33% 11%;
-    --card-foreground: 210 40% 96%;
-    --popover: 217 33% 11%;
-    --popover-foreground: 210 40% 96%;
+    --background: 210 40% 96%;
+    --foreground: 222 47% 17%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 17%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 17%;
     --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 215 28% 17%;
-    --secondary-foreground: 210 40% 96%;
-    --muted: 215 28% 17%;
-    --muted-foreground: 215 16% 57%;
-    --accent: 215 28% 17%;
-    --accent-foreground: 210 40% 96%;
+    --secondary: 210 40% 98%;
+    --secondary-foreground: 222 47% 17%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 17%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 215 16% 57%;
-    --input: 215 28% 17%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
     --ring: 217 91% 60%;
   }
 
@@ -60,8 +60,8 @@
 
   body {
     font-family: 'Inter', system-ui, sans-serif;
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
+    background-color: #F1F5F9;
+    color: #1E293B;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-width: 1280px;
@@ -79,29 +79,29 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(100, 116, 139, 0.3);
+    background: rgba(148, 163, 184, 0.35);
     border-radius: 3px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(100, 116, 139, 0.5);
+    background: rgba(148, 163, 184, 0.55);
   }
 
   /* Firefox scrollbar */
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(100, 116, 139, 0.3) transparent;
+    scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
   }
 }
 
 @layer components {
   /* Gradient utilities */
   .gradient-panel {
-    background: linear-gradient(180deg, rgba(17,24,39,0.95) 0%, rgba(11,17,32,0.98) 100%);
+    background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
   }
 
   .gradient-card {
-    background: linear-gradient(135deg, rgba(30,41,59,0.6) 0%, rgba(17,24,39,0.8) 100%);
+    background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
   }
 
   .gradient-accent {
@@ -118,46 +118,46 @@
 
   /* Glassmorphism */
   .glass {
-    background: rgba(11, 17, 32, 0.9);
+    background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
 
   .glass-light {
-    background: rgba(17, 24, 39, 0.85);
+    background: rgba(241, 245, 249, 0.95);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
   }
 
   /* Status badges */
   .badge-pendiente {
-    background: rgba(245, 158, 11, 0.15);
-    color: #F59E0B;
-    border: 1px solid rgba(245, 158, 11, 0.3);
+    background: rgba(245, 158, 11, 0.1);
+    color: #D97706;
+    border: 1px solid rgba(245, 158, 11, 0.25);
   }
 
   .badge-ganador {
-    background: rgba(34, 197, 94, 0.15);
-    color: #22C55E;
-    border: 1px solid rgba(34, 197, 94, 0.3);
+    background: rgba(34, 197, 94, 0.1);
+    color: #16A34A;
+    border: 1px solid rgba(34, 197, 94, 0.25);
   }
 
   .badge-perdedor {
-    background: rgba(239, 68, 68, 0.15);
-    color: #EF4444;
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    background: rgba(239, 68, 68, 0.1);
+    color: #DC2626;
+    border: 1px solid rgba(239, 68, 68, 0.25);
   }
 
   .badge-cancelado {
-    background: rgba(100, 116, 139, 0.15);
+    background: rgba(148, 163, 184, 0.12);
     color: #64748B;
-    border: 1px solid rgba(100, 116, 139, 0.3);
+    border: 1px solid rgba(148, 163, 184, 0.25);
   }
 
   .badge-pagado {
-    background: rgba(34, 197, 94, 0.25);
-    color: #22C55E;
-    border: 1px solid rgba(34, 197, 94, 0.5);
+    background: rgba(34, 197, 94, 0.15);
+    color: #16A34A;
+    border: 1px solid rgba(34, 197, 94, 0.35);
   }
 
   /* Amount/odds formatting */
@@ -185,8 +185,8 @@
 
   /* Input styles */
   .input-standard {
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid rgba(148, 163, 184, 0.15);
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
     border-radius: 8px;
     color: var(--text-primary);
     padding: 10px 14px;
@@ -201,12 +201,12 @@
   .input-standard:focus {
     outline: none;
     border-color: var(--accent-blue);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
   }
 
   /* Skeleton loading */
   .skeleton {
-    background: linear-gradient(90deg, rgba(148,163,184,0.05) 25%, rgba(148,163,184,0.1) 50%, rgba(148,163,184,0.05) 75%);
+    background: linear-gradient(90deg, rgba(148,163,184,0.08) 25%, rgba(148,163,184,0.15) 50%, rgba(148,163,184,0.08) 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s linear infinite;
     border-radius: 4px;

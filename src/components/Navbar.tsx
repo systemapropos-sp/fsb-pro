@@ -42,10 +42,10 @@ function NavItem({
   return (
     <Link
       to={path}
-      className={`flex flex-col items-center justify-center gap-0.5 h-full flex-1 no-underline transition-all duration-150 ${
+      className={`flex flex-col items-center justify-center gap-0.5 h-full flex-1 no-underline transition-all duration-200 ${
         active
           ? 'text-accent-blue border-t-2 border-accent-blue bg-accent-blue/10'
-          : 'text-text-muted hover:text-text-secondary hover:bg-white/[0.02] border-t-2 border-transparent'
+          : 'text-text-secondary hover:text-text-primary hover:bg-accent-blue/5 hover:shadow-sm hover:-translate-y-0.5 border-t-2 border-transparent'
       }`}
     >
       <Icon size={18} strokeWidth={active ? 2 : 1.5} />
