@@ -103,9 +103,20 @@ export default function Tickets() {
   const [pageSize, setPageSize] = useState(10);
   const [refreshSpin, setRefreshSpin] = useState(false);
 
-  // Load data on mount
+  // Load data on mount + listen for ticket creation events + focus refresh
   useEffect(() => {
-    setAllTickets(loadTickets());
+    const refresh = () => setAllTickets(loadTickets());
+    refresh(); // Load immediately on mount
+
+    // Listen for custom ticket creation events from Dashboard
+    window.addEventListener('fsb:ticketCreated', refresh);
+    // Also refresh when user returns to this browser tab
+    window.addEventListener('focus', refresh);
+
+    return () => {
+      window.removeEventListener('fsb:ticketCreated', refresh);
+      window.removeEventListener('focus', refresh);
+    };
   }, []);
 
   // Set default date to today
@@ -184,6 +195,7 @@ export default function Tickets() {
       const updated = updateTicketStatus(id, 'cancelado');
       if (updated) {
         setAllTickets((prev) => prev.map((t) => (t.id === id ? { ...t, status: 'cancelado' as const } : t)));
+        window.dispatchEvent(new CustomEvent('fsb:ticketCreated'));
       }
     },
     []
@@ -195,6 +207,7 @@ export default function Tickets() {
       const updated = updateTicketStatus(id, 'pagado');
       if (updated) {
         setAllTickets((prev) => prev.map((t) => (t.id === id ? { ...t, status: 'pagado' as const, paidAt: Date.now() } : t)));
+        window.dispatchEvent(new CustomEvent('fsb:ticketCreated'));
       }
     },
     []

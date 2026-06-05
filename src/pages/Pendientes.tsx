@@ -120,18 +120,42 @@ function getDiasColor(days: number): string {
 
 // ── Main Component ─────────────────────────────────────────
 export default function Pendientes() {
-  const [tickets, setTickets] = useState<Ticket[]>(PENDING_TICKETS);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [activeFilter, setActiveFilter] = useState<StatusFilter>('todos');
   const [searchQuery, setSearchQuery] = useState('');
   const [payingId, setPayingId] = useState<string | null>(null);
   const [allPaid, setAllPaid] = useState(false);
 
-  // Also seed these into localStorage so Pagar page can find them
+  // Load tickets from localStorage + sync with other pages
   useEffect(() => {
-    const existing = localStorage.getItem('fsb_tickets');
-    if (!existing || JSON.parse(existing).length === 0) {
-      localStorage.setItem('fsb_tickets', JSON.stringify(PENDING_TICKETS));
-    }
+    const load = () => {
+      const stored = localStorage.getItem('fsb_tickets');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored) as Ticket[];
+          // Only show pending winners (status=ganador without paidAt)
+          const pending = parsed.filter((t: Ticket) => t.status === 'ganador' && !t.paidAt);
+          setTickets(pending.length > 0 ? pending : PENDING_TICKETS);
+          if (pending.length === 0) setAllPaid(true);
+        } catch {
+          setTickets(PENDING_TICKETS);
+        }
+      } else {
+        // Seed initial data if nothing exists
+        localStorage.setItem('fsb_tickets', JSON.stringify(PENDING_TICKETS));
+        setTickets(PENDING_TICKETS);
+      }
+    };
+    load();
+
+    // Listen for ticket creation events from Dashboard
+    window.addEventListener('fsb:ticketCreated', load);
+    window.addEventListener('focus', load);
+
+    return () => {
+      window.removeEventListener('fsb:ticketCreated', load);
+      window.removeEventListener('focus', load);
+    };
   }, []);
 
   // Filtered tickets
@@ -147,16 +171,16 @@ export default function Pendientes() {
     return result;
   }, [tickets, activeFilter, searchQuery]);
 
-  // Status counts (fixed from original data)
+  // Status counts (dynamic from actual tickets)
   const statusCounts = useMemo(
     () => ({
-      todos: 7,
-      ganador: 7,
-      perdedor: 0,
-      pendiente: 0,
-      cancelado: 0,
+      todos: tickets.length,
+      ganador: tickets.filter((t) => t.status === 'ganador').length,
+      perdedor: tickets.filter((t) => t.status === 'perdedor').length,
+      pendiente: tickets.filter((t) => t.status === 'pendiente').length,
+      cancelado: tickets.filter((t) => t.status === 'cancelado').length,
     }),
-    []
+    [tickets]
   );
 
   // Summary

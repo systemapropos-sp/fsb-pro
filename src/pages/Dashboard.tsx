@@ -241,6 +241,9 @@ export default function Dashboard() {
       setSuccessTicket(ticket.id);
       setProcessingTicket(false);
 
+      // Notify other pages (Tickets, Pendientes) that a new ticket was created
+      window.dispatchEvent(new CustomEvent('fsb:ticketCreated'));
+
       confetti({
         particleCount: 40,
         spread: 70,

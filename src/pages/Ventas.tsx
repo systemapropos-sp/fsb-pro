@@ -70,8 +70,20 @@ export default function Ventas() {
   const [searchWinners, setSearchWinners] = useState('');
 
   useEffect(() => {
-    const txs = getTransactions();
-    setTransactions(txs.length > 0 ? txs : MOCK_TX);
+    const load = () => {
+      const txs = getTransactions();
+      setTransactions(txs.length > 0 ? txs : MOCK_TX);
+    };
+    load();
+
+    // Refresh when new tickets are created (transactions are added too)
+    window.addEventListener('fsb:ticketCreated', load);
+    window.addEventListener('focus', load);
+
+    return () => {
+      window.removeEventListener('fsb:ticketCreated', load);
+      window.removeEventListener('focus', load);
+    };
   }, []);
 
   const filteredTransactions = useMemo(() => {
