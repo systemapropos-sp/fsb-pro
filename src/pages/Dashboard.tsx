@@ -1,22 +1,17 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import SalesForm from '@/components/SalesForm';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  User,
-  Calendar,
-  Clock,
   Trash2,
   Printer,
   RefreshCw,
   ChevronUp,
   ChevronDown,
-  Calculator,
   X,
   ClipboardList,
 } from 'lucide-react';
 import {
-  formatAmount,
   formatOdds,
-  formatDate,
   formatTime,
   getLines,
   seedLines,
@@ -55,11 +50,11 @@ export default function Dashboard() {
   const [language, setLanguage] = useState<'es' | 'en'>('es');
   const [refreshing, setRefreshing] = useState(false);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
+  const [showCalc, setShowCalc] = useState(false);
   const [processingTicket, setProcessingTicket] = useState(false);
   const [successTicket, setSuccessTicket] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const linesScrollRef = useRef<HTMLDivElement>(null);
-  const jugadaInputRef = useRef<HTMLInputElement>(null);
 
   // --- Load data ---
   useEffect(() => {
@@ -201,241 +196,7 @@ export default function Dashboard() {
     </div>
   );
 
-  // --- Sales Form Content (shared) ---
-  const SalesForm = () => (
-    <div className="flex flex-col gap-2 p-2 md:p-3">
-      {/* Seller Info */}
-      <div className="space-y-1.5">
-        <div className="flex items-center gap-2">
-          <User size={14} className="text-text-tertiary shrink-0" />
-          <span className="text-xs text-text-tertiary w-16">Vendedor:</span>
-          <span className="text-sm font-semibold text-text-primary font-mono">
-            mmw03
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Calendar size={14} className="text-text-tertiary shrink-0" />
-          <span className="text-xs text-text-tertiary w-16">Fecha:</span>
-          <span className="text-xs text-text-secondary">
-            {formatDate(currentTime)}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Clock size={14} className="text-text-tertiary shrink-0" />
-          <span className="text-xs text-text-tertiary w-16">Hora:</span>
-          <span className="text-xs text-text-secondary font-mono">
-            {formatTime(currentTime)}
-          </span>
-        </div>
-      </div>
-
-      <div className="border-t border-border-subtle" />
-
-      {/* Mode Tabs */}
-      <div className="flex gap-1 p-1 rounded-md bg-bg-secondary/80">
-        {(
-          [
-            ['teaser', 'Teaser'],
-            ['teaserIF', 'Teaser IF'],
-          ] as const
-        ).map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => setModeTab(key)}
-            className={`flex-1 py-2 px-4 rounded-sm text-sm font-medium transition-all duration-200 min-h-[40px] active:scale-95 ${
-              modeTab === key
-                ? 'bg-accent-blue/15 text-text-primary border border-accent-blue/30'
-                : 'text-text-muted hover:text-text-secondary'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* Compact Form Fields - 2 column grid */}
-      <div className="space-y-2">
-        {/* Row 1: Equipo + Jugada side by side */}
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="block text-[11px] font-bold mb-1 tracking-wide" style={{ color: '#555555' }}>EQUIPO</label>
-            <input
-              type="text"
-              value={equipo}
-              onChange={(e) => setEquipo(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  jugadaInputRef.current?.focus();
-                }
-              }}
-              placeholder="2001"
-              className="input-standard w-full h-9 text-sm font-bold font-mono"
-              style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}
-            />
-          </div>
-          <div>
-            <label className="block text-[11px] font-bold mb-1 tracking-wide" style={{ color: '#555555' }}>JUGADA</label>
-            <input
-              type="text"
-              ref={jugadaInputRef}
-              name="jugada"
-              value={jugada}
-              onChange={(e) => setJugada(e.target.value)}
-              placeholder="ML"
-              className="input-standard w-full h-9 text-sm font-semibold"
-            />
-          </div>
-        </div>
-
-        {/* Row 2: #Jug.Reg + Cantidad side by side */}
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="block text-[11px] font-bold mb-1 tracking-wide" style={{ color: '#555555' }}>#JUG.REG</label>
-            <input
-              type="text"
-              readOnly
-              value={selectedPlays.length.toString()}
-              className="w-full h-9 rounded-md border px-2.5 text-sm font-mono"
-              style={{ borderColor: '#E0E0E0', background: 'rgba(0,176,255,0.05)', color: '#191919' }}
-            />
-          </div>
-          <div>
-            <label className="block text-[11px] font-bold mb-1 tracking-wide" style={{ color: '#555555' }}>CANTIDAD</label>
-            <div className="relative">
-              <span className="absolute left-2 top-1/2 -translate-y-1/2 font-mono text-sm" style={{ color: '#ABABAB' }}>$</span>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={cantidad}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/[^0-9.]/g, '');
-                  setCantidad(val);
-                }}
-                placeholder="0.00"
-                className="input-standard w-full h-9 pl-6 pr-2 text-right font-mono text-sm font-semibold"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Row 3: Pago + Ganancia side by side */}
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="block text-[11px] font-bold mb-1 tracking-wide" style={{ color: '#555555' }}>PAGO</label>
-            <div className="w-full h-9 rounded-md border px-2.5 text-right font-mono text-sm flex items-center justify-end" style={{ borderColor: '#E0E0E0', background: '#F7F7F7', color: '#00C853' }}>
-              {formatAmount(pago)}
-            </div>
-          </div>
-          <div>
-            <label className="block text-[11px] font-bold mb-1 tracking-wide" style={{ color: '#555555' }}>GANANCIA</label>
-            <div className="w-full h-9 rounded-md border px-2.5 text-right font-mono text-sm flex items-center justify-end" style={{ borderColor: '#E0E0E0', background: '#F7F7F7', color: '#00C853' }}>
-              {formatAmount(ganancia)}
-            </div>
-          </div>
-        </div>
-
-        {/* IF Fields */}
-        <AnimatePresence>
-          {modeTab === 'teaserIF' && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="space-y-2 border-t pt-2"
-              style={{ borderColor: 'rgba(139,92,246,0.3)' }}
-            >
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <label className="block text-[11px] font-bold mb-1 tracking-wide" style={{ color: '#8B5CF6' }}>MONTO IF</label>
-                  <div className="relative">
-                    <span className="absolute left-2 top-1/2 -translate-y-1/2 font-mono text-xs" style={{ color: '#ABABAB' }}>$</span>
-                    <input type="text" inputMode="decimal" placeholder="0" className="input-standard w-full h-8 pl-5 pr-1 text-right font-mono text-xs" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold mb-1 tracking-wide" style={{ color: '#8B5CF6' }}>PAGO IF</label>
-                  <div className="w-full h-8 rounded-md border px-1 text-right font-mono text-xs flex items-center justify-end" style={{ borderColor: 'rgba(139,92,246,0.3)', background: 'rgba(139,92,246,0.05)', color: '#8B5CF6' }}>$0</div>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold mb-1 tracking-wide" style={{ color: '#8B5CF6' }}>GAN. IF</label>
-                  <div className="w-full h-8 rounded-md border px-1 text-right font-mono text-xs flex items-center justify-end" style={{ borderColor: 'rgba(139,92,246,0.3)', background: 'rgba(139,92,246,0.05)', color: '#8B5CF6' }}>$0</div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex flex-wrap gap-2 pt-2">
-        <button className="flex items-center gap-1.5 px-3 py-2.5 rounded-md text-xs font-semibold bg-accent-blue/10 text-accent-blue border border-accent-blue/25 hover:bg-accent-blue/20 transition-colors min-h-[40px] active:scale-95">
-          <Calculator size={14} />
-          Calc
-        </button>
-        <button
-          onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
-          className="px-3 py-2.5 rounded-md text-xs font-semibold bg-bg-tertiary text-text-secondary hover:text-text-primary transition-colors min-h-[40px] active:scale-95"
-        >
-          {language === 'es' ? 'ES | EN' : 'EN | ES'}
-        </button>
-        {showConfirmClear ? (
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-text-tertiary">
-              Seguro? {selectedPlays.length} jugadas
-            </span>
-            <button
-              onClick={handleClearAll}
-              className="px-3 py-2 rounded text-xs bg-accent-red text-white min-h-[36px] active:scale-95"
-            >
-              Si
-            </button>
-            <button
-              onClick={() => setShowConfirmClear(false)}
-              className="px-3 py-2 rounded text-xs bg-bg-tertiary text-text-secondary min-h-[36px] active:scale-95"
-            >
-              No
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={() =>
-              selectedPlays.length > 0 && setShowConfirmClear(true)
-            }
-            className="flex items-center gap-1.5 px-3 py-2.5 rounded-md text-xs font-semibold text-accent-red hover:bg-accent-red/10 transition-colors min-h-[40px] active:scale-95"
-          >
-            <Trash2 size={14} />
-            Eliminar
-          </button>
-        )}
-      </div>
-
-      {/* Process Ticket Button */}
-      <button
-        onClick={handleProcessTicket}
-        disabled={selectedPlays.length === 0 || cantidadNum <= 0 || processingTicket}
-        className={`w-full mt-2 py-4 md:py-3 rounded-lg text-sm font-bold transition-all duration-200 min-h-[56px] active:scale-[0.98] touch-ripple ${
-          selectedPlays.length > 0 && cantidadNum > 0 && !processingTicket
-            ? 'bg-gradient-to-r from-accent-green to-accent-green-dim text-white shadow-winner hover:shadow-lg hover:brightness-105'
-            : 'bg-text-muted/20 text-text-muted cursor-not-allowed'
-        }`}
-      >
-        {processingTicket ? (
-          <span className="flex items-center justify-center gap-2">
-            <RefreshCw size={16} className="animate-spin" />
-            Procesando...
-          </span>
-        ) : successTicket ? (
-          <span className="flex items-center justify-center gap-2">
-            <CheckIcon />
-            Ticket #{successTicket}
-          </span>
-        ) : (
-          'PROCESAR TICKET'
-        )}
-      </button>
-    </div>
-  );
+  // SalesForm is now a separate component in src/components/SalesForm.tsx
 
   // --- Selected Plays Content (shared) ---
   const SelectedPlays = () => (
@@ -683,6 +444,34 @@ export default function Dashboard() {
     </div>
   );
 
+  // showCalc is used via setShowCalc in salesFormProps
+  void showCalc;
+
+  // --- SalesForm props ---
+  const salesFormProps = {
+    currentTime,
+    modeTab,
+    setModeTab,
+    equipo,
+    setEquipo,
+    jugada,
+    setJugada,
+    cantidad,
+    setCantidad,
+    language,
+    setLanguage,
+    selectedPlaysCount: selectedPlays.length,
+    pago,
+    ganancia,
+    processingTicket,
+    successTicket,
+    showConfirmClear,
+    setShowConfirmClear,
+    onProcessTicket: handleProcessTicket,
+    onClearAll: handleClearAll,
+    onCalc: () => setShowCalc(true),
+  };
+
   // --- Render ---
   return (
     <div className="h-full flex flex-col">
@@ -700,7 +489,7 @@ export default function Dashboard() {
             transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.1 }}
             className="gradient-panel border-r border-border-subtle overflow-y-auto"
           >
-            <SalesForm />
+            <SalesForm {...salesFormProps} />
           </motion.div>
 
           {/* Center Panel */}
@@ -735,7 +524,7 @@ export default function Dashboard() {
               transition={{ duration: 0.4, delay: 0.1 }}
               className="gradient-panel border-b border-border-subtle overflow-y-auto shrink-0 max-h-[45%]"
             >
-              <SalesForm />
+              <SalesForm {...salesFormProps} />
             </motion.div>
             {/* Selected Plays (bottom half) */}
             <motion.div
@@ -771,7 +560,7 @@ export default function Dashboard() {
                 transition={{ duration: 0.15 }}
                 className="gradient-panel"
               >
-                <SalesForm />
+                <SalesForm {...salesFormProps} />
               </motion.div>
             )}
             {mobileTab === 'jugadas' && (
@@ -922,14 +711,6 @@ function DarkLineCell({
     >
       {display}
     </button>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
   );
 }
 
