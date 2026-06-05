@@ -1,13 +1,30 @@
-export default function Lineas() {
-  return (
-    <div className="p-8">
-      <h1 className="text-h2 text-text-primary font-semibold mb-4">Lineas</h1>
-      <p className="text-body text-text-secondary">
-        Vista detallada de lineas por deporte con sub-tabs.
-      </p>
-      <div className="mt-8 p-6 gradient-card rounded-lg border border-border-subtle">
-        <p className="text-sm text-text-muted">Modulo en desarrollo. Contenido proximamente.</p>
-      </div>
-    </div>
-  );
+import { useState } from "react";
+import {
+  Filter,
+  Star,
+  ChevronDown,
+  TrendingUp,
+} from "lucide-react";
+
+interface BettingLine {
+  id: string;
+  sport: string;
+  league: string;
+  period: string;
+  gameTime: string;
+  rotation: string;
+  team: string;
+  teamCode: string;
+  spread: string;
+  spreadOdds: string;
+  moneyline: string;
+  total: string;
+  totalOdds: string;
+  isFavorite: boolean;
 }
+
+const linesData: BettingLine[] = [
+  {
+    id: "L-001",
+    sport: "NBA",
+    leag
