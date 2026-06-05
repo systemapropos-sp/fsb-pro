@@ -494,4 +494,78 @@ export default function Pendientes() {
                   return (
                     <motion.div
                       key={ticket.id}
-                      ini
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="bg-white/[0.03] border border-border-subtle rounded-lg p-4 space-y-3"
+                    >
+                      {/* Ticket ID + Days */}
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-sm font-bold text-text-primary">{ticket.id}</p>
+                          <p className="text-xs text-text-tertiary mt-0.5">{fmtDate(ticket.date)}</p>
+                        </div>
+                        <span className={`text-xs font-mono ${getDiasColor(daysPending)}`}>
+                          {daysPending}d
+                        </span>
+                      </div>
+
+                      {/* Amount + Payout */}
+                      <div className="flex items-center justify-between py-2 border-y border-border-subtle/50">
+                        <div>
+                          <p className="text-xs text-text-tertiary">Apuesta</p>
+                          <p className="text-sm font-mono font-semibold text-text-primary">{formatAmount(ticket.amount)}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-text-tertiary">Premio</p>
+                          <p className="text-lg font-mono font-bold text-accent-amber">{formatAmount(ticket.payout)}</p>
+                        </div>
+                      </div>
+
+                      {/* Pay Button */}
+                      <button
+                        onClick={() => handlePay(ticket.id, ticket.payout)}
+                        disabled={payingId === ticket.id}
+                        className="w-full h-14 rounded-md bg-gradient-to-r from-accent-green to-accent-green-bright text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-accent-green/20 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50"
+                      >
+                        {payingId === ticket.id ? (
+                          <span>Pagando...</span>
+                        ) : (
+                          <>
+                            <CreditCard size={16} /> Pagar {formatAmount(ticket.payout)}
+                          </>
+                        )}
+                      </button>
+                    </motion.div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-8">
+                  <CheckCircle2 size={32} className="mx-auto text-accent-green/40 mb-2" />
+                  <p className="text-sm text-text-tertiary">No hay tickets pendientes</p>
+                </div>
+              )}
+            </AnimatePresence>
+          </div>
+      </motion.div>
+
+      {/* ── Pay All Button ── */}
+      {!allPaid && tickets.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="flex justify-center pt-2 pb-4"
+        >
+          <button
+            onClick={handlePayAll}
+            className="flex items-center justify-center gap-2 w-full max-w-[400px] h-[52px] gradient-winner text-white text-sm font-bold tracking-wider rounded-md hover:shadow-winner hover:scale-[1.02] active:scale-[0.98] transition-all"
+          >
+            <CreditCard size={18} />
+            PAGAR TODOS LOS TICKETS
+          </button>
+        </motion.div>
+      )}
+    </motion.div>
+  );
+}
