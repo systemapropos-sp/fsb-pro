@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import {
   Calendar,
   Eye,
-  Ticket,
+  Ticket as TicketIcon,
   Printer,
   BarChart3,
   TrendingUp,
@@ -13,11 +13,10 @@ import {
 } from 'lucide-react';
 import {
   getTransactions,
-  getTickets,
   formatAmount,
   formatDate,
 } from '@/lib/storage';
-import type { Transaction, Ticket } from '@/lib/storage';
+import type { Transaction, Ticket as TicketType } from '@/lib/storage';
 
 const containerAnim = {
   hidden: { opacity: 0 },
@@ -40,7 +39,7 @@ const itemAnim = {
 const today = new Date();
 const todayStr = formatDate(today);
 
-const MOCK_WINNERS: Ticket[] = [
+const MOCK_WINNERS: TicketType[] = [
   { id: 'MMW-003-482931', seller: 'mmw03', date: todayStr, plays: [], amount: 500, payout: 950, profit: 450, status: 'ganador', createdAt: Date.now() - 86400000 },
   { id: 'MMW-003-482945', seller: 'mmw03', date: todayStr, plays: [], amount: 1200, payout: 2280, profit: 1080, status: 'ganador', createdAt: Date.now() - 72000000 },
   { id: 'MMW-003-482967', seller: 'mmw03', date: todayStr, plays: [], amount: 300, payout: 570, profit: 270, status: 'pagado', createdAt: Date.now() - 36000000, paidAt: Date.now() - 18000000 },
@@ -64,7 +63,7 @@ export default function Ventas() {
   const [selectedDate, setSelectedDate] = useState(formatDate(today));
   const [periodFilter, setPeriodFilter] = useState<'Hoy' | 'Semana' | 'Mes'>('Hoy');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [winnerTickets] = useState<Ticket[]>(MOCK_WINNERS);
+  const [winnerTickets] = useState<TicketType[]>(MOCK_WINNERS);
 
   useEffect(() => {
     const txs = getTransactions();
@@ -184,7 +183,7 @@ export default function Ventas() {
             <Eye size={16} /> Ver ventas
           </button>
           <button className="flex items-center gap-2 px-4 py-2 rounded-md bg-accent-green/10 text-accent-green text-sm font-semibold border border-accent-green/25 hover:bg-accent-green/20 transition-all">
-            <Ticket size={16} /> Vender tickets
+            <TicketIcon size={16} /> Vender tickets
           </button>
           <button className="flex items-center gap-2 px-4 py-2 rounded-md bg-bg-tertiary text-text-secondary text-sm font-semibold border border-border-default hover:bg-bg-quaternary transition-all">
             <Printer size={16} /> Imprimir

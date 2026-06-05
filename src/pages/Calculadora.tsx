@@ -40,13 +40,6 @@ function americanToDecimal(american: string): number | null {
   }
 }
 
-function formatCurrency(value: number): string {
-  return `$${value.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
 // Validate odds format: +###, -###
 function isValidOdds(odds: string): boolean {
   if (!odds.trim()) return false;

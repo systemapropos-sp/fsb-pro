@@ -439,9 +439,9 @@ function LogoutConfirmModal({
 export default function Configuraciones() {
   const [printEnabled, setPrintEnabled] = useSetting('print_auto', true);
   const [smsOnly, setSmsOnly] = useSetting('sms_enabled', false);
-  const [printMode, setPrintMode] = useSetting('print_mode', 'driver');
-  const [codeLength, setCodeLength] = useSetting('code_length', 'group');
-  const [language, setLanguage] = useSetting('language', 'es');
+  const [printMode] = useSetting('print_mode', 'driver');
+  const [codeLength] = useSetting('code_length', 'group');
+  const [language] = useSetting('language', 'es');
 
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
