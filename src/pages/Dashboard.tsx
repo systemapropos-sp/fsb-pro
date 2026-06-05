@@ -121,6 +121,92 @@ export default function Dashboard() {
     setSelectedPlays(getSelectedPlays());
   };
 
+  // Auto-add play from form: looks up the team in lines[], extracts the correct value
+  const handleAddPlayFromForm = useCallback(
+    (teamCode: string, playCode: string) => {
+      // Find the line that contains this team
+      const line = lines.find(
+        (l) => l.awayTeamCode === teamCode || l.homeTeamCode === teamCode
+      );
+      if (!line) return; // No line found for this team
+
+      const isAway = line.awayTeamCode === teamCode;
+      const teamName = isAway ? line.awayTeam : line.homeTeam;
+      const opponentName = isAway ? line.homeTeam : line.awayTeam;
+
+      // Map play code to the correct line value
+      const upperCode = playCode.toUpperCase();
+      let value = 0;
+      let detail = `${teamName} vs ${opponentName}`;
+
+      // Money Line variants
+      if (
+        ['M', 'J', 'HM', 'Q1ML', 'Q2ML', 'Q3ML', 'Q4ML'].includes(upperCode)
+      ) {
+        value = isAway ? line.moneyLine.away : line.moneyLine.home;
+      }
+      // Run Line / Handicap variants
+      else if (
+        ['R', 'H', 'Q1', 'Q2', 'Q3', 'Q4'].includes(upperCode)
+      ) {
+        value = isAway ? line.runLine.away : line.runLine.home;
+      }
+      // Super Run Line / Solo
+      else if (upperCode === 'S') {
+        value = isAway ? line.solo.away : line.solo.home;
+      }
+      // Over variants
+      else if (
+        ['+', 'H+', 'Q1+', 'Q2+', 'Q3+', 'Q4+', 'AH+'].includes(upperCode)
+      ) {
+        value = line.points.over;
+        detail = `Over ${line.points.value} - ${teamName} vs ${opponentName}`;
+      }
+      // Under variants
+      else if (
+        ['-', 'H-', 'Q1-', 'Q2-', 'Q3-', 'Q4-', 'AH-'].includes(upperCode)
+      ) {
+        value = line.points.under;
+        detail = `Under ${line.points.value} - ${teamName} vs ${opponentName}`;
+      }
+      // Spread / Team solo positive
+      else if (
+        ['A+', 'Q1S+', 'Q2S+', 'Q3S+', 'Q4S+'].includes(upperCode)
+      ) {
+        value = isAway ? line.spread.away : line.spread.home;
+      }
+      // Spread / Team solo negative
+      else if (
+        ['A-', 'Q1S-', 'Q2S-', 'Q3S-', 'Q4S-'].includes(upperCode)
+      ) {
+        value = isAway ? line.spread.home : line.spread.away;
+      }
+      // Special MLB codes (F, L, Y, N, E, K+, K-) — use moneyLine as default
+      else {
+        value = isAway ? line.moneyLine.away : line.moneyLine.home;
+      }
+
+      const newPlay: Play = {
+        id: `play-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        team: `${teamName} @ ${opponentName}`,
+        teamCode: isAway
+          ? `${line.awayTeamCode}/${line.homeTeamCode}`
+          : `${line.homeTeamCode}/${line.awayTeamCode}`,
+        playType: playCode,
+        detail,
+        line: value,
+        player: '',
+        points: 0,
+        odds: value,
+        isIF: modeTab === 'teaserIF',
+      };
+
+      addSelectedPlay(newPlay);
+      setSelectedPlays(getSelectedPlays());
+    },
+    [lines, modeTab]
+  );
+
   const handleClearAll = () => {
     clearSelectedPlays();
     setSelectedPlays([]);
@@ -481,6 +567,7 @@ export default function Dashboard() {
     onProcessTicket: handleProcessTicket,
     onClearAll: handleClearAll,
     onCalc: () => setShowCalc(true),
+    onAddPlayFromForm: handleAddPlayFromForm,
   };
 
   // --- Render ---

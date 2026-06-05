@@ -28,6 +28,7 @@ interface SalesFormProps {
   onProcessTicket: () => void;
   onClearAll: () => void;
   onCalc: () => void;
+  onAddPlayFromForm?: (teamCode: string, playCode: string) => void;
 }
 
 function CheckIcon() {
@@ -60,7 +61,9 @@ export default function SalesForm({
   onProcessTicket,
   onClearAll,
   onCalc,
+  onAddPlayFromForm,
 }: SalesFormProps) {
+  const equipoInputRef = useRef<HTMLInputElement>(null);
   const jugadaInputRef = useRef<HTMLInputElement>(null);
   const [internalEquipo, setInternalEquipo] = useState(equipo);
   const [internalJugada, setInternalJugada] = useState(jugada);
@@ -112,6 +115,19 @@ export default function SalesForm({
       if (play) {
         setFoundPlay(play.description);
         setPlayError(false);
+        // AUTO-ADD: if we have a valid team + valid play, add to Jugadas Seleccionadas
+        if (internalEquipo.length === 4 && foundTeam && onAddPlayFromForm) {
+          onAddPlayFromForm(internalEquipo, val);
+          // Clear inputs for next entry
+          setInternalEquipo('');
+          setEquipo('');
+          setFoundTeam(null);
+          setInternalJugada('');
+          setJugada('');
+          setFoundPlay(null);
+          // Return focus to equipo for next entry
+          setTimeout(() => equipoInputRef.current?.focus(), 100);
+        }
       } else if (val.length >= 2 && !isValidPlayCode(val)) {
         // Check if any code starts with this prefix
         const hasPrefix = PLAY_CODES.some(p => p.code.toUpperCase().startsWith(val));
@@ -184,6 +200,7 @@ export default function SalesForm({
           <div>
             <label className="block text-[11px] font-bold mb-1 tracking-wide" style={{ color: '#555555' }}>EQUIPO</label>
             <input
+              ref={equipoInputRef}
               type="text"
               inputMode="numeric"
               value={internalEquipo}
