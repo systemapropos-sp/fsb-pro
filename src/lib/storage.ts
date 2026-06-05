@@ -96,7 +96,7 @@ const STORAGE_KEYS = {
   AUTH_TOKEN: 'fsb_auth_token',
   AUTH_EXPIRY: 'fsb_auth_expiry',
   TICKETS: 'fsb_tickets',
-  LINES: 'fsb_lines',
+  LINES: 'fsb_lines_v5',
   CONTACTS: 'fsb_contacts',
   TRANSACTIONS: 'fsb_transactions',
   SETTINGS: 'fsb_settings',
@@ -153,33 +153,71 @@ function seedLines(): BettingLine[] {
   const sports = ['NBA', 'MLB', 'NFL', 'WNBA', 'CFL'];
   const teams: Record<string, [string, string, string, string][]> = {
     NBA: [
-      ['Lakers', 'LAL', 'Warriors', 'GSW'],
-      ['Celtics', 'BOS', 'Heat', 'MIA'],
-      ['Bulls', 'CHI', 'Knicks', 'NYK'],
-      ['Suns', 'PHX', 'Nuggets', 'DEN'],
-      ['Bucks', 'MIL', '76ers', 'PHI'],
-      ['Mavericks', 'DAL', 'Clippers', 'LAC'],
+      ['Lakers', '2001', 'Boston', '2002'],
+      ['Atlanta', '2003', 'Brooklyn', '2004'],
+      ['Charlotte', '2005', 'Chicago', '2006'],
+      ['Cleveland', '2007', 'Dallas', '2008'],
+      ['Denver', '2009', 'Detroit', '2010'],
+      ['Golden State', '2011', 'Houston', '2012'],
+      ['Indiana', '2013', 'LA Clippers', '2014'],
+      ['Memphis', '2015', 'Miami', '2016'],
+      ['Milwaukee', '2017', 'Minnesota', '2018'],
+      ['New Orleans', '2019', 'New York', '2020'],
+      ['Oklahoma City', '2021', 'Orlando', '2022'],
+      ['Philadelphia', '2023', 'Phoenix', '2024'],
+      ['Portland', '2025', 'Sacramento', '2026'],
+      ['San Antonio', '2027', 'Toronto', '2028'],
+      ['Utah', '2029', 'Washington', '2030'],
     ],
     MLB: [
-      ['Yankees', 'NYY', 'Red Sox', 'BOS'],
-      ['Dodgers', 'LAD', 'Giants', 'SF'],
-      ['Cubs', 'CHC', 'Cardinals', 'STL'],
-      ['Astros', 'HOU', 'Rangers', 'TEX'],
+      ['Arizona', '4001', 'Atlanta', '4002'],
+      ['Baltimore', '4003', 'Boston', '4004'],
+      ['Chicago Cubs', '4005', 'Chicago Sox', '4006'],
+      ['Cincinnati', '4007', 'Cleveland', '4008'],
+      ['Colorado', '4009', 'Detroit', '4010'],
+      ['Houston', '4011', 'Kansas City', '4012'],
+      ['LA Angels', '4013', 'LA Dodgers', '4014'],
+      ['Miami', '4015', 'Milwaukee', '4016'],
+      ['Minnesota', '4017', 'NY Mets', '4018'],
+      ['NY Yankees', '4019', 'Oakland', '4020'],
+      ['Philadelphia', '4021', 'Pittsburgh', '4022'],
+      ['San Diego', '4023', 'San Francisco', '4024'],
+      ['Seattle', '4025', 'St. Louis', '4026'],
+      ['Tampa Bay', '4027', 'Texas', '4028'],
+      ['Toronto', '4029', 'Washington', '4030'],
     ],
     NFL: [
-      ['Chiefs', 'KC', 'Bills', 'BUF'],
-      ['Cowboys', 'DAL', 'Eagles', 'PHI'],
-      ['Packers', 'GB', 'Bears', 'CHI'],
-      ['49ers', 'SF', 'Seahawks', 'SEA'],
+      ['Arizona', '3001', 'Atlanta', '3002'],
+      ['Baltimore', '3003', 'Buffalo', '3004'],
+      ['Carolina', '3005', 'Chicago', '3006'],
+      ['Cincinnati', '3007', 'Cleveland', '3008'],
+      ['Dallas', '3009', 'Denver', '3010'],
+      ['Detroit', '3011', 'Green Bay', '3012'],
+      ['Houston', '3013', 'Indianapolis', '3014'],
+      ['Jacksonville', '3015', 'Kansas City', '3016'],
+      ['LA Chargers', '3017', 'LA Rams', '3018'],
+      ['Las Vegas', '3019', 'Miami', '3020'],
+      ['Minnesota', '3021', 'New England', '3022'],
+      ['New Orleans', '3023', 'NY Giants', '3024'],
+      ['NY Jets', '3025', 'Philadelphia', '3026'],
+      ['Pittsburgh', '3027', 'San Francisco', '3028'],
+      ['Seattle', '3029', 'Tampa Bay', '3030'],
+      ['Tennessee', '3031', 'Washington', '3032'],
     ],
     WNBA: [
-      ['Aces', 'LVA', 'Liberty', 'NYL'],
-      ['Sky', 'CHI', 'Fever', 'IND'],
-      ['Storm', 'SEA', 'Mercury', 'PHX'],
+      ['Atlanta', '2021', 'Chicago', '2022'],
+      ['Connecticut', '2023', 'Dallas', '2024'],
+      ['Indiana', '2025', 'Las Vegas', '2026'],
+      ['Los Angeles', '2027', 'Minnesota', '2028'],
+      ['New York', '2029', 'Phoenix', '2030'],
+      ['Seattle', '2031', 'Washington', '2032'],
     ],
     CFL: [
-      ['Argonauts', 'TOR', 'Tiger-Cats', 'HAM'],
-      ['Roughriders', 'SSK', 'Blue Bombers', 'WPG'],
+      ['BC Lions', '5001', 'Calgary', '5002'],
+      ['Edmonton', '5003', 'Hamilton', '5004'],
+      ['Montreal', '5005', 'Ottawa', '5006'],
+      ['Saskatchewan', '5007', 'Toronto', '5008'],
+      ['Winnipeg', '5009', 'Calgary', '5010'],
     ],
   };
 
@@ -268,10 +306,8 @@ export function seedInitialData(): void {
     seedUsers();
   }
 
-  const existingLines = localStorage.getItem(STORAGE_KEYS.LINES);
-  if (!existingLines) {
-    seedLines();
-  }
+  // Always seed lines to ensure fresh data
+  seedLines();
 
   const existingContacts = localStorage.getItem(STORAGE_KEYS.CONTACTS);
   if (!existingContacts) {

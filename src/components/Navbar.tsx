@@ -69,8 +69,8 @@ function NavItem({
       to={path}
       className={`flex flex-col items-center justify-center gap-0.5 transition-all duration-200 active:scale-95 min-h-[44px] min-w-[56px] no-underline select-none ${
         active
-          ? 'text-accent-blue border-t-2 border-accent-blue bg-accent-blue/10'
-          : 'text-text-secondary hover:text-text-primary hover:bg-accent-blue/5 border-t-2 border-transparent'
+          ? 'text-dd-accent border-t-2 border-dd-accent bg-dd-accent/10'
+          : 'text-dd-text-secondary hover:text-dd-text hover:bg-dd-surface-hover border-t-2 border-transparent'
       } ${mobile ? 'flex-1 py-1' : 'flex-1'}`}
     >
       <Icon size={mobile ? 20 : 18} strokeWidth={active ? 2 : 1.5} />
@@ -93,7 +93,7 @@ export default function Navbar() {
     <>
       {/* Mobile Navbar: Single row of 5 + More button */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 h-16 md:hidden bg-white/95 backdrop-blur-xl border-t border-border-default"
+        className="fixed bottom-0 left-0 right-0 z-50 h-16 md:hidden bg-white border-t border-dd-border"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div className="flex items-center h-full">
@@ -110,8 +110,8 @@ export default function Navbar() {
             onClick={() => setMoreOpen(true)}
             className={`flex flex-col items-center justify-center gap-0.5 flex-1 min-h-[44px] min-w-[56px] active:scale-95 transition-all duration-200 ${
               isSecondaryActive
-                ? 'text-accent-blue bg-accent-blue/10'
-                : 'text-text-secondary hover:text-text-primary'
+                ? 'text-dd-accent bg-dd-accent/10'
+                : 'text-dd-text-secondary hover:text-dd-text'
             }`}
           >
             <MoreHorizontal size={20} strokeWidth={isSecondaryActive ? 2 : 1.5} />
@@ -121,7 +121,7 @@ export default function Navbar() {
       </nav>
 
       {/* Tablet Navbar: 2 rows, compact */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 h-20 glass border-t border-border-default hidden md:block xl:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 h-20 bg-white border-t border-dd-border hidden md:block xl:hidden">
         <div className="flex h-10">
           {tabletRow1.map((item) => (
             <NavItem
@@ -143,7 +143,7 @@ export default function Navbar() {
       </nav>
 
       {/* Desktop Navbar: Original 2-row layout */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 h-navbar glass border-t border-border-default hidden xl:block">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 h-[96px] bg-white border-t border-dd-border hidden xl:block">
         <div className="flex h-[48px]">
           {tabletRow1.map((item) => (
             <NavItem
@@ -181,21 +181,21 @@ export default function Navbar() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 100 }}
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
-              className="fixed bottom-0 left-0 right-0 z-[70] bg-bg-secondary rounded-t-2xl shadow-modal md:hidden"
+              className="fixed bottom-0 left-0 right-0 z-[70] bg-white rounded-t-2xl shadow-lg md:hidden"
               style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
             >
               {/* Handle */}
               <div className="flex items-center justify-center pt-3 pb-2">
-                <div className="w-10 h-1 rounded-full bg-text-muted/40" />
+                <div className="w-10 h-1 rounded-full bg-dd-text-muted/40" />
               </div>
               {/* Close button */}
-              <div className="flex items-center justify-between px-4 pb-2 border-b border-border-subtle">
-                <span className="text-sm font-semibold text-text-primary">Mas opciones</span>
+              <div className="flex items-center justify-between px-4 pb-2 border-b border-dd-border-light">
+                <span className="text-sm font-semibold text-dd-text">Mas opciones</span>
                 <button
                   onClick={() => setMoreOpen(false)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/5 transition-colors"
+                  className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-dd-surface transition-colors"
                 >
-                  <X size={18} className="text-text-secondary" />
+                  <X size={18} className="text-dd-text-secondary" />
                 </button>
               </div>
               {/* Menu items */}
@@ -210,8 +210,8 @@ export default function Navbar() {
                       onClick={() => setMoreOpen(false)}
                       className={`flex flex-col items-center justify-center gap-2 rounded-xl p-4 transition-all active:scale-95 min-h-[80px] no-underline ${
                         isActive
-                          ? 'bg-accent-blue/10 text-accent-blue border border-accent-blue/25'
-                          : 'bg-bg-tertiary text-text-secondary hover:bg-accent-blue/5'
+                          ? 'bg-dd-accent/10 text-dd-accent border border-dd-accent/25'
+                          : 'bg-dd-surface text-dd-text-secondary hover:bg-dd-surface-hover'
                       }`}
                     >
                       <Icon size={24} strokeWidth={isActive ? 2 : 1.5} />
