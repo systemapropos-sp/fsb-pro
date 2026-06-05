@@ -34,6 +34,37 @@ import confetti from 'canvas-confetti';
 type TabMode = 'teaser' | 'teaserIF';
 type PlaysTab = 'jugadas' | 'jugadasIF';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const TEAM_CODES: Record<string, string> = {
+  // MLB
+  'Giants': '4022', 'Cubs': '4023', 'Yankees': '4001', 'Red Sox': '4002',
+  'Dodgers': '4003', 'Mets': '4004', 'Cardinals': '4005', 'Braves': '4006',
+  'Astros': '4007', 'Rangers': '4008', 'Phillies': '4009', 'Blue Jays': '4010',
+  'Mariners': '4011', 'Padres': '4012', 'Brewers': '4013', 'Twins': '4014',
+  'Rays': '4015', 'Orioles': '4016', 'Guardians': '4017', 'Tigers': '4018',
+  'White Sox': '4019', 'Royals': '4020', 'Rockies': '4021', 'Athletics': '4024',
+  'Pirates': '4025', 'Reds': '4026', 'Marlins': '4027', 'Diamondbacks': '4028',
+  'Angels': '4029', 'Nationals': '4030',
+  // NBA
+  'New York Knicks': '2003', 'San Antonio Spurs': '2016', 'Lakers': '2001',
+  'Warriors': '2002', 'Celtics': '2004', 'Bulls': '2005', 'Heat': '2006',
+  'Suns': '2007', 'Nets': '2008', 'Mavericks': '2009', 'Bucks': '2010',
+  '76ers': '2011', 'Jazz': '2012', 'Nuggets': '2013', 'Clippers': '2014',
+  'Hawks': '2015', 'Raptors': '2017', 'Pacers': '2018', 'Blazers': '2019',
+  'Kings': '2020', 'Pelicans': '2021', 'Thunder': '2022', 'Timberwolves': '2023',
+  'Hornets': '2024', 'Wizards': '2025', 'Magic': '2026', 'Pistons': '2027',
+  'Rockets': '2028', 'Grizzlies': '2029', 'Cavaliers': '2030',
+  // NFL
+  'Cowboys': '3001', 'Chiefs': '3002', 'Eagles': '3003', '49ers': '3004',
+  'Ravens': '3005', 'Bills': '3006', 'Bengals': '3007', 'Packers': '3008',
+  'Jets': '3009', 'Dolphins': '3010', 'Vikings': '3011', 'Broncos': '3012',
+  'Steelers': '3013', 'Falcons': '3014', 'Saints': '3015', 'Rams': '3016',
+  'Chargers': '3017', 'Commanders': '3018', 'Browns': '3019', 'Colts': '3020',
+  'Jaguars': '3021', 'Titans': '3022', 'Panthers': '3023', 'Buccaneers': '3024',
+  'Patriots': '3025', 'Texans': '3026', 'Lions': '3027', 'Bears': '3028',
+  'Giants NFL': '3029', 'Cardinals NFL': '3030', 'Raiders': '3031', 'Seahawks': '3032',
+};
+
 export default function Dashboard() {
   // --- State ---
   const [modeTab, setModeTab] = useState<TabMode>('teaser');
