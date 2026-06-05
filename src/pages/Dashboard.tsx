@@ -22,6 +22,8 @@ import {
   removeSelectedPlay,
   clearSelectedPlays,
   createTicket,
+  addTransaction,
+  formatDate,
   type Play,
   type BettingLine,
 } from '@/lib/storage';
@@ -139,6 +141,15 @@ export default function Dashboard() {
         payout: pago,
         profit: ganancia,
         status: 'pendiente',
+      });
+
+      addTransaction({
+        ticketId: ticket.id,
+        type: 'venta',
+        amount: cantidadNum,
+        date: formatDate(new Date()),
+        seller: 'mmw03',
+        description: `Venta de ticket ${ticket.id} (${selectedPlays.length} jugadas)`,
       });
 
       setSuccessTicket(ticket.id);

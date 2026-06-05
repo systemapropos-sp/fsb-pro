@@ -10,6 +10,8 @@ import {
   ArrowRight,
   Receipt,
   ChevronRight,
+  Search,
+  X,
 } from 'lucide-react';
 import {
   getTransactions,
@@ -64,19 +66,42 @@ export default function Ventas() {
   const [periodFilter, setPeriodFilter] = useState<'Hoy' | 'Semana' | 'Mes'>('Hoy');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [winnerTickets] = useState<TicketType[]>(MOCK_WINNERS);
+  const [searchTx, setSearchTx] = useState('');
+  const [searchWinners, setSearchWinners] = useState('');
 
   useEffect(() => {
     const txs = getTransactions();
     setTransactions(txs.length > 0 ? txs : MOCK_TX);
   }, []);
 
+  const filteredTransactions = useMemo(() => {
+    const q = searchTx.trim().toLowerCase();
+    if (!q) return transactions;
+    return transactions.filter(
+      (tx) =>
+        tx.description.toLowerCase().includes(q) ||
+        tx.type.toLowerCase().includes(q) ||
+        tx.ticketId.toLowerCase().includes(q)
+    );
+  }, [transactions, searchTx]);
+
+  const filteredWinners = useMemo(() => {
+    const q = searchWinners.trim().toLowerCase();
+    if (!q) return winnerTickets;
+    return winnerTickets.filter(
+      (ticket) =>
+        ticket.id.toLowerCase().includes(q) ||
+        ticket.seller.toLowerCase().includes(q)
+    );
+  }, [winnerTickets, searchWinners]);
+
   const runningBalance = useMemo(() => {
     let bal = 0;
-    return transactions.map((tx) => {
+    return filteredTransactions.map((tx) => {
       bal += tx.amount;
       return { ...tx, balance: bal };
     }).reverse();
-  }, [transactions]);
+  }, [filteredTransactions]);
 
   const dailyStats = {
     ventas: 14320.00,
@@ -402,16 +427,36 @@ export default function Ventas() {
 
       {/* ====== Winner Tickets Table ====== */}
       <motion.div variants={itemAnim} className="gradient-panel rounded-lg border border-border-subtle overflow-hidden">
-        <div className="px-5 py-3 border-b border-border-subtle flex items-center justify-between">
+        <div className="px-5 py-3 border-b border-border-subtle flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <h3 className="text-base md:text-lg font-semibold text-text-primary">Tickets Ganadores</h3>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-accent-green/15 text-accent-green border border-accent-green/30">
-              {winnerTickets.length}
+              {filteredWinners.length}
             </span>
           </div>
-          <button className="text-xs text-accent-blue hover:text-accent-blue-bright transition-colors flex items-center gap-1 min-h-[44px]">
-            Ver todos <ChevronRight size={14} />
-          </button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:flex-initial">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+              <input
+                type="text"
+                value={searchWinners}
+                onChange={(e) => setSearchWinners(e.target.value)}
+                placeholder="Buscar ticket o vendedor..."
+                className="input-standard pl-9 pr-3 h-12 md:h-10 text-sm w-full sm:w-[280px]"
+              />
+              {searchWinners && (
+                <button
+                  onClick={() => setSearchWinners('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+            <button className="text-xs text-accent-blue hover:text-accent-blue-bright transition-colors flex items-center gap-1 min-h-[44px] shrink-0">
+              Ver todos <ChevronRight size={14} />
+            </button>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -426,7 +471,7 @@ export default function Ventas() {
               </tr>
             </thead>
             <tbody>
-              {winnerTickets.map((ticket, i) => (
+              {filteredWinners.map((ticket, i) => (
                 <tr
                   key={ticket.id}
                   className={`border-b border-border-subtle hover:bg-white/[0.04] transition-colors ${i % 2 === 1 ? 'bg-white/[0.02]' : ''}`}
@@ -447,12 +492,16 @@ export default function Ventas() {
                   </td>
                 </tr>
               ))}
-              {winnerTickets.length === 0 && (
+              {filteredWinners.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-4 py-12 text-center">
                     <Receipt size={48} className="mx-auto text-text-muted/30 mb-3" />
-                    <p className="text-body-lg text-text-tertiary">No hay tickets ganadores</p>
-                    <p className="text-sm text-text-muted mt-1">Los tickets ganadores apareceran aqui</p>
+                    <p className="text-body-lg text-text-tertiary">
+                      {searchWinners ? 'No se encontraron resultados' : 'No hay tickets ganadores'}
+                    </p>
+                    <p className="text-sm text-text-muted mt-1">
+                      {searchWinners ? 'Intente con otro termino de busqueda' : 'Los tickets ganadores apareceran aqui'}
+                    </p>
                   </td>
                 </tr>
               )}
@@ -463,14 +512,34 @@ export default function Ventas() {
 
       {/* ====== Transaction History Table ====== */}
       <motion.div variants={itemAnim} className="gradient-panel rounded-lg border border-border-subtle overflow-hidden">
-        <div className="px-5 py-3 border-b border-border-subtle flex items-center justify-between">
+        <div className="px-5 py-3 border-b border-border-subtle flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <h3 className="text-base md:text-lg font-semibold text-text-primary">Historial de Transacciones</h3>
             <p className="text-xs text-text-tertiary mt-0.5">Ultimas {runningBalance.length} transacciones</p>
           </div>
-          <button className="text-xs text-accent-blue hover:text-accent-blue-bright transition-colors flex items-center gap-1 min-h-[44px]">
-            Ver todas <ArrowRight size={14} />
-          </button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:flex-initial">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+              <input
+                type="text"
+                value={searchTx}
+                onChange={(e) => setSearchTx(e.target.value)}
+                placeholder="Buscar por concepto, tipo o ticket..."
+                className="input-standard pl-9 pr-3 h-12 md:h-10 text-sm w-full sm:w-[280px]"
+              />
+              {searchTx && (
+                <button
+                  onClick={() => setSearchTx('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+            <button className="text-xs text-accent-blue hover:text-accent-blue-bright transition-colors flex items-center gap-1 min-h-[44px] shrink-0">
+              Ver todas <ArrowRight size={14} />
+            </button>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -515,8 +584,12 @@ export default function Ventas() {
                 <tr>
                   <td colSpan={6} className="px-4 py-12 text-center">
                     <Receipt size={48} className="mx-auto text-text-muted/30 mb-3" />
-                    <p className="text-body-lg text-text-tertiary">No hay transacciones</p>
-                    <p className="text-sm text-text-muted mt-1">Las transacciones apareceran aqui</p>
+                    <p className="text-body-lg text-text-tertiary">
+                      {searchTx ? 'No se encontraron resultados' : 'No hay transacciones'}
+                    </p>
+                    <p className="text-sm text-text-muted mt-1">
+                      {searchTx ? 'Intente con otro termino de busqueda' : 'Las transacciones apareceran aqui'}
+                    </p>
                   </td>
                 </tr>
               )}
