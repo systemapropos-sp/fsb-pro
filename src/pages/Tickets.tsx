@@ -217,7 +217,7 @@ export default function Tickets() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] }}
-      className="p-6 space-y-5"
+      className="px-4 md:px-6 lg:px-8 py-5 space-y-5"
     >
       {/* ── Page Header ── */}
       <motion.div
@@ -225,7 +225,7 @@ export default function Tickets() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <h1 className="text-h2 font-semibold text-text-primary">Gestion de Tickets</h1>
+        <h1 className="text-xl md:text-2xl lg:text-3xl font-semibold text-text-primary">Gestion de Tickets</h1>
         <p className="text-sm text-text-tertiary mt-1">Administre todos los tickets del sistema</p>
       </motion.div>
 
@@ -234,23 +234,23 @@ export default function Tickets() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.25, delay: 0.1 }}
-        className="flex flex-wrap items-center justify-between gap-3"
+        className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3"
       >
         {/* Left: Date picker */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full md:w-auto">
           <div className="relative">
             <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none" />
             <input
               type="date"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              className="input-standard pl-9 pr-3 py-2 text-sm cursor-pointer"
+              className="input-standard pl-9 pr-3 h-12 md:h-10 text-sm cursor-pointer w-full sm:w-auto"
             />
           </div>
-          <button className="gradient-accent text-white text-sm font-semibold px-5 py-2 rounded-md hover:brightness-110 transition-all active:scale-[0.98]">
+          <button className="gradient-accent text-white text-sm font-semibold px-5 min-h-[44px] rounded-md hover:brightness-110 transition-all active:scale-[0.98] w-full sm:w-auto">
             Buscar tickets
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold border border-border-default text-text-secondary hover:bg-white/5 transition-all">
+          <button className="flex items-center gap-2 px-4 min-h-[44px] rounded-md text-sm font-semibold border border-border-default text-text-secondary hover:bg-white/5 transition-all">
             <Download size={15} />
             Imprimir pendientes de pago
           </button>
@@ -265,7 +265,7 @@ export default function Tickets() {
               placeholder="Buscar por numero de ticket..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="input-standard pl-9 pr-3 py-2 text-sm w-[280px]"
+              className="input-standard pl-9 pr-3 h-12 md:h-10 text-sm w-full sm:w-[280px]"
             />
           </div>
           <button
@@ -284,7 +284,7 @@ export default function Tickets() {
         initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25, delay: 0.15 }}
-        className="flex items-center gap-2 flex-wrap"
+        className="flex items-center gap-2 overflow-x-auto flex-nowrap pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap md:overflow-visible"
       >
         {STATUS_FILTERS.map((filter) => {
           const isActive = activeFilter === filter.key;
@@ -293,7 +293,7 @@ export default function Tickets() {
             <button
               key={filter.key}
               onClick={() => setActiveFilter(filter.key)}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 border ${
+              className={`flex items-center gap-1.5 px-4 py-1.5 min-h-[44px] rounded-full text-xs font-semibold transition-all duration-200 border flex-shrink-0 ${
                 isActive
                   ? filter.key === 'ganador'
                     ? 'bg-accent-green/15 text-accent-green border-accent-green/30'
@@ -377,8 +377,8 @@ export default function Tickets() {
         transition={{ duration: 0.35, delay: 0.25 }}
         className="gradient-panel border border-border-subtle rounded-lg overflow-hidden"
       >
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="hidden sm:block overflow-x-auto">
+          <table className="min-w-[800px] w-full text-sm">
             {/* Table Header */}
             <thead className="sticky top-0 z-10">
               <tr className="bg-[rgba(17,24,39,0.95)] backdrop-blur-lg">
@@ -555,6 +555,77 @@ export default function Tickets() {
             </tbody>
           </table>
         </div>
+
+          {/* Mobile Card View */}
+          <div className="sm:hidden space-y-3 mt-3">
+            <AnimatePresence mode="wait">
+              {paginatedTickets.length > 0 ? (
+                paginatedTickets.map((ticket) => (
+                  <motion.div
+                    key={ticket.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="bg-white/[0.03] border border-border-subtle rounded-lg p-4 space-y-3"
+                  >
+                    {/* Ticket ID + Date */}
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-sm font-bold text-text-primary">{ticket.id}</p>
+                        <p className="text-xs text-text-tertiary mt-0.5">
+                          {new Date(ticket.date).toLocaleDateString('es-DO')} &middot; {ticket.seller}
+                        </p>
+                      </div>
+                      <StatusBadge status={ticket.status} />
+                    </div>
+
+                    {/* Amount + Payout */}
+                    <div className="flex items-center justify-between py-2 border-y border-border-subtle/50">
+                      <div>
+                        <p className="text-xs text-text-tertiary">Monto</p>
+                        <p className="text-sm font-mono font-semibold text-text-primary">{formatAmount(ticket.amount)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-text-tertiary">Premio</p>
+                        <p className="text-sm font-mono font-semibold text-accent-amber">{formatAmount(ticket.payout)}</p>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2">
+                      <button className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] px-3 py-2 rounded-md bg-accent-blue/10 text-accent-blue text-xs font-semibold border border-accent-blue/25">
+                        <Eye size={14} /> Ver
+                      </button>
+                      <button className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] px-3 py-2 rounded-md bg-accent-purple/10 text-accent-purple text-xs font-semibold border border-accent-purple/25">
+                        <Pencil size={14} /> Editar
+                      </button>
+                      {(ticket.status === 'ganador' || ticket.status === 'pendiente') && (
+                        <button
+                          onClick={() => handlePayTicket(ticket.id)}
+                          className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] px-3 py-2 rounded-md bg-accent-green/10 text-accent-green text-xs font-semibold border border-accent-green/25"
+                        >
+                          <DollarSign size={14} /> Pagar
+                        </button>
+                      )}
+                      {ticket.status !== 'cancelado' && ticket.status !== 'pagado' && (
+                        <button
+                          onClick={() => handleCancelTicket(ticket.id)}
+                          className="flex items-center justify-center min-h-[44px] w-10 rounded-md bg-accent-red/10 text-accent-red border border-accent-red/25"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <SearchX size={32} className="mx-auto text-text-muted/30 mb-2" />
+                  <p className="text-sm text-text-tertiary">No se encontraron tickets</p>
+                </div>
+              )}
+            </AnimatePresence>
+          </div>
 
         {/* ── Pagination ── */}
         {totalEntries > 0 && (

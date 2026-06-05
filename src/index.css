@@ -64,7 +64,7 @@
     color: #1E293B;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    min-width: 1280px;
+    min-width: 320px !important;
     overflow-x: hidden;
   }
 
@@ -227,4 +227,78 @@
   .text-blue { color: var(--accent-blue); }
   .text-cyan { color: var(--accent-cyan); }
   .text-purple { color: var(--accent-purple); }
+}
+
+/* ===== Responsive font sizes ===== */
+@media (max-width: 767px) {
+  html { font-size: 15px; }
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  html { font-size: 15.5px; }
+}
+
+/* ===== Touch-specific styles ===== */
+
+/* Touch ripple effect */
+.touch-ripple {
+  position: relative;
+  overflow: hidden;
+}
+.touch-ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(59,130,246,0.15) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.15s;
+  pointer-events: none;
+}
+.touch-ripple:active::after {
+  opacity: 1;
+}
+
+/* Disable tap highlight on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent text selection on interactive elements */
+button, a, [role="button"] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Smooth scrolling for overscroll on iOS */
+main {
+  -webkit-overflow-scrolling: touch;
+}
+/* Hide scrollbar but keep functionality */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Standalone mode detection */
+@media (display-mode: standalone) {
+  body {
+    /* Extra space for safe areas when in standalone mode */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Prevent overscroll bounce on iOS */
+html, body {
+  overscroll-behavior-y: none;
+  height: 100%;
+  position: fixed;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Root fills viewport */
+#root {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }

@@ -33,6 +33,7 @@ import confetti from 'canvas-confetti';
 
 type TabMode = 'teaser' | 'teaserIF';
 type PlaysTab = 'jugadas' | 'jugadasIF';
+type MobileTab = 'apuesta' | 'jugadas' | 'lineas';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const TEAM_CODES: Record<string, string> = {
@@ -69,6 +70,7 @@ export default function Dashboard() {
   // --- State ---
   const [modeTab, setModeTab] = useState<TabMode>('teaser');
   const [playsTab, setPlaysTab] = useState<PlaysTab>('jugadas');
+  const [mobileTab, setMobileTab] = useState<MobileTab>('apuesta');
   const [selectedPlays, setSelectedPlays] = useState<Play[]>([]);
   const [lines, setLines] = useState<BettingLine[]>([]);
   const [sports, setSports] = useState<string[]>([]);
@@ -168,7 +170,6 @@ export default function Dashboard() {
       setSuccessTicket(ticket.id);
       setProcessingTicket(false);
 
-      // Confetti
       confetti({
         particleCount: 40,
         spread: 70,
@@ -196,320 +197,332 @@ export default function Dashboard() {
     playsTab === 'jugadas' ? !p.isIF : p.isIF
   );
 
-  // --- Render ---
-  return (
-    <div className="h-[calc(100dvh-48px-96px)] grid grid-cols-[320px_1fr_1.2fr] gap-px bg-bg-primary overflow-hidden">
-      {/* ==================== LEFT PANEL: Sales Form ==================== */}
-      <motion.div
-        initial={{ opacity: 0, x: -30 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.1 }}
-        className="gradient-panel border-r border-border-subtle overflow-y-auto p-4 flex flex-col gap-3"
-      >
-        {/* Seller Info */}
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <User size={14} className="text-text-tertiary" />
-            <span className="text-xs text-text-tertiary w-16">Vendedor:</span>
-            <span className="text-sm font-semibold text-text-primary font-mono">
-              mmw03
+  // --- Mobile Tab Bar ---
+  const MobileTabBar = () => (
+    <div className="sticky top-0 z-20 bg-white border-b border-border-subtle flex md:hidden">
+      {(
+        [
+          ['apuesta', 'Apuesta'],
+          ['jugadas', `Jugadas (${selectedPlays.length})`],
+          ['lineas', 'Lineas'],
+        ] as const
+      ).map(([key, label]) => (
+        <button
+          key={key}
+          onClick={() => setMobileTab(key)}
+          className={`flex-1 py-3 text-sm font-medium transition-all min-h-[44px] active:scale-95 ${
+            mobileTab === key
+              ? 'text-accent-blue border-b-2 border-accent-blue bg-accent-blue/5'
+              : 'text-text-muted hover:text-text-secondary'
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+
+  // --- Sales Form Content (shared) ---
+  const SalesForm = () => (
+    <div className="flex flex-col gap-3 p-3 md:p-4">
+      {/* Seller Info */}
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-2">
+          <User size={14} className="text-text-tertiary shrink-0" />
+          <span className="text-xs text-text-tertiary w-16">Vendedor:</span>
+          <span className="text-sm font-semibold text-text-primary font-mono">
+            mmw03
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Calendar size={14} className="text-text-tertiary shrink-0" />
+          <span className="text-xs text-text-tertiary w-16">Fecha:</span>
+          <span className="text-xs text-text-secondary">
+            {formatDate(currentTime)}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Clock size={14} className="text-text-tertiary shrink-0" />
+          <span className="text-xs text-text-tertiary w-16">Hora:</span>
+          <span className="text-xs text-text-secondary font-mono">
+            {formatTime(currentTime)}
+          </span>
+        </div>
+      </div>
+
+      <div className="border-t border-border-subtle" />
+
+      {/* Mode Tabs */}
+      <div className="flex gap-1 p-1 rounded-md bg-bg-secondary/80">
+        {(
+          [
+            ['teaser', 'Teaser'],
+            ['teaserIF', 'Teaser IF'],
+          ] as const
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setModeTab(key)}
+            className={`flex-1 py-2 px-4 rounded-sm text-sm font-medium transition-all duration-200 min-h-[40px] active:scale-95 ${
+              modeTab === key
+                ? 'bg-accent-blue/15 text-text-primary border border-accent-blue/30'
+                : 'text-text-muted hover:text-text-secondary'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Form Fields */}
+      <div className="space-y-3 md:space-y-2.5">
+        <div>
+          <label className="block text-xs text-text-tertiary mb-1">
+            Equipo
+          </label>
+          <input
+            type="text"
+            value={equipo}
+            onChange={(e) => setEquipo(e.target.value)}
+            placeholder="Nombre del equipo"
+            className="input-standard w-full h-12 md:h-10"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs text-text-tertiary mb-1">
+            Jugada
+          </label>
+          <input
+            type="text"
+            value={jugada}
+            onChange={(e) => setJugada(e.target.value)}
+            placeholder="Tipo de jugada"
+            className="input-standard w-full h-12 md:h-10"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs text-text-tertiary mb-1">
+            #Jug.Reg
+          </label>
+          <input
+            type="text"
+            readOnly
+            value={selectedPlays.length.toString()}
+            className="w-full rounded-md border border-border-default bg-accent-blue/5 px-3.5 py-2.5 text-sm font-mono text-text-primary h-12 md:h-10"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs text-text-tertiary mb-1">
+            Cantidad
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary font-mono text-lg">
+              $
             </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Calendar size={14} className="text-text-tertiary" />
-            <span className="text-xs text-text-tertiary w-16">Fecha:</span>
-            <span className="text-xs text-text-secondary">
-              {formatDate(currentTime)}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock size={14} className="text-text-tertiary" />
-            <span className="text-xs text-text-tertiary w-16">Hora:</span>
-            <span className="text-xs text-text-secondary font-mono">
-              {formatTime(currentTime)}
-            </span>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={cantidad}
+              onChange={(e) => {
+                const val = e.target.value.replace(/[^0-9.]/g, '');
+                setCantidad(val);
+              }}
+              placeholder="0.00"
+              className="input-standard w-full pl-8 pr-4 py-2.5 text-right font-mono text-mono-lg h-12 md:h-10"
+            />
           </div>
         </div>
 
-        <div className="border-t border-border-subtle" />
+        <div>
+          <label className="block text-xs text-text-tertiary mb-1">Pago</label>
+          <div className="w-full rounded-md border border-border-default bg-bg-tertiary/40 px-3.5 py-2.5 text-right font-mono text-mono text-accent-green h-12 md:h-10 flex items-center justify-end">
+            {formatAmount(pago)}
+          </div>
+        </div>
 
-        {/* Mode Tabs */}
-        <div className="flex gap-1 p-1 rounded-md bg-bg-secondary/80">
+        <div>
+          <label className="block text-xs text-text-tertiary mb-1">
+            Ganancia
+          </label>
+          <div className="w-full rounded-md border border-border-default bg-bg-tertiary/40 px-3.5 py-2.5 text-right font-mono text-mono text-accent-green h-12 md:h-10 flex items-center justify-end">
+            {formatAmount(ganancia)}
+          </div>
+        </div>
+
+        {/* IF Fields */}
+        <AnimatePresence>
+          {modeTab === 'teaserIF' && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-3 md:space-y-2.5 border-t border-accent-purple/30 pt-2.5"
+            >
+              <div>
+                <label className="block text-xs text-accent-purple mb-1">
+                  Monto IF
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary font-mono text-lg">
+                    $
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="0.00"
+                    className="input-standard w-full pl-8 pr-4 py-2.5 text-right font-mono text-mono-lg border-accent-purple/30 focus:border-accent-purple focus:shadow-[0_0_0_3px_rgba(139,92,246,0.2)] h-12 md:h-10"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-accent-purple mb-1">
+                  Pago con IF
+                </label>
+                <div className="w-full rounded-md border border-accent-purple/30 bg-accent-purple/5 px-3.5 py-2.5 text-right font-mono text-mono text-accent-purple h-12 md:h-10 flex items-center justify-end">
+                  $0.00
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-accent-purple mb-1">
+                  Ganancia IF
+                </label>
+                <div className="w-full rounded-md border border-accent-purple/30 bg-accent-purple/5 px-3.5 py-2.5 text-right font-mono text-mono text-accent-purple h-12 md:h-10 flex items-center justify-end">
+                  $0.00
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex flex-wrap gap-2 pt-2">
+        <button className="flex items-center gap-1.5 px-3 py-2.5 rounded-md text-xs font-semibold bg-accent-blue/10 text-accent-blue border border-accent-blue/25 hover:bg-accent-blue/20 transition-colors min-h-[40px] active:scale-95">
+          <Calculator size={14} />
+          Calc
+        </button>
+        <button
+          onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
+          className="px-3 py-2.5 rounded-md text-xs font-semibold bg-bg-tertiary text-text-secondary hover:text-text-primary transition-colors min-h-[40px] active:scale-95"
+        >
+          {language === 'es' ? 'ES | EN' : 'EN | ES'}
+        </button>
+        {showConfirmClear ? (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-text-tertiary">
+              Seguro? {selectedPlays.length} jugadas
+            </span>
+            <button
+              onClick={handleClearAll}
+              className="px-3 py-2 rounded text-xs bg-accent-red text-white min-h-[36px] active:scale-95"
+            >
+              Si
+            </button>
+            <button
+              onClick={() => setShowConfirmClear(false)}
+              className="px-3 py-2 rounded text-xs bg-bg-tertiary text-text-secondary min-h-[36px] active:scale-95"
+            >
+              No
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() =>
+              selectedPlays.length > 0 && setShowConfirmClear(true)
+            }
+            className="flex items-center gap-1.5 px-3 py-2.5 rounded-md text-xs font-semibold text-accent-red hover:bg-accent-red/10 transition-colors min-h-[40px] active:scale-95"
+          >
+            <Trash2 size={14} />
+            Eliminar
+          </button>
+        )}
+      </div>
+
+      {/* Process Ticket Button */}
+      <button
+        onClick={handleProcessTicket}
+        disabled={selectedPlays.length === 0 || cantidadNum <= 0 || processingTicket}
+        className={`w-full mt-2 py-4 md:py-3 rounded-lg text-sm font-bold transition-all duration-200 min-h-[56px] active:scale-[0.98] touch-ripple ${
+          selectedPlays.length > 0 && cantidadNum > 0 && !processingTicket
+            ? 'bg-gradient-to-r from-accent-green to-accent-green-dim text-white shadow-winner hover:shadow-lg hover:brightness-105'
+            : 'bg-text-muted/20 text-text-muted cursor-not-allowed'
+        }`}
+      >
+        {processingTicket ? (
+          <span className="flex items-center justify-center gap-2">
+            <RefreshCw size={16} className="animate-spin" />
+            Procesando...
+          </span>
+        ) : successTicket ? (
+          <span className="flex items-center justify-center gap-2">
+            <CheckIcon />
+            Ticket #{successTicket}
+          </span>
+        ) : (
+          'PROCESAR TICKET'
+        )}
+      </button>
+    </div>
+  );
+
+  // --- Selected Plays Content (shared) ---
+  const SelectedPlays = () => (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="p-3 md:p-4 border-b border-border-subtle shrink-0">
+        <h2 className="text-base md:text-h4 text-text-primary font-semibold mb-2">
+          Jugadas Seleccionadas
+        </h2>
+        <div className="flex gap-1">
           {(
             [
-              ['teaser', 'Teaser'],
-              ['teaserIF', 'Teaser IF'],
+              ['jugadas', `Jugadas (${jugadasCount})`],
+              ['jugadasIF', `Jugadas IF (${jugadasIFCount})`],
             ] as const
           ).map(([key, label]) => (
             <button
               key={key}
-              onClick={() => setModeTab(key)}
-              className={`flex-1 py-2 px-4 rounded-sm text-sm font-medium transition-all duration-200 ${
-                modeTab === key
-                  ? 'bg-accent-blue/15 text-text-primary border border-accent-blue/30'
-                  : 'text-text-muted hover:text-text-secondary'
+              onClick={() => setPlaysTab(key)}
+              className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all min-h-[36px] active:scale-95 ${
+                playsTab === key
+                  ? 'bg-accent-blue/15 text-accent-blue border border-accent-blue/25'
+                  : 'text-text-muted hover:text-text-secondary hover:bg-white/[0.02]'
               }`}
             >
               {label}
             </button>
           ))}
         </div>
+      </div>
 
-        {/* Form Fields */}
-        <div className="space-y-2.5">
-          <div>
-            <label className="block text-xs text-text-tertiary mb-1">
-              Equipo
-            </label>
-            <input
-              type="text"
-              value={equipo}
-              onChange={(e) => setEquipo(e.target.value)}
-              placeholder="Nombre del equipo"
-              className="input-standard w-full"
+      {/* Plays Table */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        {displayPlays.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-48 md:h-64 text-center px-8">
+            <ClipboardList
+              size={48}
+              className="text-text-muted/30 mb-3"
             />
+            <p className="text-sm text-text-tertiary">
+              Seleccione jugadas del panel derecho
+            </p>
+            <p className="text-xs text-text-muted mt-1">
+              Haga clic en una linea para agregarla
+            </p>
           </div>
-
-          <div>
-            <label className="block text-xs text-text-tertiary mb-1">
-              Jugada
-            </label>
-            <input
-              type="text"
-              value={jugada}
-              onChange={(e) => setJugada(e.target.value)}
-              placeholder="Tipo de jugada"
-              className="input-standard w-full"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-text-tertiary mb-1">
-              #Jug.Reg
-            </label>
-            <input
-              type="text"
-              readOnly
-              value={selectedPlays.length.toString()}
-              className="w-full rounded-md border border-border-default bg-accent-blue/5 px-3.5 py-2.5 text-sm font-mono text-text-primary"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-text-tertiary mb-1">
-              Cantidad
-            </label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary font-mono text-lg">
-                $
-              </span>
-              <input
-                type="text"
-                value={cantidad}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/[^0-9.]/g, '');
-                  setCantidad(val);
-                }}
-                placeholder="0.00"
-                className="input-standard w-full pl-8 pr-4 py-2.5 text-right font-mono text-mono-lg"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs text-text-tertiary mb-1">Pago</label>
-            <div className="w-full rounded-md border border-border-default bg-bg-tertiary/40 px-3.5 py-2.5 text-right font-mono text-mono text-accent-green">
-              {formatAmount(pago)}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs text-text-tertiary mb-1">
-              Ganancia
-            </label>
-            <div className="w-full rounded-md border border-border-default bg-bg-tertiary/40 px-3.5 py-2.5 text-right font-mono text-mono text-accent-green">
-              {formatAmount(ganancia)}
-            </div>
-          </div>
-
-          {/* IF Fields */}
-          <AnimatePresence>
-            {modeTab === 'teaserIF' && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-2.5 border-t border-accent-purple/30 pt-2.5"
-              >
-                <div>
-                  <label className="block text-xs text-accent-purple mb-1">
-                    Monto IF
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary font-mono text-lg">
-                      $
-                    </span>
-                    <input
-                      type="text"
-                      placeholder="0.00"
-                      className="input-standard w-full pl-8 pr-4 py-2.5 text-right font-mono text-mono-lg border-accent-purple/30 focus:border-accent-purple focus:shadow-[0_0_0_3px_rgba(139,92,246,0.2)]"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs text-accent-purple mb-1">
-                    Pago con IF
-                  </label>
-                  <div className="w-full rounded-md border border-accent-purple/30 bg-accent-purple/5 px-3.5 py-2.5 text-right font-mono text-mono text-accent-purple">
-                    $0.00
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs text-accent-purple mb-1">
-                    Ganancia IF
-                  </label>
-                  <div className="w-full rounded-md border border-accent-purple/30 bg-accent-purple/5 px-3.5 py-2.5 text-right font-mono text-mono text-accent-purple">
-                    $0.00
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-wrap gap-2 pt-2">
-          <button className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-semibold bg-accent-blue/10 text-accent-blue border border-accent-blue/25 hover:bg-accent-blue/20 transition-colors">
-            <Calculator size={14} />
-            Calc
-          </button>
-          <button
-            onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
-            className="px-3 py-2 rounded-md text-xs font-semibold bg-bg-tertiary text-text-secondary hover:text-text-primary transition-colors"
-          >
-            {language === 'es' ? 'ES | EN' : 'EN | ES'}
-          </button>
-          {showConfirmClear ? (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-text-tertiary">
-                Seguro? {selectedPlays.length} jugadas
-              </span>
-              <button
-                onClick={handleClearAll}
-                className="px-2 py-1 rounded text-xs bg-accent-red text-white"
-              >
-                Si
-              </button>
-              <button
-                onClick={() => setShowConfirmClear(false)}
-                className="px-2 py-1 rounded text-xs bg-bg-tertiary text-text-secondary"
-              >
-                No
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() =>
-                selectedPlays.length > 0 && setShowConfirmClear(true)
-              }
-              className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-semibold text-accent-red hover:bg-accent-red/10 transition-colors"
-            >
-              <Trash2 size={14} />
-              Eliminar
-            </button>
-          )}
-          <button className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-semibold bg-accent-blue/10 text-accent-blue border border-accent-blue/25 hover:bg-accent-blue/20 transition-colors">
-            <Printer size={14} />
-            Imprimir
-          </button>
-        </div>
-
-        {/* Process Button */}
-        <button
-          onClick={handleProcessTicket}
-          disabled={selectedPlays.length === 0 || cantidadNum <= 0 || processingTicket}
-          className={`w-full h-11 rounded-md font-bold text-sm tracking-[0.05em] transition-all duration-200 flex items-center justify-center gap-2 mt-1 ${
-            processingTicket
-              ? 'bg-accent-green text-white cursor-default'
-              : selectedPlays.length > 0 && cantidadNum > 0
-                ? 'gradient-winner text-white hover:shadow-winner hover:-translate-y-px active:scale-[0.98]'
-                : 'bg-bg-quaternary text-text-muted cursor-not-allowed opacity-50'
-          }`}
-        >
-          {processingTicket ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              PROCESANDO...
-            </>
-          ) : successTicket ? (
-            <>
-              <CheckIcon />
-              TICKET {successTicket}
-            </>
-          ) : (
-            'PROCESAR TICKET'
-          )}
-        </button>
-      </motion.div>
-
-      {/* ==================== CENTER PANEL: Selected Plays ==================== */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.2 }}
-        className="gradient-panel border-r border-border-subtle overflow-y-auto flex flex-col"
-      >
-        {/* Header */}
-        <div className="p-4 border-b border-border-subtle">
-          <h2 className="text-h4 text-text-primary font-semibold mb-2">
-            Jugadas Seleccionadas
-          </h2>
-          <div className="flex gap-1">
-            {(
-              [
-                ['jugadas', `Jugadas (${jugadasCount})`],
-                ['jugadasIF', `Jugadas IF (${jugadasIFCount})`],
-              ] as const
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                onClick={() => setPlaysTab(key)}
-                className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  playsTab === key
-                    ? 'bg-accent-blue/15 text-accent-blue border border-accent-blue/25'
-                    : 'text-text-muted hover:text-text-secondary hover:bg-white/[0.02]'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Plays Table */}
-        <div className="flex-1 overflow-y-auto">
-          {displayPlays.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-center px-8">
-              <ClipboardList
-                size={48}
-                className="text-text-muted/30 mb-3"
-              />
-              <p className="text-sm text-text-tertiary">
-                Seleccione jugadas del panel derecho
-              </p>
-              <p className="text-xs text-text-muted mt-1">
-                Haga clic en una linea para agregarla
-              </p>
-            </div>
-          ) : (
-            <table className="w-full">
+        ) : (
+          <div className="w-full overflow-x-auto">
+            <table className="w-full min-w-[400px]">
               <thead className="sticky top-0 z-10">
                 <tr className="bg-bg-secondary/90 text-xs font-semibold text-text-secondary uppercase tracking-wider">
                   <th className="text-left px-3 py-2">Equipo</th>
                   <th className="text-left px-3 py-2">Jugada</th>
-                  <th className="text-left px-3 py-2">Dato</th>
+                  <th className="text-left px-3 py-2 hidden md:table-cell">Dato</th>
                   <th className="text-right px-3 py-2">Linea</th>
-                  <th className="text-center px-2 py-2 w-8"></th>
+                  <th className="text-center px-2 py-2 w-12"></th>
                 </tr>
               </thead>
               <tbody>
@@ -527,14 +540,14 @@ export default function Dashboard() {
                     >
                       <td className="px-3 py-2.5 text-sm text-text-primary">
                         <div className="font-medium">{play.teamCode}</div>
-                        <div className="text-xs text-text-tertiary">
+                        <div className="text-xs text-text-tertiary truncate max-w-[120px] md:max-w-none">
                           {play.team}
                         </div>
                       </td>
                       <td className="px-3 py-2.5 text-sm font-mono text-accent-blue">
                         {play.playType}
                       </td>
-                      <td className="px-3 py-2.5 text-xs text-text-secondary">
+                      <td className="px-3 py-2.5 text-xs text-text-secondary hidden md:table-cell">
                         {play.detail}
                       </td>
                       <td
@@ -547,9 +560,9 @@ export default function Dashboard() {
                       <td className="px-2 py-2.5 text-center">
                         <button
                           onClick={() => handleRemovePlay(play.id)}
-                          className="w-6 h-6 rounded-full flex items-center justify-center text-text-muted hover:text-accent-red hover:bg-accent-red/10 transition-colors"
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-text-muted hover:text-accent-red hover:bg-accent-red/10 transition-colors active:scale-95"
                         >
-                          <X size={14} />
+                          <X size={16} />
                         </button>
                       </td>
                     </motion.tr>
@@ -557,148 +570,266 @@ export default function Dashboard() {
                 </AnimatePresence>
               </tbody>
             </table>
-          )}
-        </div>
-
-        {/* Delete All */}
-        {displayPlays.length > 0 && (
-          <div className="p-3 border-t border-border-subtle">
-            <button
-              onClick={() => setShowConfirmClear(true)}
-              className="flex items-center gap-1.5 text-xs text-accent-red hover:bg-accent-red/10 px-3 py-1.5 rounded-md transition-colors"
-            >
-              <Trash2 size={14} />
-              Eliminar Todas
-            </button>
           </div>
         )}
-      </motion.div>
+      </div>
 
-      {/* ==================== RIGHT PANEL: Betting Lines ==================== */}
-      <motion.div
-        initial={{ opacity: 0, x: 30 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.3 }}
-        className="gradient-panel overflow-hidden flex flex-col"
-      >
-        {/* Sticky Header */}
-        <div className="sticky top-0 z-10 bg-bg-secondary/95 backdrop-blur-lg border-b border-border-subtle">
-          {/* View Toggle + Refresh */}
-          <div className="flex items-center justify-between px-4 py-2">
-            <div className="flex gap-1">
-              {(
-                [
-                  ['lineas', 'Lineas'],
-                  ['resultados', 'Resultados'],
-                ] as const
-              ).map(([key, label]) => (
-                <button
-                  key={key}
-                  onClick={() => setLineView(key)}
-                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                    lineView === key
-                      ? 'bg-accent-blue/15 text-accent-blue'
-                      : 'text-text-muted hover:text-text-secondary'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-text-tertiary font-mono">
-                Actualizado: {formatTime(currentTime)}
-              </span>
-              <button
-                onClick={handleRefresh}
-                className={`w-8 h-8 rounded-md flex items-center justify-center bg-white/[0.04] hover:bg-white/[0.08] text-text-secondary transition-colors ${
-                  refreshing ? 'animate-spin-once' : ''
-                }`}
-              >
-                <RefreshCw size={15} />
-              </button>
-              <button className="w-8 h-8 rounded-md flex items-center justify-center bg-white/[0.04] hover:bg-white/[0.08] text-text-secondary transition-colors">
-                <Printer size={15} />
-              </button>
-            </div>
-          </div>
+      {/* Delete All */}
+      {displayPlays.length > 0 && (
+        <div className="p-3 border-t border-border-subtle shrink-0">
+          <button
+            onClick={() => setShowConfirmClear(true)}
+            className="flex items-center gap-1.5 text-xs text-accent-red hover:bg-accent-red/10 px-3 py-2.5 rounded-md transition-colors min-h-[40px] active:scale-95"
+          >
+            <Trash2 size={14} />
+            Eliminar Todas
+          </button>
+        </div>
+      )}
+    </div>
+  );
 
-          {/* Sport Filter */}
-          <div className="flex gap-1.5 px-4 py-2 overflow-x-auto">
-            {sports.map((sport) => (
+  // --- Betting Lines Content (shared) ---
+  const BettingLines = () => (
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Sticky Header */}
+      <div className="shrink-0 bg-bg-secondary/95 backdrop-blur-lg border-b border-border-subtle z-10">
+        {/* View Toggle + Refresh */}
+        <div className="flex items-center justify-between px-3 md:px-4 py-2">
+          <div className="flex gap-1">
+            {(
+              [
+                ['lineas', 'Lineas'],
+                ['resultados', 'Resultados'],
+              ] as const
+            ).map(([key, label]) => (
               <button
-                key={sport}
-                onClick={() => setSelectedSport(sport)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
-                  selectedSport === sport
-                    ? 'bg-accent-blue/15 text-accent-blue border border-accent-blue/25'
-                    : 'text-text-muted hover:text-text-secondary hover:bg-white/[0.02]'
-                }`}
-              >
-                {sport}
-              </button>
-            ))}
-          </div>
-
-          {/* Period Filter */}
-          <div className="flex gap-4 px-4 py-1.5">
-            {getPeriods().map((period) => (
-              <button
-                key={period}
-                onClick={() => setSelectedPeriod(period)}
-                className={`pb-1 text-xs font-medium transition-colors ${
-                  selectedPeriod === period
-                    ? 'text-accent-blue border-b-2 border-accent-blue'
+                key={key}
+                onClick={() => setLineView(key)}
+                className={`px-3 py-1.5 rounded text-xs font-medium transition-colors min-h-[36px] active:scale-95 ${
+                  lineView === key
+                    ? 'bg-accent-blue/15 text-accent-blue'
                     : 'text-text-muted hover:text-text-secondary'
                 }`}
               >
-                {period}
+                {label}
               </button>
             ))}
           </div>
+          <div className="flex items-center gap-1.5 md:gap-2">
+            <span className="text-[10px] md:text-xs text-text-tertiary font-mono hidden sm:inline">
+              Actualizado: {formatTime(currentTime)}
+            </span>
+            <button
+              onClick={handleRefresh}
+              className={`w-10 h-10 md:w-8 md:h-8 rounded-md flex items-center justify-center hover:bg-black/5 text-text-secondary transition-colors active:scale-95 ${
+                refreshing ? 'animate-spin-once' : ''
+              }`}
+            >
+              <RefreshCw size={15} />
+            </button>
+            <button className="w-10 h-10 md:w-8 md:h-8 rounded-md flex items-center justify-center hover:bg-black/5 text-text-secondary transition-colors active:scale-95">
+              <Printer size={15} />
+            </button>
+          </div>
         </div>
 
-        {/* Game Cards */}
-        <div ref={linesScrollRef} className="flex-1 overflow-y-auto py-2">
-          {lines.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-center px-8">
-              <CalendarIcon size={48} className="text-text-muted/30 mb-3" />
-              <p className="text-sm text-text-tertiary">
-                No hay juegos disponibles
-              </p>
-              <p className="text-xs text-text-muted mt-1">
-                Seleccione otro deporte o periodo
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2 px-4">
-              {lines.map((line) => (
-                <GameCard
-                  key={line.id}
-                  line={line}
-                  onAddPlay={handleAddPlay}
-                />
-              ))}
-            </div>
-          )}
+        {/* Sport Filter */}
+        <div className="flex gap-1.5 px-3 md:px-4 py-2 overflow-x-auto no-scrollbar">
+          {sports.map((sport) => (
+            <button
+              key={sport}
+              onClick={() => setSelectedSport(sport)}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all min-h-[36px] active:scale-95 ${
+                selectedSport === sport
+                  ? 'bg-accent-blue/15 text-accent-blue border border-accent-blue/25'
+                  : 'text-text-muted hover:text-text-secondary hover:bg-white/[0.02]'
+              }`}
+            >
+              {sport}
+            </button>
+          ))}
         </div>
 
-        {/* Scroll buttons */}
-        <div className="flex justify-end gap-1 p-2 border-t border-border-subtle">
-          <button
-            onClick={() => linesScrollRef.current?.scrollBy({ top: -200, behavior: 'smooth' })}
-            className="w-7 h-7 rounded flex items-center justify-center bg-white/[0.04] hover:bg-white/[0.08] text-text-secondary"
-          >
-            <ChevronUp size={14} />
-          </button>
-          <button
-            onClick={() => linesScrollRef.current?.scrollBy({ top: 200, behavior: 'smooth' })}
-            className="w-7 h-7 rounded flex items-center justify-center bg-white/[0.04] hover:bg-white/[0.08] text-text-secondary"
-          >
-            <ChevronDown size={14} />
-          </button>
+        {/* Period Filter */}
+        <div className="flex gap-4 px-3 md:px-4 py-1.5 overflow-x-auto">
+          {getPeriods().map((period) => (
+            <button
+              key={period}
+              onClick={() => setSelectedPeriod(period)}
+              className={`pb-1 text-xs font-medium transition-colors whitespace-nowrap min-h-[28px] active:scale-95 ${
+                selectedPeriod === period
+                  ? 'text-accent-blue border-b-2 border-accent-blue'
+                  : 'text-text-muted hover:text-text-secondary'
+              }`}
+            >
+              {period}
+            </button>
+          ))}
         </div>
-      </motion.div>
+      </div>
+
+      {/* Game Cards */}
+      <div ref={linesScrollRef} className="flex-1 overflow-y-auto min-h-0 py-2">
+        {lines.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-48 md:h-64 text-center px-8">
+            <CalendarIcon size={48} className="text-text-muted/30 mb-3" />
+            <p className="text-sm text-text-tertiary">
+              No hay juegos disponibles
+            </p>
+            <p className="text-xs text-text-muted mt-1">
+              Seleccione otro deporte o periodo
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2 px-2 md:px-4">
+            {lines.map((line) => (
+              <GameCard
+                key={line.id}
+                line={line}
+                onAddPlay={handleAddPlay}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Scroll buttons */}
+      <div className="shrink-0 flex justify-end gap-1 p-2 border-t border-border-subtle">
+        <button
+          onClick={() => linesScrollRef.current?.scrollBy({ top: -200, behavior: 'smooth' })}
+          className="w-9 h-9 md:w-7 md:h-7 rounded flex items-center justify-center hover:bg-black/5 text-text-secondary active:scale-95"
+        >
+          <ChevronUp size={14} />
+        </button>
+        <button
+          onClick={() => linesScrollRef.current?.scrollBy({ top: 200, behavior: 'smooth' })}
+          className="w-9 h-9 md:w-7 md:h-7 rounded flex items-center justify-center hover:bg-black/5 text-text-secondary active:scale-95"
+        >
+          <ChevronDown size={14} />
+        </button>
+      </div>
+    </div>
+  );
+
+  // --- Render ---
+  return (
+    <div className="h-full flex flex-col">
+      {/* Mobile Tab Bar - only visible on small screens */}
+      <MobileTabBar />
+
+      {/* Content Area */}
+      <div className="flex-1 overflow-hidden">
+        {/* Desktop Layout: 3 columns */}
+        <div className="hidden xl:grid h-full grid-cols-[300px_1fr_1.2fr] gap-px bg-bg-primary">
+          {/* Left Panel */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.1 }}
+            className="gradient-panel border-r border-border-subtle overflow-y-auto"
+          >
+            <SalesForm />
+          </motion.div>
+
+          {/* Center Panel */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.2 }}
+            className="gradient-panel border-r border-border-subtle overflow-hidden"
+          >
+            <SelectedPlays />
+          </motion.div>
+
+          {/* Right Panel */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.3 }}
+            className="gradient-panel overflow-hidden"
+          >
+            <BettingLines />
+          </motion.div>
+        </div>
+
+        {/* Tablet Layout: 2 columns */}
+        <div className="hidden md:grid xl:hidden h-full grid-cols-[3fr_2fr] gap-px bg-bg-primary">
+          {/* Left+Center Combined */}
+          <div className="flex flex-col border-r border-border-subtle overflow-hidden">
+            {/* Sales Form (top half) */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+              className="gradient-panel border-b border-border-subtle overflow-y-auto shrink-0 max-h-[45%]"
+            >
+              <SalesForm />
+            </motion.div>
+            {/* Selected Plays (bottom half) */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+              className="gradient-panel flex-1 overflow-hidden min-h-0"
+            >
+              <SelectedPlays />
+            </motion.div>
+          </div>
+
+          {/* Right Panel (Lines) */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            className="gradient-panel overflow-hidden"
+          >
+            <BettingLines />
+          </motion.div>
+        </div>
+
+        {/* Mobile Layout: Tab-based single column */}
+        <div className="md:hidden h-full bg-bg-primary overflow-y-auto">
+          <AnimatePresence mode="wait">
+            {mobileTab === 'apuesta' && (
+              <motion.div
+                key="apuesta"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.15 }}
+                className="gradient-panel"
+              >
+                <SalesForm />
+              </motion.div>
+            )}
+            {mobileTab === 'jugadas' && (
+              <motion.div
+                key="jugadas"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.15 }}
+                className="gradient-panel h-full"
+              >
+                <SelectedPlays />
+              </motion.div>
+            )}
+            {mobileTab === 'lineas' && (
+              <motion.div
+                key="lineas"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.15 }}
+                className="gradient-panel h-full flex flex-col"
+              >
+                <BettingLines />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
     </div>
   );
 }
@@ -723,7 +854,7 @@ function GameCard({
   return (
     <motion.div
       whileHover={{ y: -1 }}
-      className={`rounded-md border p-3 transition-all duration-150 shadow-sm hover:shadow-md hover:-translate-y-0.5 ${
+      className={`rounded-lg border p-3 md:p-3 transition-all duration-150 shadow-sm hover:shadow-md ${
         flash
           ? 'bg-[#EFF6FF] border-accent-blue/40'
           : 'bg-[#F8FAFC] border-gray-200 hover:border-gray-300'
@@ -747,7 +878,7 @@ function GameCard({
           <span className="font-mono text-blue-600 mr-1">{line.awayTeamCode || TEAM_CODES[line.awayTeam] || '0000'}</span>
           <span className="text-[#94A3B8] font-normal">{line.awayTeam}</span>
         </div>
-        <span className="text-xs text-[#CBD5E1]">@</span>
+        <span className="text-xs text-[#CBD5E1] mx-1">@</span>
         <div className="text-sm font-semibold text-[#1E293B] text-right">
           <span className="text-[#94A3B8] font-normal">{line.homeTeam}</span>
           <span className="font-mono text-blue-600 ml-1">{line.homeTeamCode || TEAM_CODES[line.homeTeam] || '0000'}</span>
@@ -755,72 +886,74 @@ function GameCard({
       </div>
 
       {/* Lines Table */}
-      <div className="grid grid-cols-5 gap-1 text-center">
-        <div className="text-[10px] text-[#94A3B8] uppercase font-semibold py-1">
-          M.L
-        </div>
-        <div className="text-[10px] text-[#94A3B8] uppercase font-semibold py-1">
-          R.L
-        </div>
-        <div className="text-[10px] text-[#94A3B8] uppercase font-semibold py-1">
-          Spread
-        </div>
-        <div className="text-[10px] text-[#94A3B8] uppercase font-semibold py-1">
-          Solo
-        </div>
-        <div className="text-[10px] text-[#94A3B8] uppercase font-semibold py-1">
-          Puntos
-        </div>
+      <div className="overflow-x-auto no-scrollbar">
+        <div className="grid grid-cols-5 gap-1 text-center min-w-[280px]">
+          <div className="text-[10px] text-[#94A3B8] uppercase font-semibold py-1">
+            M.L
+          </div>
+          <div className="text-[10px] text-[#94A3B8] uppercase font-semibold py-1">
+            R.L
+          </div>
+          <div className="text-[10px] text-[#94A3B8] uppercase font-semibold py-1">
+            Spread
+          </div>
+          <div className="text-[10px] text-[#94A3B8] uppercase font-semibold py-1">
+            Solo
+          </div>
+          <div className="text-[10px] text-[#94A3B8] uppercase font-semibold py-1">
+            Puntos
+          </div>
 
-        {/* Away row */}
-        <LineCell
-          value={line.moneyLine.away}
-          onClick={() => handleCellClick('ML', line.moneyLine.away)}
-          type="odds"
-        />
-        <LineCell
-          value={`${line.runLine.away >= 0 ? '+' : ''}${line.runLine.away}`}
-          onClick={() => handleCellClick('RL', line.runLine.away)}
-        />
-        <LineCell
-          value={`${line.spread.away >= 0 ? '+' : ''}${line.spread.away}`}
-          onClick={() => handleCellClick('Spread', line.spread.away, line.spread.away)}
-        />
-        <LineCell
-          value={line.solo.away}
-          onClick={() => handleCellClick('Solo', line.solo.away)}
-          type="odds"
-        />
-        <LineCell
-          value={`O ${line.points.over}`}
-          onClick={() => handleCellClick('Over', line.points.over, line.points.value)}
-          type="over"
-        />
+          {/* Away row */}
+          <LineCell
+            value={line.moneyLine.away}
+            onClick={() => handleCellClick('ML', line.moneyLine.away)}
+            type="odds"
+          />
+          <LineCell
+            value={`${line.runLine.away >= 0 ? '+' : ''}${line.runLine.away}`}
+            onClick={() => handleCellClick('RL', line.runLine.away)}
+          />
+          <LineCell
+            value={`${line.spread.away >= 0 ? '+' : ''}${line.spread.away}`}
+            onClick={() => handleCellClick('Spread', line.spread.away, line.spread.away)}
+          />
+          <LineCell
+            value={line.solo.away}
+            onClick={() => handleCellClick('Solo', line.solo.away)}
+            type="odds"
+          />
+          <LineCell
+            value={`O ${line.points.over}`}
+            onClick={() => handleCellClick('Over', line.points.over, line.points.value)}
+            type="over"
+          />
 
-        {/* Home row */}
-        <LineCell
-          value={line.moneyLine.home}
-          onClick={() => handleCellClick('ML', line.moneyLine.home)}
-          type="odds"
-        />
-        <LineCell
-          value={`${line.runLine.home >= 0 ? '+' : ''}${line.runLine.home}`}
-          onClick={() => handleCellClick('RL', line.runLine.home)}
-        />
-        <LineCell
-          value={`${line.spread.home >= 0 ? '+' : ''}${line.spread.home}`}
-          onClick={() => handleCellClick('Spread', line.spread.home, line.spread.home)}
-        />
-        <LineCell
-          value={line.solo.home}
-          onClick={() => handleCellClick('Solo', line.solo.home)}
-          type="odds"
-        />
-        <LineCell
-          value={`U ${line.points.under}`}
-          onClick={() => handleCellClick('Under', line.points.under, line.points.value)}
-          type="under"
-        />
+          {/* Home row */}
+          <LineCell
+            value={line.moneyLine.home}
+            onClick={() => handleCellClick('ML', line.moneyLine.home)}
+            type="odds"
+          />
+          <LineCell
+            value={`${line.runLine.home >= 0 ? '+' : ''}${line.runLine.home}`}
+            onClick={() => handleCellClick('RL', line.runLine.home)}
+          />
+          <LineCell
+            value={`${line.spread.home >= 0 ? '+' : ''}${line.spread.home}`}
+            onClick={() => handleCellClick('Spread', line.spread.home, line.spread.home)}
+          />
+          <LineCell
+            value={line.solo.home}
+            onClick={() => handleCellClick('Solo', line.solo.home)}
+            type="odds"
+          />
+          <LineCell
+            value={`U ${line.points.under}`}
+            onClick={() => handleCellClick('Under', line.points.under, line.points.value)}
+            type="under"
+          />
+        </div>
       </div>
     </motion.div>
   );
@@ -850,7 +983,7 @@ function LineCell({
   return (
     <button
       onClick={onClick}
-      className={`py-1.5 rounded-sm font-mono text-mono hover:bg-accent-blue/10 hover:cursor-pointer transition-colors ${colorClass}`}
+      className={`py-2 md:py-1.5 rounded-sm font-mono text-xs md:text-mono hover:bg-accent-blue/10 transition-colors min-h-[44px] md:min-h-0 flex items-center justify-center ${colorClass}`}
     >
       {display}
     </button>

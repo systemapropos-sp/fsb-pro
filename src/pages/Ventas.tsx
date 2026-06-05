@@ -139,16 +139,16 @@ export default function Ventas() {
       variants={containerAnim}
       initial="hidden"
       animate="show"
-      className="px-6 py-5 space-y-5"
+      className="px-4 md:px-6 lg:px-8 py-5 space-y-5"
     >
       {/* ====== Page Header ====== */}
       <motion.div variants={itemAnim} className="border-b border-border-subtle pb-4">
-        <h1 className="text-h2 text-text-primary">Reportes de Ventas</h1>
-        <p className="text-xs text-text-tertiary mt-1">Inicio / Ventas</p>
+        <h1 className="text-xl md:text-2xl lg:text-3xl font-semibold text-text-primary">Reportes de Ventas</h1>
+        <p className="text-xs text-text-tertiary mt-1 hidden sm:block">Inicio / Ventas</p>
       </motion.div>
 
       {/* ====== Date Selector & Action Buttons ====== */}
-      <motion.div variants={itemAnim} className="flex items-center gap-4 flex-wrap">
+      <motion.div variants={itemAnim} className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4">
         <div className="relative">
           <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
           <input
@@ -158,7 +158,7 @@ export default function Ventas() {
               const d = new Date(e.target.value);
               setSelectedDate(formatDate(d));
             }}
-            className="bg-bg-tertiary/60 border border-border-default rounded-md pl-9 pr-3 py-2 text-sm text-text-primary focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/20 outline-none transition-all"
+            className="bg-bg-tertiary/60 border border-border-default rounded-md pl-9 pr-3 h-12 md:h-10 text-sm text-text-primary focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/20 outline-none transition-all w-full md:w-auto"
           />
         </div>
 
@@ -167,7 +167,7 @@ export default function Ventas() {
             <button
               key={p}
               onClick={() => setPeriodFilter(p)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+              className={`px-4 py-2 min-h-[44px] rounded-full text-sm font-medium transition-all duration-200 ${
                 periodFilter === p
                   ? 'bg-accent-blue/15 text-accent-blue border border-accent-blue/30'
                   : 'text-text-muted hover:text-text-secondary hover:bg-white/5 border border-transparent'
@@ -178,17 +178,17 @@ export default function Ventas() {
           ))}
         </div>
 
-        <div className="flex gap-2 ml-auto">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-md bg-accent-blue/10 text-accent-blue text-sm font-semibold border border-accent-blue/25 hover:bg-accent-blue/20 transition-all">
+        <div className="flex flex-wrap gap-2 w-full md:w-auto md:ml-auto">
+          <button className="flex items-center gap-2 px-4 min-h-[44px] rounded-md bg-accent-blue/10 text-accent-blue text-sm font-semibold border border-accent-blue/25 hover:bg-accent-blue/20 transition-all">
             <Eye size={16} /> Ver ventas
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-md bg-accent-green/10 text-accent-green text-sm font-semibold border border-accent-green/25 hover:bg-accent-green/20 transition-all">
+          <button className="flex items-center gap-2 px-4 min-h-[44px] rounded-md bg-accent-green/10 text-accent-green text-sm font-semibold border border-accent-green/25 hover:bg-accent-green/20 transition-all">
             <TicketIcon size={16} /> Vender tickets
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-md bg-bg-tertiary text-text-secondary text-sm font-semibold border border-border-default hover:bg-bg-quaternary transition-all">
+          <button className="flex items-center gap-2 px-4 min-h-[44px] rounded-md bg-bg-tertiary text-text-secondary text-sm font-semibold border border-border-default hover:bg-bg-quaternary transition-all">
             <Printer size={16} /> Imprimir
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-md bg-bg-tertiary text-text-secondary text-sm font-semibold border border-border-default hover:bg-bg-quaternary transition-all">
+          <button className="flex items-center gap-2 px-4 min-h-[44px] rounded-md bg-bg-tertiary text-text-secondary text-sm font-semibold border border-border-default hover:bg-bg-quaternary transition-all">
             <BarChart3 size={16} /> Resumen semana anterior
           </button>
         </div>
@@ -197,25 +197,25 @@ export default function Ventas() {
       {/* ====== Bank Name Banner ====== */}
       <motion.div
         variants={itemAnim}
-        className="flex items-center justify-between bg-gradient-to-r from-accent-amber/10 to-transparent border-l-4 border-accent-amber rounded-lg px-5 py-4"
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gradient-to-r from-accent-amber/10 to-transparent border-l-4 border-accent-amber rounded-lg px-4 md:px-5 py-4 gap-3"
       >
         <div>
-          <h2 className="text-h3 text-text-primary font-bold">SPORT MMW 03</h2>
+          <h2 className="text-lg md:text-xl lg:text-2xl text-text-primary font-bold">SPORT MMW 03</h2>
           <p className="text-xs text-text-tertiary mt-0.5">Banca deportiva activa</p>
         </div>
         <div className="text-right">
           <p className="text-xs text-text-tertiary uppercase tracking-wider">Monto Pendiente</p>
-          <p className="text-h2 font-bold font-mono text-accent-amber">$14,327.00</p>
+          <p className="text-2xl md:text-3xl font-bold font-mono text-accent-amber">$14,327.00</p>
         </div>
       </motion.div>
 
       {/* ====== Summary Cards (4-Card Grid) ====== */}
-      <motion.div variants={itemAnim} className="grid grid-cols-4 gap-4">
+      <motion.div variants={itemAnim} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {/* Card 1: Ventas del Dia */}
-        <div className="gradient-card rounded-lg border border-border-subtle p-5 relative overflow-hidden">
+        <div className="gradient-card rounded-lg border border-border-subtle p-4 md:p-5 relative overflow-hidden">
           <TrendingUp size={24} className="text-accent-blue absolute top-4 right-4" />
           <p className="text-xs text-text-tertiary uppercase tracking-wider">Ventas del Dia</p>
-          <p className="text-h1 font-bold font-mono text-text-primary mt-2">{formatAmount(dailyStats.ventas)}</p>
+          <p className="text-xl md:text-2xl font-bold font-mono text-text-primary mt-2">{formatAmount(dailyStats.ventas)}</p>
           <p className="text-xs text-accent-green mt-1 flex items-center gap-1">
             <TrendingUp size={12} /> +8.5% vs ayer
           </p>
@@ -235,20 +235,20 @@ export default function Ventas() {
         </div>
 
         {/* Card 2: Balance del Dia */}
-        <div className="gradient-card rounded-lg border border-border-subtle p-5 relative overflow-hidden">
+        <div className="gradient-card rounded-lg border border-border-subtle p-4 md:p-5 relative overflow-hidden">
           <BarChart3 size={24} className="text-accent-cyan absolute top-4 right-4" />
           <p className="text-xs text-text-tertiary uppercase tracking-wider">Balance del Dia</p>
-          <p className="text-h1 font-bold font-mono text-accent-green mt-2">{formatAmount(dailyStats.neto)}</p>
+          <p className="text-xl md:text-2xl font-bold font-mono text-accent-green mt-2">{formatAmount(dailyStats.neto)}</p>
           <p className="text-xs text-accent-green mt-1 flex items-center gap-1">
             <TrendingUp size={12} /> +12.3% vs ayer
           </p>
         </div>
 
         {/* Card 3: Ventas de la Semana */}
-        <div className="gradient-card rounded-lg border border-border-subtle p-5 relative overflow-hidden">
+        <div className="gradient-card rounded-lg border border-border-subtle p-4 md:p-5 relative overflow-hidden">
           <Receipt size={24} className="text-accent-purple absolute top-4 right-4" />
           <p className="text-xs text-text-tertiary uppercase tracking-wider">Ventas de la Semana</p>
-          <p className="text-h1 font-bold font-mono text-text-primary mt-2">{formatAmount(weeklyTotals.venta)}</p>
+          <p className="text-xl md:text-2xl font-bold font-mono text-text-primary mt-2">{formatAmount(weeklyTotals.venta)}</p>
           {/* Mini bar chart */}
           <div className="flex items-end gap-1 mt-3 h-8">
             {weeklyData.map((d, i) => (
@@ -262,10 +262,10 @@ export default function Ventas() {
         </div>
 
         {/* Card 4: Balance de la Semana */}
-        <div className="gradient-card rounded-lg border border-border-subtle p-5 relative overflow-hidden">
+        <div className="gradient-card rounded-lg border border-border-subtle p-4 md:p-5 relative overflow-hidden">
           <TrendingUp size={24} className="text-accent-amber absolute top-4 right-4" />
           <p className="text-xs text-text-tertiary uppercase tracking-wider">Balance de la Semana</p>
-          <p className="text-h1 font-bold font-mono text-accent-amber mt-2">{formatAmount(weeklyTotals.final)}</p>
+          <p className="text-xl md:text-2xl font-bold font-mono text-accent-amber mt-2">{formatAmount(weeklyTotals.final)}</p>
           <p className="text-xs text-accent-amber mt-1">Comisiones: {formatAmount(weeklyTotals.comision)}</p>
         </div>
       </motion.div>
@@ -273,7 +273,7 @@ export default function Ventas() {
       {/* ====== Daily Balance Card ====== */}
       <motion.div variants={itemAnim} className="gradient-panel rounded-lg border border-border-subtle overflow-hidden">
         <div className="px-5 py-3 border-b border-border-subtle flex items-center justify-between">
-          <h3 className="text-h4 text-text-primary">Balance Diario</h3>
+          <h3 className="text-base md:text-lg font-semibold text-text-primary">Balance Diario</h3>
           <span className="text-xs text-text-tertiary">{selectedDate}</span>
         </div>
         <div className="overflow-x-auto">
@@ -331,7 +331,7 @@ export default function Ventas() {
       {/* ====== Weekly Balance Card ====== */}
       <motion.div variants={itemAnim} className="gradient-panel rounded-lg border border-border-subtle overflow-hidden">
         <div className="px-5 py-3 border-b border-border-subtle flex items-center justify-between">
-          <h3 className="text-h4 text-text-primary">Balance Semanal</h3>
+          <h3 className="text-base md:text-lg font-semibold text-text-primary">Balance Semanal</h3>
           <span className="text-xs text-text-tertiary">Semana actual</span>
         </div>
         <div className="overflow-x-auto">
@@ -404,12 +404,12 @@ export default function Ventas() {
       <motion.div variants={itemAnim} className="gradient-panel rounded-lg border border-border-subtle overflow-hidden">
         <div className="px-5 py-3 border-b border-border-subtle flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h3 className="text-h4 text-text-primary">Tickets Ganadores</h3>
+            <h3 className="text-base md:text-lg font-semibold text-text-primary">Tickets Ganadores</h3>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-accent-green/15 text-accent-green border border-accent-green/30">
               {winnerTickets.length}
             </span>
           </div>
-          <button className="text-xs text-accent-blue hover:text-accent-blue-bright transition-colors flex items-center gap-1">
+          <button className="text-xs text-accent-blue hover:text-accent-blue-bright transition-colors flex items-center gap-1 min-h-[44px]">
             Ver todos <ChevronRight size={14} />
           </button>
         </div>
@@ -465,10 +465,10 @@ export default function Ventas() {
       <motion.div variants={itemAnim} className="gradient-panel rounded-lg border border-border-subtle overflow-hidden">
         <div className="px-5 py-3 border-b border-border-subtle flex items-center justify-between">
           <div>
-            <h3 className="text-h4 text-text-primary">Historial de Transacciones</h3>
+            <h3 className="text-base md:text-lg font-semibold text-text-primary">Historial de Transacciones</h3>
             <p className="text-xs text-text-tertiary mt-0.5">Ultimas {runningBalance.length} transacciones</p>
           </div>
-          <button className="text-xs text-accent-blue hover:text-accent-blue-bright transition-colors flex items-center gap-1">
+          <button className="text-xs text-accent-blue hover:text-accent-blue-bright transition-colors flex items-center gap-1 min-h-[44px]">
             Ver todas <ArrowRight size={14} />
           </button>
         </div>
@@ -533,8 +533,8 @@ export default function Ventas() {
         <div className="px-5 py-4 flex items-center justify-between">
           <div>
             <p className="text-sm text-text-tertiary">Pendientes de Pago</p>
-            <p className="text-h2 font-bold font-mono text-accent-amber mt-1">$14,327.00</p>
-            <p className="text-xs text-text-tertiary mt-1">7 tickets ganadores sin pagar</p>
+            <p className="text-xl md:text-2xl font-bold font-mono text-accent-amber mt-1">$14,327.00</p>
+            <p className="text-xs text-text-tertiary mt-1 hidden sm:block">7 tickets ganadores sin pagar</p>
           </div>
           <a
             href="#/pendientes"

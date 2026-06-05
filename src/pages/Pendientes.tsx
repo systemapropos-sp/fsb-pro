@@ -215,7 +215,7 @@ export default function Pendientes() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] }}
-      className="p-6 space-y-5"
+      className="px-4 md:px-6 lg:px-8 py-5 space-y-5"
     >
       {/* ── Page Header ── */}
       <motion.div
@@ -223,7 +223,7 @@ export default function Pendientes() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <h1 className="text-h2 font-semibold text-text-primary">Pendientes de Pago</h1>
+        <h1 className="text-xl md:text-2xl lg:text-3xl font-semibold text-text-primary">Pendientes de Pago</h1>
         <p className="text-sm text-text-tertiary mt-1">Tickets ganadores que requieren pago</p>
       </motion.div>
 
@@ -239,7 +239,7 @@ export default function Pendientes() {
         }`}
       >
         {allPaid ? (
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -248,38 +248,38 @@ export default function Pendientes() {
               <CheckCircle size={48} className="text-accent-green" />
             </motion.div>
             <div>
-              <h2 className="text-h3 text-accent-green font-semibold">
+              <h2 className="text-lg md:text-xl text-accent-green font-semibold">
                 Todos los tickets estan pagados
               </h2>
               <p className="text-sm text-text-tertiary mt-1">No hay pagos pendientes</p>
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
+          <div className="space-y-3 md:space-y-4">
+            <div className="flex items-center gap-3 flex-wrap">
               <Clock size={20} className="text-accent-amber" />
               <span className="text-sm text-text-tertiary">Tickets Pendientes:</span>
               <motion.span
                 key={tickets.length}
                 initial={{ scale: 1.3 }}
                 animate={{ scale: 1 }}
-                className="text-h3 font-bold text-accent-amber"
+                className="text-xl md:text-2xl font-bold text-accent-amber"
               >
                 {tickets.length}
               </motion.span>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <span className="text-body-lg text-text-tertiary">Monto Total Pendiente:</span>
               <motion.span
                 key={summary.premioTotal}
                 initial={{ scale: 1.05 }}
                 animate={{ scale: 1 }}
-                className="text-hero font-bold text-accent-amber font-mono"
+                className="text-2xl md:text-3xl lg:text-4xl font-bold text-accent-amber font-mono"
               >
                 {formatAmount(summary.premioTotal)}
               </motion.span>
             </div>
-            <div className="flex items-center justify-between pt-2 border-t border-border-subtle">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-2 border-t border-border-subtle gap-1">
               <span className="text-sm text-text-tertiary">Monto apostado total:</span>
               <span className="font-mono text-mono text-text-primary font-semibold">
                 {formatAmount(summary.montoTotal)}
@@ -295,7 +295,7 @@ export default function Pendientes() {
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="flex items-center gap-2 flex-wrap"
+          className="flex items-center gap-2 overflow-x-auto flex-nowrap pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap md:overflow-visible"
         >
           {STATUS_FILTERS.map((filter) => {
             const isActive = activeFilter === filter.key;
@@ -351,7 +351,7 @@ export default function Pendientes() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por numero de ticket..."
-            className="input-standard px-3 py-1.5 text-sm w-[260px]"
+            className="input-standard px-3 h-12 md:h-10 text-sm w-full sm:w-[260px]"
           />
         </div>
       )}
@@ -363,8 +363,8 @@ export default function Pendientes() {
         transition={{ duration: 0.35, delay: 0.2 }}
         className="gradient-panel border border-border-subtle rounded-lg overflow-hidden"
       >
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="hidden sm:block overflow-x-auto">
+          <table className="min-w-[640px] w-full text-sm">
             <thead className="sticky top-0 z-10">
               <tr className="bg-[rgba(17,24,39,0.95)] backdrop-blur-lg">
                 <th className="px-3 py-3 text-center text-xs font-semibold text-text-secondary uppercase tracking-wider w-[5%]">
@@ -484,25 +484,14 @@ export default function Pendientes() {
             </tbody>
           </table>
         </div>
-      </motion.div>
 
-      {/* ── Pay All Button ── */}
-      {!allPaid && tickets.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="flex justify-center pt-2 pb-4"
-        >
-          <button
-            onClick={handlePayAll}
-            className="flex items-center justify-center gap-2 w-full max-w-[400px] h-[52px] gradient-winner text-white text-sm font-bold tracking-wider rounded-md hover:shadow-winner hover:scale-[1.02] active:scale-[0.98] transition-all"
-          >
-            <CreditCard size={18} />
-            PAGAR TODOS LOS TICKETS
-          </button>
-        </motion.div>
-      )}
-    </motion.div>
-  );
-}
+          {/* Mobile Card View */}
+          <div className="sm:hidden space-y-3 mt-3">
+            <AnimatePresence>
+              {filteredTickets.length > 0 ? (
+                filteredTickets.map((ticket) => {
+                  const daysPending = getDaysPending(ticket.date);
+                  return (
+                    <motion.div
+                      key={ticket.id}
+                      ini
