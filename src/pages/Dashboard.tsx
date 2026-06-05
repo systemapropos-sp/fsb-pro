@@ -1,43 +1,23 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  User,
-  Calendar,
-  Clock,
-  Trash2,
-  Printer,
-  RefreshCw,
-  ChevronUp,
-  ChevronDown,
-  Calculator,
-  X,
-  ClipboardList,
+  User, Calendar, Clock, Trash2, Printer,
+  RefreshCw, ChevronUp, ChevronDown, Calculator,
+  ClipboardList, X, Check
 } from 'lucide-react';
 import {
-  formatAmount,
-  formatOdds,
-  formatDate,
-  formatTime,
-  getLines,
-  getSports,
-  getPeriods,
-  getSelectedPlays,
-  addSelectedPlay,
-  removeSelectedPlay,
-  clearSelectedPlays,
-  createTicket,
-  type Play,
-  type BettingLine,
+  formatAmount, formatOdds, formatDate, formatTime,
+  getLines, getSports, getPeriods, getSelectedPlays,
+  addSelectedPlay, removeSelectedPlay, clearSelectedPlays,
+  createTicket, type Play, type BettingLine,
 } from '@/lib/storage';
 import confetti from 'canvas-confetti';
 
 type TabMode = 'teaser' | 'teaserIF';
 type PlaysTab = 'jugadas' | 'jugadasIF';
-type MobileTab = 'apuesta' | 'jugadas' | 'lineas';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const TEAM_CODES: Record<string, string> = {
-  // MLB
   'Giants': '4022', 'Cubs': '4023', 'Yankees': '4001', 'Red Sox': '4002',
   'Dodgers': '4003', 'Mets': '4004', 'Cardinals': '4005', 'Braves': '4006',
   'Astros': '4007', 'Rangers': '4008', 'Phillies': '4009', 'Blue Jays': '4010',
@@ -46,37 +26,16 @@ const TEAM_CODES: Record<string, string> = {
   'White Sox': '4019', 'Royals': '4020', 'Rockies': '4021', 'Athletics': '4024',
   'Pirates': '4025', 'Reds': '4026', 'Marlins': '4027', 'Diamondbacks': '4028',
   'Angels': '4029', 'Nationals': '4030',
-  // NBA
-  'New York Knicks': '2003', 'San Antonio Spurs': '2016', 'Lakers': '2001',
-  'Warriors': '2002', 'Celtics': '2004', 'Bulls': '2005', 'Heat': '2006',
-  'Suns': '2007', 'Nets': '2008', 'Mavericks': '2009', 'Bucks': '2010',
-  '76ers': '2011', 'Jazz': '2012', 'Nuggets': '2013', 'Clippers': '2014',
-  'Hawks': '2015', 'Raptors': '2017', 'Pacers': '2018', 'Blazers': '2019',
-  'Kings': '2020', 'Pelicans': '2021', 'Thunder': '2022', 'Timberwolves': '2023',
-  'Hornets': '2024', 'Wizards': '2025', 'Magic': '2026', 'Pistons': '2027',
-  'Rockets': '2028', 'Grizzlies': '2029', 'Cavaliers': '2030',
-  // NFL
-  'Cowboys': '3001', 'Chiefs': '3002', 'Eagles': '3003', '49ers': '3004',
-  'Ravens': '3005', 'Bills': '3006', 'Bengals': '3007', 'Packers': '3008',
-  'Jets': '3009', 'Dolphins': '3010', 'Vikings': '3011', 'Broncos': '3012',
-  'Steelers': '3013', 'Falcons': '3014', 'Saints': '3015', 'Rams': '3016',
-  'Chargers': '3017', 'Commanders': '3018', 'Browns': '3019', 'Colts': '3020',
-  'Jaguars': '3021', 'Titans': '3022', 'Panthers': '3023', 'Buccaneers': '3024',
-  'Patriots': '3025', 'Texans': '3026', 'Lions': '3027', 'Bears': '3028',
-  'Giants NFL': '3029', 'Cardinals NFL': '3030', 'Raiders': '3031', 'Seahawks': '3032',
 };
 
 export default function Dashboard() {
-  // --- State ---
   const [modeTab, setModeTab] = useState<TabMode>('teaser');
   const [playsTab, setPlaysTab] = useState<PlaysTab>('jugadas');
-  const [mobileTab, setMobileTab] = useState<MobileTab>('apuesta');
   const [selectedPlays, setSelectedPlays] = useState<Play[]>([]);
   const [lines, setLines] = useState<BettingLine[]>([]);
   const [sports, setSports] = useState<string[]>([]);
   const [selectedSport, setSelectedSport] = useState('Todos');
   const [selectedPeriod, setSelectedPeriod] = useState('Juego Completo');
-  const [lineView, setLineView] = useState<'lineas' | 'resultados'>('lineas');
   const [equipo, setEquipo] = useState('');
   const [jugada, setJugada] = useState('');
   const [cantidad, setCantidad] = useState('');
@@ -88,13 +47,11 @@ export default function Dashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const linesScrollRef = useRef<HTMLDivElement>(null);
 
-  // --- Load data ---
   useEffect(() => {
     const plays = getSelectedPlays();
     setSelectedPlays(plays);
     setSports(getSports());
     loadLines();
-
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
@@ -107,7 +64,6 @@ export default function Dashboard() {
     loadLines();
   }, [selectedSport, selectedPeriod]);
 
-  // --- Computed ---
   const jugadasCount = selectedPlays.filter((p) => !p.isIF).length;
   const jugadasIFCount = selectedPlays.filter((p) => p.isIF).length;
   const totalOdds = useMemo(() => {
@@ -119,7 +75,6 @@ export default function Dashboard() {
   const pago = cantidadNum > 0 ? cantidadNum * totalOdds : 0;
   const ganancia = pago - cantidadNum;
 
-  // --- Handlers ---
   const handleAddPlay = useCallback(
     (line: BettingLine, type: string, value: number, points: number = 0) => {
       const newPlay: Play = {
@@ -155,7 +110,6 @@ export default function Dashboard() {
   const handleProcessTicket = () => {
     if (selectedPlays.length === 0 || cantidadNum <= 0) return;
     setProcessingTicket(true);
-
     setTimeout(() => {
       const ticket = createTicket({
         seller: 'mmw03',
@@ -166,18 +120,13 @@ export default function Dashboard() {
         profit: ganancia,
         status: 'pendiente',
       });
-
       setSuccessTicket(ticket.id);
       setProcessingTicket(false);
-
       confetti({
-        particleCount: 40,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#22C55E', '#3B82F6', '#06B6D4'],
+        particleCount: 40, spread: 70, origin: { y: 0.6 },
+        colors: ['#7CB342', '#29B6F6', '#81D4FA'],
         disableForReducedMotion: true,
       });
-
       setTimeout(() => {
         handleClearAll();
         setSuccessTicket(null);
@@ -187,256 +136,114 @@ export default function Dashboard() {
 
   const handleRefresh = () => {
     setRefreshing(true);
-    setTimeout(() => {
-      loadLines();
-      setRefreshing(false);
-    }, 500);
+    setTimeout(() => { loadLines(); setRefreshing(false); }, 500);
   };
 
   const displayPlays = selectedPlays.filter((p) =>
     playsTab === 'jugadas' ? !p.isIF : p.isIF
   );
 
-  // --- Mobile Tab Bar ---
-  const MobileTabBar = () => (
-    <div className="sticky top-0 z-20 bg-white border-b border-border-subtle flex md:hidden">
-      {(
-        [
-          ['apuesta', 'Apuesta'],
-          ['jugadas', `Jugadas (${selectedPlays.length})`],
-          ['lineas', 'Lineas'],
-        ] as const
-      ).map(([key, label]) => (
-        <button
-          key={key}
-          onClick={() => setMobileTab(key)}
-          className={`flex-1 py-3 text-sm font-medium transition-all min-h-[44px] active:scale-95 ${
-            mobileTab === key
-              ? 'text-accent-blue border-b-2 border-accent-blue bg-accent-blue/5'
-              : 'text-text-muted hover:text-text-secondary'
-          }`}
-        >
-          {label}
-        </button>
-      ))}
-    </div>
-  );
-
-  // --- Sales Form Content (shared) ---
+  // --- Sales Form ---
   const SalesForm = () => (
-    <div className="flex flex-col gap-3 p-3 md:p-4">
+    <div className="flex flex-col gap-3 p-4">
       {/* Seller Info */}
       <div className="space-y-1.5">
         <div className="flex items-center gap-2">
-          <User size={14} className="text-text-tertiary shrink-0" />
-          <span className="text-xs text-text-tertiary w-16">Vendedor:</span>
-          <span className="text-sm font-semibold text-text-primary font-mono">
-            mmw03
-          </span>
+          <User size={14} className="text-muted shrink-0" />
+          <span className="text-xs text-muted w-16">Vendedor:</span>
+          <span className="text-sm font-semibold text-main font-mono">mmw03</span>
         </div>
         <div className="flex items-center gap-2">
-          <Calendar size={14} className="text-text-tertiary shrink-0" />
-          <span className="text-xs text-text-tertiary w-16">Fecha:</span>
-          <span className="text-xs text-text-secondary">
-            {formatDate(currentTime)}
-          </span>
+          <Calendar size={14} className="text-muted shrink-0" />
+          <span className="text-xs text-muted w-16">Fecha:</span>
+          <span className="text-xs text-main">{formatDate(currentTime)}</span>
         </div>
         <div className="flex items-center gap-2">
-          <Clock size={14} className="text-text-tertiary shrink-0" />
-          <span className="text-xs text-text-tertiary w-16">Hora:</span>
-          <span className="text-xs text-text-secondary font-mono">
-            {formatTime(currentTime)}
-          </span>
+          <Clock size={14} className="text-muted shrink-0" />
+          <span className="text-xs text-muted w-16">Hora:</span>
+          <span className="text-xs text-main font-mono">{formatTime(currentTime)}</span>
         </div>
       </div>
 
-      <div className="border-t border-border-subtle" />
+      <div className="border-t border-light" />
 
       {/* Mode Tabs */}
-      <div className="flex gap-1 p-1 rounded-md bg-bg-secondary/80">
-        {(
-          [
-            ['teaser', 'Teaser'],
-            ['teaserIF', 'Teaser IF'],
-          ] as const
-        ).map(([key, label]) => (
+      <div className="flex gap-1 p-1 rounded-md bg-panel">
+        {(['teaser', 'teaserIF'] as const).map((key) => (
           <button
             key={key}
             onClick={() => setModeTab(key)}
-            className={`flex-1 py-2 px-4 rounded-sm text-sm font-medium transition-all duration-200 min-h-[40px] active:scale-95 ${
+            className={`flex-1 py-2 px-4 rounded-sm text-sm font-medium transition-all ${
               modeTab === key
-                ? 'bg-accent-blue/15 text-text-primary border border-accent-blue/30'
-                : 'text-text-muted hover:text-text-secondary'
+                ? 'bg-white text-main shadow-sm border border-light'
+                : 'text-muted hover:text-main'
             }`}
           >
-            {label}
+            {key === 'teaser' ? 'Teaser' : 'Teaser IF'}
           </button>
         ))}
       </div>
 
       {/* Form Fields */}
-      <div className="space-y-3 md:space-y-2.5">
+      <div className="space-y-2.5">
         <div>
-          <label className="block text-xs text-text-tertiary mb-1">
-            Equipo
-          </label>
-          <input
-            type="text"
-            value={equipo}
-            onChange={(e) => setEquipo(e.target.value)}
-            placeholder="Nombre del equipo"
-            className="input-standard w-full h-12 md:h-10"
-          />
+          <label className="block text-xs text-muted mb-1">Equipo</label>
+          <input type="text" value={equipo} onChange={(e) => setEquipo(e.target.value)}
+            placeholder="Nombre del equipo" className="w-full h-10 px-3 rounded-lg border border-light bg-white text-sm focus:outline-none focus:border-matador-green focus:ring-1 focus:ring-matador-green/30 transition-all" />
         </div>
-
         <div>
-          <label className="block text-xs text-text-tertiary mb-1">
-            Jugada
-          </label>
-          <input
-            type="text"
-            value={jugada}
-            onChange={(e) => setJugada(e.target.value)}
-            placeholder="Tipo de jugada"
-            className="input-standard w-full h-12 md:h-10"
-          />
+          <label className="block text-xs text-muted mb-1">Jugada</label>
+          <input type="text" value={jugada} onChange={(e) => setJugada(e.target.value)}
+            placeholder="Tipo de jugada" className="w-full h-10 px-3 rounded-lg border border-light bg-white text-sm focus:outline-none focus:border-matador-green focus:ring-1 focus:ring-matador-green/30 transition-all" />
         </div>
-
         <div>
-          <label className="block text-xs text-text-tertiary mb-1">
-            #Jug.Reg
-          </label>
-          <input
-            type="text"
-            readOnly
-            value={selectedPlays.length.toString()}
-            className="w-full rounded-md border border-border-default bg-accent-blue/5 px-3.5 py-2.5 text-sm font-mono text-text-primary h-12 md:h-10"
-          />
+          <label className="block text-xs text-muted mb-1">#Jug.Reg</label>
+          <input type="text" readOnly value={selectedPlays.length.toString()}
+            className="w-full h-10 px-3 rounded-lg border border-light bg-fsb-cyan/5 text-sm font-mono text-main" />
         </div>
-
         <div>
-          <label className="block text-xs text-text-tertiary mb-1">
-            Cantidad
-          </label>
+          <label className="block text-xs text-muted mb-1">Cantidad</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary font-mono text-lg">
-              $
-            </span>
-            <input
-              type="text"
-              inputMode="decimal"
-              value={cantidad}
-              onChange={(e) => {
-                const val = e.target.value.replace(/[^0-9.]/g, '');
-                setCantidad(val);
-              }}
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted font-mono text-lg">$</span>
+            <input type="text" inputMode="decimal" value={cantidad}
+              onChange={(e) => setCantidad(e.target.value.replace(/[^0-9.]/g, ''))}
               placeholder="0.00"
-              className="input-standard w-full pl-8 pr-4 py-2.5 text-right font-mono text-mono-lg h-12 md:h-10"
-            />
+              className="w-full h-10 pl-8 pr-4 rounded-lg border border-light bg-white text-right font-mono text-lg focus:outline-none focus:border-matador-green focus:ring-1 focus:ring-matador-green/30 transition-all" />
           </div>
         </div>
-
         <div>
-          <label className="block text-xs text-text-tertiary mb-1">Pago</label>
-          <div className="w-full rounded-md border border-border-default bg-bg-tertiary/40 px-3.5 py-2.5 text-right font-mono text-mono text-accent-green h-12 md:h-10 flex items-center justify-end">
+          <label className="block text-xs text-muted mb-1">Pago</label>
+          <div className="w-full h-10 px-3 rounded-lg border border-light bg-panel/50 text-right font-mono text-accent-green flex items-center justify-end">
             {formatAmount(pago)}
           </div>
         </div>
-
         <div>
-          <label className="block text-xs text-text-tertiary mb-1">
-            Ganancia
-          </label>
-          <div className="w-full rounded-md border border-border-default bg-bg-tertiary/40 px-3.5 py-2.5 text-right font-mono text-mono text-accent-green h-12 md:h-10 flex items-center justify-end">
+          <label className="block text-xs text-muted mb-1">Ganancia</label>
+          <div className="w-full h-10 px-3 rounded-lg border border-light bg-panel/50 text-right font-mono text-accent-green flex items-center justify-end">
             {formatAmount(ganancia)}
           </div>
         </div>
-
-        {/* IF Fields */}
-        <AnimatePresence>
-          {modeTab === 'teaserIF' && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="space-y-3 md:space-y-2.5 border-t border-accent-purple/30 pt-2.5"
-            >
-              <div>
-                <label className="block text-xs text-accent-purple mb-1">
-                  Monto IF
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary font-mono text-lg">
-                    $
-                  </span>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="0.00"
-                    className="input-standard w-full pl-8 pr-4 py-2.5 text-right font-mono text-mono-lg border-accent-purple/30 focus:border-accent-purple focus:shadow-[0_0_0_3px_rgba(139,92,246,0.2)] h-12 md:h-10"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs text-accent-purple mb-1">
-                  Pago con IF
-                </label>
-                <div className="w-full rounded-md border border-accent-purple/30 bg-accent-purple/5 px-3.5 py-2.5 text-right font-mono text-mono text-accent-purple h-12 md:h-10 flex items-center justify-end">
-                  $0.00
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs text-accent-purple mb-1">
-                  Ganancia IF
-                </label>
-                <div className="w-full rounded-md border border-accent-purple/30 bg-accent-purple/5 px-3.5 py-2.5 text-right font-mono text-mono text-accent-purple h-12 md:h-10 flex items-center justify-end">
-                  $0.00
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
       {/* Action Buttons */}
       <div className="flex flex-wrap gap-2 pt-2">
-        <button className="flex items-center gap-1.5 px-3 py-2.5 rounded-md text-xs font-semibold bg-accent-blue/10 text-accent-blue border border-accent-blue/25 hover:bg-accent-blue/20 transition-colors min-h-[40px] active:scale-95">
-          <Calculator size={14} />
-          Calc
+        <button className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-fsb-cyan/10 text-fsb-cyan border border-fsb-cyan/25 hover:bg-fsb-cyan/20 transition-colors">
+          <Calculator size={14} /> Calc
         </button>
-        <button
-          onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
-          className="px-3 py-2.5 rounded-md text-xs font-semibold bg-bg-tertiary text-text-secondary hover:text-text-primary transition-colors min-h-[40px] active:scale-95"
-        >
+        <button onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
+          className="px-3 py-2 rounded-lg text-xs font-semibold bg-panel text-muted hover:text-main transition-colors">
           {language === 'es' ? 'ES | EN' : 'EN | ES'}
         </button>
         {showConfirmClear ? (
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-text-tertiary">
-              Seguro? {selectedPlays.length} jugadas
-            </span>
-            <button
-              onClick={handleClearAll}
-              className="px-3 py-2 rounded text-xs bg-accent-red text-white min-h-[36px] active:scale-95"
-            >
-              Si
-            </button>
-            <button
-              onClick={() => setShowConfirmClear(false)}
-              className="px-3 py-2 rounded text-xs bg-bg-tertiary text-text-secondary min-h-[36px] active:scale-95"
-            >
-              No
-            </button>
+            <span className="text-xs text-muted">Seguro? {selectedPlays.length} jugadas</span>
+            <button onClick={handleClearAll} className="px-3 py-2 rounded text-xs bg-accent-red text-white">Si</button>
+            <button onClick={() => setShowConfirmClear(false)} className="px-3 py-2 rounded text-xs bg-panel text-muted">No</button>
           </div>
         ) : (
-          <button
-            onClick={() =>
-              selectedPlays.length > 0 && setShowConfirmClear(true)
-            }
-            className="flex items-center gap-1.5 px-3 py-2.5 rounded-md text-xs font-semibold text-accent-red hover:bg-accent-red/10 transition-colors min-h-[40px] active:scale-95"
-          >
-            <Trash2 size={14} />
-            Eliminar
+          <button onClick={() => selectedPlays.length > 0 && setShowConfirmClear(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-accent-red hover:bg-accent-red/10 transition-colors">
+            <Trash2 size={14} /> Eliminar
           </button>
         )}
       </div>
@@ -445,21 +252,19 @@ export default function Dashboard() {
       <button
         onClick={handleProcessTicket}
         disabled={selectedPlays.length === 0 || cantidadNum <= 0 || processingTicket}
-        className={`w-full mt-2 py-4 md:py-3 rounded-lg text-sm font-bold transition-all duration-200 min-h-[56px] active:scale-[0.98] touch-ripple ${
+        className={`w-full mt-2 py-3 rounded-lg text-sm font-bold transition-all duration-200 ${
           selectedPlays.length > 0 && cantidadNum > 0 && !processingTicket
-            ? 'bg-gradient-to-r from-accent-green to-accent-green-dim text-white shadow-winner hover:shadow-lg hover:brightness-105'
-            : 'bg-text-muted/20 text-text-muted cursor-not-allowed'
+            ? 'btn-matador-green'
+            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
         }`}
       >
         {processingTicket ? (
           <span className="flex items-center justify-center gap-2">
-            <RefreshCw size={16} className="animate-spin" />
-            Procesando...
+            <RefreshCw size={16} className="animate-spin" /> Procesando...
           </span>
         ) : successTicket ? (
           <span className="flex items-center justify-center gap-2">
-            <CheckIcon />
-            Ticket #{successTicket}
+            <Check size={16} /> Ticket #{successTicket}
           </span>
         ) : (
           'PROCESAR TICKET'
@@ -468,59 +273,42 @@ export default function Dashboard() {
     </div>
   );
 
-  // --- Selected Plays Content (shared) ---
+  // --- Selected Plays ---
   const SelectedPlays = () => (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="p-3 md:p-4 border-b border-border-subtle shrink-0">
-        <h2 className="text-base md:text-h4 text-text-primary font-semibold mb-2">
-          Jugadas Seleccionadas
-        </h2>
+      <div className="p-4 border-b border-light shrink-0">
+        <h2 className="text-base font-semibold text-main mb-2">Jugadas Seleccionadas</h2>
         <div className="flex gap-1">
-          {(
-            [
-              ['jugadas', `Jugadas (${jugadasCount})`],
-              ['jugadasIF', `Jugadas IF (${jugadasIFCount})`],
-            ] as const
-          ).map(([key, label]) => (
+          {(['jugadas', 'jugadasIF'] as const).map((key) => (
             <button
               key={key}
               onClick={() => setPlaysTab(key)}
-              className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all min-h-[36px] active:scale-95 ${
+              className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
                 playsTab === key
-                  ? 'bg-accent-blue/15 text-accent-blue border border-accent-blue/25'
-                  : 'text-text-muted hover:text-text-secondary hover:bg-white/[0.02]'
+                  ? 'bg-matador-green/15 text-matador-green border border-matador-green/25'
+                  : 'text-muted hover:text-main hover:bg-white'
               }`}
             >
-              {label}
+              {key === 'jugadas' ? `Jugadas (${jugadasCount})` : `Jugadas IF (${jugadasIFCount})`}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Plays Table */}
       <div className="flex-1 overflow-y-auto min-h-0">
         {displayPlays.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-48 md:h-64 text-center px-8">
-            <ClipboardList
-              size={48}
-              className="text-text-muted/30 mb-3"
-            />
-            <p className="text-sm text-text-tertiary">
-              Seleccione jugadas del panel derecho
-            </p>
-            <p className="text-xs text-text-muted mt-1">
-              Haga clic en una linea para agregarla
-            </p>
+          <div className="flex flex-col items-center justify-center h-48 text-center px-8">
+            <ClipboardList size={48} className="text-gray-300 mb-3" />
+            <p className="text-sm text-muted">Seleccione jugadas del panel derecho</p>
+            <p className="text-xs text-gray-400 mt-1">Haga clic en una linea para agregarla</p>
           </div>
         ) : (
           <div className="w-full overflow-x-auto">
             <table className="w-full min-w-[400px]">
               <thead className="sticky top-0 z-10">
-                <tr className="bg-bg-secondary/90 text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                <tr className="bg-matador-green text-xs font-semibold text-white uppercase tracking-wider">
                   <th className="text-left px-3 py-2">Equipo</th>
                   <th className="text-left px-3 py-2">Jugada</th>
-                  <th className="text-left px-3 py-2 hidden md:table-cell">Dato</th>
                   <th className="text-right px-3 py-2">Linea</th>
                   <th className="text-center px-2 py-2 w-12"></th>
                 </tr>
@@ -534,35 +322,22 @@ export default function Dashboard() {
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.25 }}
-                      className={`border-b border-border-subtle hover:bg-white/[0.02] transition-colors ${
-                        index % 2 === 0 ? 'bg-white/[0.01]' : ''
+                      className={`border-b border-light hover:bg-gray-50 transition-colors ${
+                        index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
                       }`}
                     >
-                      <td className="px-3 py-2.5 text-sm text-text-primary">
+                      <td className="px-3 py-2.5 text-sm text-main">
                         <div className="font-medium">{play.teamCode}</div>
-                        <div className="text-xs text-text-tertiary truncate max-w-[120px] md:max-w-none">
-                          {play.team}
-                        </div>
+                        <div className="text-xs text-muted truncate max-w-[120px]">{play.team}</div>
                       </td>
-                      <td className="px-3 py-2.5 text-sm font-mono text-accent-blue">
-                        {play.playType}
-                      </td>
-                      <td className="px-3 py-2.5 text-xs text-text-secondary hidden md:table-cell">
-                        {play.detail}
-                      </td>
-                      <td
-                        className={`px-3 py-2.5 text-sm font-mono text-right ${
-                          play.odds >= 0 ? 'text-accent-green' : 'text-accent-red'
-                        }`}
-                      >
+                      <td className="px-3 py-2.5 text-sm font-mono text-fsb-cyan">{play.playType}</td>
+                      <td className={`px-3 py-2.5 text-sm font-mono text-right ${play.odds >= 0 ? 'odds-positive' : 'odds-negative'}`}>
                         {formatOdds(play.line)}
                       </td>
                       <td className="px-2 py-2.5 text-center">
-                        <button
-                          onClick={() => handleRemovePlay(play.id)}
-                          className="w-10 h-10 rounded-full flex items-center justify-center text-text-muted hover:text-accent-red hover:bg-accent-red/10 transition-colors active:scale-95"
-                        >
-                          <X size={16} />
+                        <button onClick={() => handleRemovePlay(play.id)}
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-muted hover:text-accent-red hover:bg-accent-red/10 transition-colors">
+                          <X size={14} />
                         </button>
                       </td>
                     </motion.tr>
@@ -574,95 +349,68 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Delete All */}
       {displayPlays.length > 0 && (
-        <div className="p-3 border-t border-border-subtle shrink-0">
-          <button
-            onClick={() => setShowConfirmClear(true)}
-            className="flex items-center gap-1.5 text-xs text-accent-red hover:bg-accent-red/10 px-3 py-2.5 rounded-md transition-colors min-h-[40px] active:scale-95"
-          >
-            <Trash2 size={14} />
-            Eliminar Todas
+        <div className="p-3 border-t border-light shrink-0">
+          <button onClick={() => setShowConfirmClear(true)}
+            className="flex items-center gap-1.5 text-xs text-accent-red hover:bg-accent-red/10 px-3 py-2 rounded-md transition-colors">
+            <Trash2 size={14} /> Eliminar Todas
           </button>
         </div>
       )}
     </div>
   );
 
-  // --- Betting Lines Content (shared) ---
+  // --- Betting Lines Panel (RIGHT - FSB Style) ---
   const BettingLines = () => (
-    <div className="flex flex-col h-full overflow-hidden">
-      {/* Sticky Header */}
-      <div className="shrink-0 bg-bg-secondary/95 backdrop-blur-lg border-b border-border-subtle z-10">
-        {/* View Toggle + Refresh */}
-        <div className="flex items-center justify-between px-3 md:px-4 py-2">
+    <div className="flex flex-col h-full overflow-hidden bg-bg-dark">
+      {/* Filters Bar */}
+      <div className="shrink-0 bg-bg-dark border-b border-border-dark z-10">
+        <div className="flex items-center justify-between px-3 py-2">
           <div className="flex gap-1">
-            {(
-              [
-                ['lineas', 'Lineas'],
-                ['resultados', 'Resultados'],
-              ] as const
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                onClick={() => setLineView(key)}
-                className={`px-3 py-1.5 rounded text-xs font-medium transition-colors min-h-[36px] active:scale-95 ${
-                  lineView === key
-                    ? 'bg-accent-blue/15 text-accent-blue'
-                    : 'text-text-muted hover:text-text-secondary'
-                }`}
-              >
-                {label}
+            {(['lineas', 'resultados'] as const).map(([key, label]) => (
+              <button key={key} onClick={() => {}}
+                className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                  key === 'lineas' ? 'bg-fsb-cyan/20 text-fsb-cyan' : 'text-gray-400 hover:text-white'
+                }`}>
+                {label === 'lineas' ? 'Lineas' : 'Resultados'}
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-1.5 md:gap-2">
-            <span className="text-[10px] md:text-xs text-text-tertiary font-mono hidden sm:inline">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-gray-500 font-mono hidden sm:inline">
               Actualizado: {formatTime(currentTime)}
             </span>
-            <button
-              onClick={handleRefresh}
-              className={`w-10 h-10 md:w-8 md:h-8 rounded-md flex items-center justify-center hover:bg-black/5 text-text-secondary transition-colors active:scale-95 ${
-                refreshing ? 'animate-spin-once' : ''
-              }`}
-            >
+            <button onClick={handleRefresh}
+              className={`w-8 h-8 rounded flex items-center justify-center hover:bg-white/10 text-gray-400 transition-colors ${refreshing ? 'animate-spin' : ''}`}>
               <RefreshCw size={15} />
             </button>
-            <button className="w-10 h-10 md:w-8 md:h-8 rounded-md flex items-center justify-center hover:bg-black/5 text-text-secondary transition-colors active:scale-95">
+            <button className="w-8 h-8 rounded flex items-center justify-center hover:bg-white/10 text-gray-400 transition-colors">
               <Printer size={15} />
             </button>
           </div>
         </div>
 
         {/* Sport Filter */}
-        <div className="flex gap-1.5 px-3 md:px-4 py-2 overflow-x-auto no-scrollbar">
+        <div className="flex gap-1.5 px-3 py-1.5 overflow-x-auto">
           {sports.map((sport) => (
-            <button
-              key={sport}
-              onClick={() => setSelectedSport(sport)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all min-h-[36px] active:scale-95 ${
+            <button key={sport} onClick={() => setSelectedSport(sport)}
+              className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
                 selectedSport === sport
-                  ? 'bg-accent-blue/15 text-accent-blue border border-accent-blue/25'
-                  : 'text-text-muted hover:text-text-secondary hover:bg-white/[0.02]'
-              }`}
-            >
+                  ? 'bg-fsb-cyan text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}>
               {sport}
             </button>
           ))}
         </div>
 
         {/* Period Filter */}
-        <div className="flex gap-4 px-3 md:px-4 py-1.5 overflow-x-auto">
+        <div className="flex gap-4 px-3 py-1 overflow-x-auto">
           {getPeriods().map((period) => (
-            <button
-              key={period}
-              onClick={() => setSelectedPeriod(period)}
-              className={`pb-1 text-xs font-medium transition-colors whitespace-nowrap min-h-[28px] active:scale-95 ${
-                selectedPeriod === period
-                  ? 'text-accent-blue border-b-2 border-accent-blue'
-                  : 'text-text-muted hover:text-text-secondary'
-              }`}
-            >
+            <button key={period} onClick={() => setSelectedPeriod(period)}
+              className={`pb-1 text-xs font-medium transition-colors whitespace-nowrap ${
+                selectedPeriod === period ? 'text-fsb-cyan border-b-2 border-fsb-cyan' : 'text-gray-500 hover:text-gray-300'
+              }`}>
               {period}
             </button>
           ))}
@@ -670,172 +418,71 @@ export default function Dashboard() {
       </div>
 
       {/* Game Cards */}
-      <div ref={linesScrollRef} className="flex-1 overflow-y-auto min-h-0 py-2">
+      <div ref={linesScrollRef} className="flex-1 overflow-y-auto min-h-0 py-2 px-2">
         {lines.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-48 md:h-64 text-center px-8">
-            <CalendarIcon size={48} className="text-text-muted/30 mb-3" />
-            <p className="text-sm text-text-tertiary">
-              No hay juegos disponibles
-            </p>
-            <p className="text-xs text-text-muted mt-1">
-              Seleccione otro deporte o periodo
-            </p>
+          <div className="flex flex-col items-center justify-center h-48 text-center">
+            <CalendarIcon size={48} className="text-gray-600 mb-3" />
+            <p className="text-sm text-gray-400">No hay juegos disponibles</p>
           </div>
         ) : (
-          <div className="space-y-2 px-2 md:px-4">
+          <div className="space-y-2">
             {lines.map((line) => (
-              <GameCard
-                key={line.id}
-                line={line}
-                onAddPlay={handleAddPlay}
-              />
+              <GameCard key={line.id} line={line} onAddPlay={handleAddPlay} />
             ))}
           </div>
         )}
       </div>
 
       {/* Scroll buttons */}
-      <div className="shrink-0 flex justify-end gap-1 p-2 border-t border-border-subtle">
-        <button
-          onClick={() => linesScrollRef.current?.scrollBy({ top: -200, behavior: 'smooth' })}
-          className="w-9 h-9 md:w-7 md:h-7 rounded flex items-center justify-center hover:bg-black/5 text-text-secondary active:scale-95"
-        >
+      <div className="shrink-0 flex justify-end gap-1 p-2 border-t border-border-dark">
+        <button onClick={() => linesScrollRef.current?.scrollBy({ top: -200, behavior: 'smooth' })}
+          className="w-7 h-7 rounded flex items-center justify-center hover:bg-white/10 text-gray-400">
           <ChevronUp size={14} />
         </button>
-        <button
-          onClick={() => linesScrollRef.current?.scrollBy({ top: 200, behavior: 'smooth' })}
-          className="w-9 h-9 md:w-7 md:h-7 rounded flex items-center justify-center hover:bg-black/5 text-text-secondary active:scale-95"
-        >
+        <button onClick={() => linesScrollRef.current?.scrollBy({ top: 200, behavior: 'smooth' })}
+          className="w-7 h-7 rounded flex items-center justify-center hover:bg-white/10 text-gray-400">
           <ChevronDown size={14} />
         </button>
       </div>
     </div>
   );
 
-  // --- Render ---
   return (
-    <div className="h-full flex flex-col">
-      {/* Mobile Tab Bar - only visible on small screens */}
-      <MobileTabBar />
+    <div className="h-full grid grid-cols-[280px_1fr_1.3fr] gap-0">
+      {/* Left Panel - Sales Form */}
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+        className="bg-white border-r border-light overflow-y-auto"
+      >
+        <SalesForm />
+      </motion.div>
 
-      {/* Content Area */}
-      <div className="flex-1 overflow-hidden">
-        {/* Desktop Layout: 3 columns */}
-        <div className="hidden xl:grid h-full grid-cols-[300px_1fr_1.2fr] gap-px bg-bg-primary">
-          {/* Left Panel */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.1 }}
-            className="gradient-panel border-r border-border-subtle overflow-y-auto"
-          >
-            <SalesForm />
-          </motion.div>
+      {/* Center Panel - Selected Plays */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+        className="bg-bg-panel border-r border-light overflow-hidden"
+      >
+        <SelectedPlays />
+      </motion.div>
 
-          {/* Center Panel */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.2 }}
-            className="gradient-panel border-r border-border-subtle overflow-hidden"
-          >
-            <SelectedPlays />
-          </motion.div>
-
-          {/* Right Panel */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.3 }}
-            className="gradient-panel overflow-hidden"
-          >
-            <BettingLines />
-          </motion.div>
-        </div>
-
-        {/* Tablet Layout: 2 columns */}
-        <div className="hidden md:grid xl:hidden h-full grid-cols-[3fr_2fr] gap-px bg-bg-primary">
-          {/* Left+Center Combined */}
-          <div className="flex flex-col border-r border-border-subtle overflow-hidden">
-            {/* Sales Form (top half) */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-              className="gradient-panel border-b border-border-subtle overflow-y-auto shrink-0 max-h-[45%]"
-            >
-              <SalesForm />
-            </motion.div>
-            {/* Selected Plays (bottom half) */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
-              className="gradient-panel flex-1 overflow-hidden min-h-0"
-            >
-              <SelectedPlays />
-            </motion.div>
-          </div>
-
-          {/* Right Panel (Lines) */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-            className="gradient-panel overflow-hidden"
-          >
-            <BettingLines />
-          </motion.div>
-        </div>
-
-        {/* Mobile Layout: Tab-based single column */}
-        <div className="md:hidden h-full bg-bg-primary overflow-y-auto">
-          <AnimatePresence mode="wait">
-            {mobileTab === 'apuesta' && (
-              <motion.div
-                key="apuesta"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.15 }}
-                className="gradient-panel"
-              >
-                <SalesForm />
-              </motion.div>
-            )}
-            {mobileTab === 'jugadas' && (
-              <motion.div
-                key="jugadas"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.15 }}
-                className="gradient-panel h-full"
-              >
-                <SelectedPlays />
-              </motion.div>
-            )}
-            {mobileTab === 'lineas' && (
-              <motion.div
-                key="lineas"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.15 }}
-                className="gradient-panel h-full flex flex-col"
-              >
-                <BettingLines />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
+      {/* Right Panel - Betting Lines (FSB Dark) */}
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.4, delay: 0.3 }}
+        className="overflow-hidden"
+      >
+        <BettingLines />
+      </motion.div>
     </div>
   );
 }
 
-// --- Sub-components ---
-
+// --- Game Card (FSB Style Dark Card) ---
 function GameCard({
   line,
   onAddPlay,
@@ -851,114 +498,54 @@ function GameCard({
     onAddPlay(line, type, value, points);
   };
 
+  const awayCode = line.awayTeamCode || TEAM_CODES[line.awayTeam] || '0000';
+  const homeCode = line.homeTeamCode || TEAM_CODES[line.homeTeam] || '0000';
+
   return (
     <motion.div
-      whileHover={{ y: -1 }}
-      className={`rounded-lg border p-3 md:p-3 transition-all duration-150 shadow-sm hover:shadow-md ${
-        flash
-          ? 'bg-[#EFF6FF] border-accent-blue/40'
-          : 'bg-[#F8FAFC] border-gray-200 hover:border-gray-300'
-      }`}
+      whileHover={{ scale: 1.005 }}
+      className={`fsb-line-card transition-all duration-150 ${flash ? 'ring-2 ring-fsb-cyan' : ''}`}
     >
-      {/* Teams Header */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-accent-blue bg-accent-blue/10 px-1.5 py-0.5 rounded-sm">
-            {line.sport}
-          </span>
-          <span className="text-xs text-[#94A3B8]">{line.time}</span>
+      {/* Cyan Header Row: TIME | M.L | R.L | SPREAD | SOLO */}
+      <div className="fsb-line-header grid grid-cols-[1fr_60px_60px_60px_60px] gap-px text-center">
+        <div className="px-2 py-1.5 text-xs font-bold text-left flex items-center gap-2">
+          <span>{line.time}</span>
+          <span className="text-white/70 font-normal">{line.sport}</span>
         </div>
-        <span className="text-[10px] text-[#CBD5E1] uppercase tracking-wider">
-          {line.period}
-        </span>
+        <div className="py-1.5 text-[10px] font-bold uppercase">M.L</div>
+        <div className="py-1.5 text-[10px] font-bold uppercase">R.L</div>
+        <div className="py-1.5 text-[10px] font-bold uppercase">Spread</div>
+        <div className="py-1.5 text-[10px] font-bold uppercase">Solo</div>
       </div>
 
-      <div className="flex items-center justify-between mb-3">
-        <div className="text-sm font-semibold text-[#1E293B]">
-          <span className="font-mono text-blue-600 mr-1">{line.awayTeamCode || TEAM_CODES[line.awayTeam] || '0000'}</span>
-          <span className="text-[#94A3B8] font-normal">{line.awayTeam}</span>
+      {/* Away Team Row */}
+      <div className="fsb-line-row grid grid-cols-[1fr_60px_60px_60px_60px] gap-px text-center items-center">
+        <div className="px-2 py-2 text-left">
+          <span className="font-mono text-fsb-cyan text-xs mr-1.5">{awayCode}</span>
+          <span className="text-white text-xs font-medium">- {line.awayTeam}</span>
         </div>
-        <span className="text-xs text-[#CBD5E1] mx-1">@</span>
-        <div className="text-sm font-semibold text-[#1E293B] text-right">
-          <span className="text-[#94A3B8] font-normal">{line.homeTeam}</span>
-          <span className="font-mono text-blue-600 ml-1">{line.homeTeamCode || TEAM_CODES[line.homeTeam] || '0000'}</span>
-        </div>
+        <LineCell value={line.moneyLine.away} onClick={() => handleCellClick('ML', line.moneyLine.away)} type="odds" />
+        <LineCell value={`${line.runLine.away >= 0 ? '+' : ''}${line.runLine.away}`} onClick={() => handleCellClick('RL', line.runLine.away)} />
+        <LineCell value={`${line.spread.away >= 0 ? '+' : ''}${line.spread.away}`} onClick={() => handleCellClick('Spread', line.spread.away, line.spread.away)} />
+        <LineCell value={line.solo.away} onClick={() => handleCellClick('Solo', line.solo.away)} type="odds" />
       </div>
 
-      {/* Lines Table */}
-      <div className="overflow-x-auto no-scrollbar">
-        <div className="grid grid-cols-5 gap-1 text-center min-w-[280px]">
-          <div className="text-[10px] text-[#94A3B8] uppercase font-semibold py-1">
-            M.L
-          </div>
-          <div className="text-[10px] text-[#94A3B8] uppercase font-semibold py-1">
-            R.L
-          </div>
-          <div className="text-[10px] text-[#94A3B8] uppercase font-semibold py-1">
-            Spread
-          </div>
-          <div className="text-[10px] text-[#94A3B8] uppercase font-semibold py-1">
-            Solo
-          </div>
-          <div className="text-[10px] text-[#94A3B8] uppercase font-semibold py-1">
-            Puntos
-          </div>
-
-          {/* Away row */}
-          <LineCell
-            value={line.moneyLine.away}
-            onClick={() => handleCellClick('ML', line.moneyLine.away)}
-            type="odds"
-          />
-          <LineCell
-            value={`${line.runLine.away >= 0 ? '+' : ''}${line.runLine.away}`}
-            onClick={() => handleCellClick('RL', line.runLine.away)}
-          />
-          <LineCell
-            value={`${line.spread.away >= 0 ? '+' : ''}${line.spread.away}`}
-            onClick={() => handleCellClick('Spread', line.spread.away, line.spread.away)}
-          />
-          <LineCell
-            value={line.solo.away}
-            onClick={() => handleCellClick('Solo', line.solo.away)}
-            type="odds"
-          />
-          <LineCell
-            value={`O ${line.points.over}`}
-            onClick={() => handleCellClick('Over', line.points.over, line.points.value)}
-            type="over"
-          />
-
-          {/* Home row */}
-          <LineCell
-            value={line.moneyLine.home}
-            onClick={() => handleCellClick('ML', line.moneyLine.home)}
-            type="odds"
-          />
-          <LineCell
-            value={`${line.runLine.home >= 0 ? '+' : ''}${line.runLine.home}`}
-            onClick={() => handleCellClick('RL', line.runLine.home)}
-          />
-          <LineCell
-            value={`${line.spread.home >= 0 ? '+' : ''}${line.spread.home}`}
-            onClick={() => handleCellClick('Spread', line.spread.home, line.spread.home)}
-          />
-          <LineCell
-            value={line.solo.home}
-            onClick={() => handleCellClick('Solo', line.solo.home)}
-            type="odds"
-          />
-          <LineCell
-            value={`U ${line.points.under}`}
-            onClick={() => handleCellClick('Under', line.points.under, line.points.value)}
-            type="under"
-          />
+      {/* Home Team Row */}
+      <div className="fsb-line-row grid grid-cols-[1fr_60px_60px_60px_60px] gap-px text-center items-center" style={{ background: '#546E7A' }}>
+        <div className="px-2 py-2 text-left">
+          <span className="font-mono text-fsb-cyan text-xs mr-1.5">{homeCode}</span>
+          <span className="text-white text-xs font-medium">- {line.homeTeam}</span>
         </div>
+        <LineCell value={line.moneyLine.home} onClick={() => handleCellClick('ML', line.moneyLine.home)} type="odds" />
+        <LineCell value={`${line.runLine.home >= 0 ? '+' : ''}${line.runLine.home}`} onClick={() => handleCellClick('RL', line.runLine.home)} />
+        <LineCell value={`${line.spread.home >= 0 ? '+' : ''}${line.spread.home}`} onClick={() => handleCellClick('Spread', line.spread.home, line.spread.home)} />
+        <LineCell value={line.solo.home} onClick={() => handleCellClick('Solo', line.solo.home)} type="odds" />
       </div>
     </motion.div>
   );
 }
 
+// --- Line Cell (FSB Dark Style) ---
 function LineCell({
   value,
   onClick,
@@ -966,55 +553,34 @@ function LineCell({
 }: {
   value: string | number;
   onClick: () => void;
-  type?: 'normal' | 'odds' | 'over' | 'under';
+  type?: 'normal' | 'odds';
 }) {
   const numVal = typeof value === 'string' ? parseFloat(value.replace(/[OU+\s]/g, '')) : value;
   const display = typeof value === 'string' ? value : formatOdds(value);
 
-  let colorClass = 'text-[#1E293B]';
-  if (type === 'odds') {
-    colorClass = numVal >= 0 ? 'text-accent-green' : 'text-accent-red';
-  } else if (type === 'over') {
-    colorClass = 'text-accent-green';
-  } else if (type === 'under') {
-    colorClass = 'text-accent-red';
-  }
+  const colorClass = type === 'odds'
+    ? (numVal >= 0 ? 'text-accent-green' : 'text-accent-red')
+    : 'text-white';
 
   return (
     <button
       onClick={onClick}
-      className={`py-2 md:py-1.5 rounded-sm font-mono text-xs md:text-mono hover:bg-accent-blue/10 transition-colors min-h-[44px] md:min-h-0 flex items-center justify-center ${colorClass}`}
+      className={`fsb-line-cell ${colorClass} mx-0.5 my-1`}
     >
       {display}
     </button>
   );
 }
 
-function CheckIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  );
-}
-
 function CalendarIcon({ size, className }: { size: number; className?: string }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+      <rect x="3" y="4" width="18" height="18" rx="2" />
       <line x1="16" y1="2" x2="16" y2="6" />
       <line x1="8" y1="2" x2="8" y2="6" />
       <line x1="3" y1="10" x2="21" y2="10" />
     </svg>
   );
 }
+
+

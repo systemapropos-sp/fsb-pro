@@ -5,84 +5,71 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Background colors
-        'bg-primary': '#F1F5F9',
-        'bg-secondary': '#FFFFFF',
-        'bg-tertiary': '#F8FAFC',
-        'bg-quaternary': '#E2E8F0',
-        // Accent colors
-        'accent-green': '#22C55E',
-        'accent-green-dim': '#16A34A',
+        // MATADOR dark grays
+        'matador-dark': '#3C3C3C',
+        'matador-darker': '#2D2D2D',
+        'matador-sidebar': '#333333',
+        'matador-header': '#3C3C3C',
+
+        // MATADOR green (action buttons, table headers)
+        'matador-green': '#7CB342',
+        'matador-green-hover': '#689F38',
+        'matador-green-light': '#AED581',
+
+        // FSB cyan (betting lines panel)
+        'fsb-cyan': '#29B6F6',
+        'fsb-cyan-dark': '#0288D1',
+        'fsb-cyan-light': '#81D4FA',
+
+        // Backgrounds
+        'bg-main': '#ECEFF1',
+        'bg-card': '#FFFFFF',
+        'bg-panel': '#F5F5F5',
+        'bg-dark': '#455A64',
+        'bg-dark-row': '#546E7A',
+        'bg-dark-hover': '#607D8B',
+
+        // Text
+        'text-main': '#212121',
+        'text-light': '#FFFFFF',
+        'text-muted': '#757575',
+        'text-cyan': '#29B6F6',
+
+        // Borders
+        'border-light': '#E0E0E0',
+        'border-dark': '#37474F',
+
+        // Accents
+        'accent-green': '#7CB342',
         'accent-red': '#EF4444',
-        'accent-red-dim': '#DC2626',
-        'accent-amber': '#F59E0B',
-        'accent-amber-dim': '#D97706',
-        'accent-blue': '#3B82F6',
-        'accent-blue-bright': '#60A5FA',
-        'accent-cyan': '#06B6D4',
-        'accent-purple': '#8B5CF6',
-        // Text colors
-        'text-primary': '#1E293B',
-        'text-secondary': '#475569',
-        'text-tertiary': '#94A3B8',
-        'text-muted': '#CBD5E1',
-        'text-inverse': '#FFFFFF',
-        // Border colors
-        'border-subtle': 'rgba(148, 163, 184, 0.2)',
-        'border-default': 'rgba(148, 163, 184, 0.3)',
-        'border-focus': '#3B82F6',
-        // Shadcn defaults (keep for compatibility)
+        'accent-amber': '#FFA726',
+        'accent-blue': '#29B6F6',
+        'accent-cyan': '#29B6F6',
+
+        // Status
+        'status-pending': '#FFA726',
+        'status-winner': '#7CB342',
+        'status-loser': '#EF4444',
+        'status-paid': '#7CB342',
+        'status-cancelled': '#9E9E9E',
+
+        // Shadcn compatibility
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive) / <alpha-value>)",
-          foreground: "hsl(var(--destructive-foreground) / <alpha-value>)",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
+        primary: { DEFAULT: "hsl(var(--primary))", foreground: "hsl(var(--primary-foreground))" },
+        secondary: { DEFAULT: "hsl(var(--secondary))", foreground: "hsl(var(--secondary-foreground))" },
+        destructive: { DEFAULT: "hsl(var(--destructive) / <alpha-value>)", foreground: "hsl(var(--destructive-foreground) / <alpha-value>)" },
+        muted: { DEFAULT: "hsl(var(--muted))", foreground: "hsl(var(--muted-foreground))" },
+        accent: { DEFAULT: "hsl(var(--accent))", foreground: "hsl(var(--accent-foreground))" },
+        popover: { DEFAULT: "hsl(var(--popover))", foreground: "hsl(var(--popover-foreground))" },
+        card: { DEFAULT: "hsl(var(--card))", foreground: "hsl(var(--card-foreground))" },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
-      },
-      fontSize: {
-        'hero': ['2.5rem', { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '700' }],
-        'h1': ['1.875rem', { lineHeight: '1.2', letterSpacing: '-0.01em', fontWeight: '700' }],
-        'h2': ['1.5rem', { lineHeight: '1.3', letterSpacing: '-0.01em', fontWeight: '600' }],
-        'h3': ['1.25rem', { lineHeight: '1.4', fontWeight: '600' }],
-        'h4': ['1.125rem', { lineHeight: '1.4', fontWeight: '600' }],
-        'body-lg': ['1rem', { lineHeight: '1.5', fontWeight: '400' }],
-        'body': ['0.875rem', { lineHeight: '1.5', fontWeight: '400' }],
-        'sm': ['0.8125rem', { lineHeight: '1.4', letterSpacing: '0.01em', fontWeight: '500' }],
-        'xs': ['0.75rem', { lineHeight: '1.4', letterSpacing: '0.02em', fontWeight: '500' }],
-        'mono-lg': ['1.25rem', { lineHeight: '1.2', letterSpacing: '0.02em', fontWeight: '500' }],
-        'mono': ['0.9375rem', { lineHeight: '1.3', letterSpacing: '0.01em', fontWeight: '500' }],
-        'mono-sm': ['0.8125rem', { lineHeight: '1.3', letterSpacing: '0.02em', fontWeight: '400' }],
       },
       borderRadius: {
         'sm': '6px',
@@ -103,20 +90,14 @@ module.exports = {
         '10': '40px',
         '12': '48px',
         'header': '48px',
-        'navbar': '96px',
       },
       boxShadow: {
-        xs: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
         'sm': '0 1px 2px rgba(0,0,0,0.05)',
-        'md': '0 4px 6px rgba(0,0,0,0.07)',
-        'lg': '0 10px 15px rgba(0,0,0,0.08)',
-        'xl': '0 20px 25px rgba(0,0,0,0.1)',
-        'panel': '0 1px 3px rgba(0,0,0,0.08)',
-        'card': '0 4px 12px rgba(0,0,0,0.08)',
-        'modal': '0 25px 50px -12px rgba(0,0,0,0.15)',
-        'accent': '0 4px 16px rgba(59,130,246,0.2)',
-        'winner': '0 4px 16px rgba(34,197,94,0.2)',
-        'danger': '0 4px 16px rgba(239,68,68,0.2)',
+        'card': '0 2px 8px rgba(0,0,0,0.08)',
+        'panel': '0 4px 12px rgba(0,0,0,0.1)',
+        'modal': '0 25px 50px rgba(0,0,0,0.15)',
+        'green': '0 4px 12px rgba(124,179,66,0.3)',
+        'cyan': '0 4px 12px rgba(41,182,246,0.3)',
       },
       keyframes: {
         "accordion-down": {
@@ -144,32 +125,6 @@ module.exports = {
           "80%": { transform: "translateX(4px)" },
           "100%": { transform: "translateX(0)" },
         },
-        "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 0 0 rgba(59,130,246,0.4)" },
-          "50%": { boxShadow: "0 0 20px 4px rgba(59,130,246,0.2)" },
-        },
-        "float-up": {
-          "0%": { transform: "translateY(100vh)", opacity: "0" },
-          "10%": { opacity: "0.6" },
-          "90%": { opacity: "0.6" },
-          "100%": { transform: "translateY(-10vh)", opacity: "0" },
-        },
-        "bg-zoom": {
-          "0%": { transform: "scale(1)" },
-          "100%": { transform: "scale(1.02)" },
-        },
-        "shimmer": {
-          "0%": { backgroundPosition: "-200% 0" },
-          "100%": { backgroundPosition: "200% 0" },
-        },
-        "spin-once": {
-          "0%": { transform: "rotate(0deg)" },
-          "100%": { transform: "rotate(360deg)" },
-        },
-        "count-pulse": {
-          "0%, 100%": { transform: "scale(1)" },
-          "50%": { transform: "scale(1.2)" },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -177,12 +132,6 @@ module.exports = {
         "caret-blink": "caret-blink 1.25s ease-out infinite",
         "shake": "shake 0.4s ease-in-out",
         "pin-shake": "pin-shake 0.4s ease-in-out",
-        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
-        "float-up": "float-up 20s ease-in-out infinite",
-        "bg-zoom": "bg-zoom 20s ease-in-out infinite alternate",
-        "shimmer": "shimmer 1.5s linear infinite",
-        "spin-once": "spin-once 0.5s ease-in-out",
-        "count-pulse": "count-pulse 0.2s ease-in-out",
       },
     },
   },

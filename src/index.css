@@ -6,299 +6,141 @@
 
 @layer base {
   :root {
-    --bg-primary: #F1F5F9;
+    --bg-primary: #ECEFF1;
     --bg-secondary: #FFFFFF;
-    --bg-tertiary: #F8FAFC;
-    --bg-quaternary: #E2E8F0;
-    --accent-green: #22C55E;
-    --accent-green-dim: #16A34A;
+    --bg-tertiary: #F5F5F5;
+    --bg-dark: #455A64;
+    --bg-dark-row: #546E7A;
+    --matador-dark: #3C3C3C;
+    --matador-darker: #2D2D2D;
+    --matador-green: #7CB342;
+    --matador-green-hover: #689F38;
+    --fsb-cyan: #29B6F6;
+    --fsb-cyan-dark: #0288D1;
+    --text-primary: #212121;
+    --text-secondary: #616161;
+    --text-tertiary: #9E9E9E;
+    --text-light: #FFFFFF;
+    --text-cyan: #29B6F6;
+    --border-light: #E0E0E0;
+    --border-dark: #37474F;
+    --accent-green: #7CB342;
     --accent-red: #EF4444;
-    --accent-red-dim: #DC2626;
-    --accent-amber: #F59E0B;
-    --accent-amber-dim: #D97706;
-    --accent-blue: #3B82F6;
-    --accent-blue-bright: #60A5FA;
-    --accent-cyan: #06B6D4;
-    --accent-purple: #8B5CF6;
-    --text-primary: #1E293B;
-    --text-secondary: #475569;
-    --text-tertiary: #94A3B8;
-    --text-muted: #CBD5E1;
-    --text-inverse: #FFFFFF;
-    --border-subtle: rgba(148, 163, 184, 0.2);
-    --border-default: rgba(148, 163, 184, 0.3);
-    --border-focus: #3B82F6;
+    --accent-amber: #FFA726;
+    --accent-blue: #29B6F6;
     --radius: 0.5rem;
-    --background: 210 40% 96%;
-    --foreground: 222 47% 17%;
+    --background: 220 14% 93%;
+    --foreground: 0 0% 13%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 17%;
+    --card-foreground: 0 0% 13%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 17%;
-    --primary: 217 91% 60%;
+    --popover-foreground: 0 0% 13%;
+    --primary: 88 50% 47%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 98%;
-    --secondary-foreground: 222 47% 17%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 47% 17%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 13%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 38%;
+    --accent: 199 91% 57%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 217 91% 60%;
-  }
-
-  * {
-    @apply border-border-subtle;
-  }
-
-  html {
-    scroll-behavior: smooth;
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 199 91% 57%;
   }
 
   body {
     font-family: 'Inter', system-ui, sans-serif;
-    background-color: #F1F5F9;
-    color: #1E293B;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    min-width: 320px !important;
+    background-color: #ECEFF1;
+    color: #212121;
+    min-width: 1280px;
     overflow-x: hidden;
   }
 
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: rgba(148, 163, 184, 0.35);
-    border-radius: 3px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(148, 163, 184, 0.55);
-  }
-
-  /* Firefox scrollbar */
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
-  }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(117,117,117,0.3); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(117,117,117,0.5); }
 }
 
 @layer components {
-  /* Gradient utilities */
-  .gradient-panel {
-    background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+  .btn-matador-green {
+    @apply bg-matador-green hover:bg-matador-green-hover text-white font-semibold rounded-lg transition-all duration-200;
+    box-shadow: 0 2px 8px rgba(124,179,66,0.3);
+  }
+  .btn-matador-green:hover {
+    box-shadow: 0 4px 16px rgba(124,179,66,0.4);
+    transform: translateY(-1px);
   }
 
-  .gradient-card {
-    background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
-  }
-
-  .gradient-accent {
-    background: linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%);
-  }
-
-  .gradient-winner {
-    background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
-  }
-
-  .gradient-danger {
-    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
-  }
-
-  /* Glassmorphism */
-  .glass {
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-  }
-
-  .glass-light {
-    background: rgba(241, 245, 249, 0.95);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-  }
-
-  /* Status badges */
-  .badge-pendiente {
-    background: rgba(245, 158, 11, 0.1);
-    color: #D97706;
-    border: 1px solid rgba(245, 158, 11, 0.25);
-  }
-
-  .badge-ganador {
-    background: rgba(34, 197, 94, 0.1);
-    color: #16A34A;
-    border: 1px solid rgba(34, 197, 94, 0.25);
-  }
-
-  .badge-perdedor {
-    background: rgba(239, 68, 68, 0.1);
-    color: #DC2626;
-    border: 1px solid rgba(239, 68, 68, 0.25);
-  }
-
-  .badge-cancelado {
-    background: rgba(148, 163, 184, 0.12);
-    color: #64748B;
-    border: 1px solid rgba(148, 163, 184, 0.25);
-  }
-
-  .badge-pagado {
-    background: rgba(34, 197, 94, 0.15);
-    color: #16A34A;
-    border: 1px solid rgba(34, 197, 94, 0.35);
-  }
-
-  /* Amount/odds formatting */
-  .amount-positive {
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--accent-green);
-    text-align: right;
-  }
-
-  .amount-negative {
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--accent-red);
-    text-align: right;
-  }
-
-  .odds-positive {
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--accent-green);
-  }
-
-  .odds-negative {
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--accent-red);
-  }
-
-  /* Input styles */
-  .input-standard {
-    background: #F8FAFC;
-    border: 1px solid #E2E8F0;
+  .fsb-line-card {
+    background: #455A64;
+    border: 1px solid #546E7A;
     border-radius: 8px;
-    color: var(--text-primary);
-    padding: 10px 14px;
-    font-size: 0.875rem;
-    transition: all 200ms ease;
+    overflow: hidden;
   }
 
-  .input-standard::placeholder {
-    color: var(--text-tertiary);
+  .fsb-line-header {
+    background: #29B6F6;
+    color: white;
   }
 
-  .input-standard:focus {
-    outline: none;
-    border-color: var(--accent-blue);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  .fsb-line-row {
+    background: #455A64;
+    color: white;
   }
 
-  /* Skeleton loading */
-  .skeleton {
-    background: linear-gradient(90deg, rgba(148,163,184,0.08) 25%, rgba(148,163,184,0.15) 50%, rgba(148,163,184,0.08) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s linear infinite;
-    border-radius: 4px;
+  .fsb-line-row:nth-child(odd) {
+    background: #546E7A;
   }
-}
 
-@layer utilities {
-  /* Monospace amount formatting */
-  .font-mono-amount {
+  .fsb-line-cell {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    color: white;
     font-family: 'JetBrains Mono', monospace;
-    font-variant-numeric: tabular-nums;
+    font-size: 0.8125rem;
+    padding: 6px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
   }
 
-  /* Text colors shorthand */
-  .text-green { color: var(--accent-green); }
-  .text-red { color: var(--accent-red); }
-  .text-amber { color: var(--accent-amber); }
-  .text-blue { color: var(--accent-blue); }
-  .text-cyan { color: var(--accent-cyan); }
-  .text-purple { color: var(--accent-purple); }
-}
-
-/* ===== Responsive font sizes ===== */
-@media (max-width: 767px) {
-  html { font-size: 15px; }
-}
-
-@media (min-width: 768px) and (max-width: 1279px) {
-  html { font-size: 15.5px; }
-}
-
-/* ===== Touch-specific styles ===== */
-
-/* Touch ripple effect */
-.touch-ripple {
-  position: relative;
-  overflow: hidden;
-}
-.touch-ripple::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at center, rgba(59,130,246,0.15) 0%, transparent 70%);
-  opacity: 0;
-  transition: opacity 0.15s;
-  pointer-events: none;
-}
-.touch-ripple:active::after {
-  opacity: 1;
-}
-
-/* Disable tap highlight on mobile */
-* {
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Prevent text selection on interactive elements */
-button, a, [role="button"] {
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-/* Smooth scrolling for overscroll on iOS */
-main {
-  -webkit-overflow-scrolling: touch;
-}
-/* Hide scrollbar but keep functionality */
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-/* Standalone mode detection */
-@media (display-mode: standalone) {
-  body {
-    /* Extra space for safe areas when in standalone mode */
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
+  .fsb-line-cell:hover {
+    background: rgba(41,182,246,0.3);
+    border-color: rgba(41,182,246,0.6);
+    box-shadow: 0 2px 8px rgba(41,182,246,0.2);
   }
-}
 
-/* Prevent overscroll bounce on iOS */
-html, body {
-  overscroll-behavior-y: none;
-  height: 100%;
-  position: fixed;
-  width: 100%;
-  overflow: hidden;
-}
+  .fsb-line-cell:active {
+    transform: scale(0.95);
+  }
 
-/* Root fills viewport */
-#root {
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
+  .table-header-green {
+    background: #7CB342;
+    color: white;
+  }
+
+  .sidebar-matador {
+    background: #2D2D2D;
+    color: #BDBDBD;
+  }
+
+  .sidebar-item:hover {
+    background: rgba(255,255,255,0.05);
+    color: white;
+  }
+
+  .sidebar-item.active {
+    background: rgba(124,179,66,0.2);
+    color: #7CB342;
+    border-left: 3px solid #7CB342;
+  }
+
+  .amount-positive { font-family: 'JetBrains Mono', monospace; color: #7CB342; }
+  .amount-negative { font-family: 'JetBrains Mono', monospace; color: #EF4444; }
+  .odds-positive { font-family: 'JetBrains Mono', monospace; color: #7CB342; }
+  .odds-negative { font-family: 'JetBrains Mono', monospace; color: #EF4444; }
 }
