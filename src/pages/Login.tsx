@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, Eye, EyeOff, ExternalLink, Check } from 'lucide-react';
 import { loginWithPin, loginWithPassword, isRateLimited, formatCountdown } from '@/lib/storage';
+import { createSession, logAudit, sanitizeInput } from '@/lib/security';
 
 function PinInput({
   pin,
@@ -263,6 +264,8 @@ export default function Login() {
       if (ok) {
         setSuccess(true);
         setError(false);
+        createSession('mmw03');
+        logAudit({ action: 'LOGIN', userId: 'mmw03', details: 'Login via PIN' });
         setTimeout(() => navigate('/'), 800);
       } else {
         setError(true);
@@ -283,10 +286,13 @@ export default function Login() {
 
     setLoading(true);
     setTimeout(() => {
-      const ok = loginWithPassword(username, password);
+      const safeUser = sanitizeInput(username);
+      const ok = loginWithPassword(safeUser, password);
       if (ok) {
         setSuccess(true);
         setError(false);
+        createSession(safeUser);
+        logAudit({ action: 'LOGIN', userId: safeUser, details: 'Login via password' });
         setTimeout(() => navigate('/'), 800);
       } else {
         setError(true);

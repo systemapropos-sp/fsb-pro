@@ -14,8 +14,10 @@ import {
   EyeOff,
   Check,
   X,
+  Globe,
 } from 'lucide-react';
 import { getSetting, updateSetting, logout } from '@/lib/storage';
+import { saveApiKey, getSavedApiKey } from '@/lib/sportsApi';
 
 // ------------------------------------------------------------------
 // Types
@@ -442,6 +444,7 @@ export default function Configuraciones() {
   const [printMode] = useSetting('print_mode', 'driver');
   const [codeLength] = useSetting('code_length', 'group');
   const [language] = useSetting('language', 'es');
+  const [apiKey, setApiKey] = useState(getSavedApiKey() || '');
 
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -589,6 +592,42 @@ export default function Configuraciones() {
             onChange={(val) => handleSettingChange('language', val, 'Idioma')}
           />
         </div>
+      </SettingsCard>
+
+      {/* Integraciones */}
+      <SettingsCard
+        icon={Globe}
+        iconColor="#0288D1"
+        title="Integraciones"
+        delay={0.22}
+        borderTopColor="#0288D1"
+      >
+        <SettingsItem
+          title="API-SPORTS Key"
+          description="Clave para resultados deportivos en tiempo real. Obtenga una gratis en api-sports.io"
+          delay={0.23}
+        >
+          <div className="flex gap-2">
+            <input
+              type="password"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="Su API key de api-sports.io"
+              className="input-standard flex-1 h-9 text-sm font-mono"
+              autoComplete="off"
+            />
+            <button
+              onClick={() => { saveApiKey(apiKey); toast.success(apiKey ? 'API key guardada' : 'API key eliminada'); }}
+              className="px-4 py-2 rounded-lg text-xs font-bold text-white transition-all active:scale-95"
+              style={{ background: '#0288D1' }}
+            >
+              Guardar
+            </button>
+          </div>
+          <p className="text-[10px] mt-1.5" style={{ color: '#ABABAB' }}>
+            {getSavedApiKey() ? '✓ API key configurada - Resultados en tiempo real activos' : 'Sin API key - Usando datos de demostracion'}
+          </p>
+        </SettingsItem>
       </SettingsCard>
 
       {/* Cuenta */}
