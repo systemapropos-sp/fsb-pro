@@ -723,10 +723,10 @@ function GameCard({
   return (
     <motion.div
       whileHover={{ y: -1 }}
-      className={`rounded-md border p-3 transition-all duration-150 ${
+      className={`rounded-md border p-3 transition-all duration-150 shadow-sm hover:shadow-md hover:-translate-y-0.5 ${
         flash
-          ? 'bg-accent-blue/20 border-accent-blue/40'
-          : 'bg-bg-tertiary/40 border-border-subtle hover:shadow-card'
+          ? 'bg-[#EFF6FF] border-accent-blue/40'
+          : 'bg-[#F8FAFC] border-gray-200 hover:border-gray-300'
       }`}
     >
       {/* Teams Header */}
@@ -735,40 +735,40 @@ function GameCard({
           <span className="text-xs font-semibold text-accent-blue bg-accent-blue/10 px-1.5 py-0.5 rounded-sm">
             {line.sport}
           </span>
-          <span className="text-xs text-text-tertiary">{line.time}</span>
+          <span className="text-xs text-[#94A3B8]">{line.time}</span>
         </div>
-        <span className="text-[10px] text-text-muted uppercase tracking-wider">
+        <span className="text-[10px] text-[#CBD5E1] uppercase tracking-wider">
           {line.period}
         </span>
       </div>
 
       <div className="flex items-center justify-between mb-3">
-        <div className="text-sm font-semibold text-text-primary">
-          {line.awayTeamCode}{' '}
-          <span className="text-text-tertiary font-normal">{line.awayTeam}</span>
+        <div className="text-sm font-semibold text-[#1E293B]">
+          <span className="font-mono text-blue-600 mr-1">{line.awayTeamCode || TEAM_CODES[line.awayTeam] || '0000'}</span>
+          <span className="text-[#94A3B8] font-normal">{line.awayTeam}</span>
         </div>
-        <span className="text-xs text-text-muted">@</span>
-        <div className="text-sm font-semibold text-text-primary text-right">
-          <span className="text-text-tertiary font-normal">{line.homeTeam}</span>{' '}
-          {line.homeTeamCode}
+        <span className="text-xs text-[#CBD5E1]">@</span>
+        <div className="text-sm font-semibold text-[#1E293B] text-right">
+          <span className="text-[#94A3B8] font-normal">{line.homeTeam}</span>
+          <span className="font-mono text-blue-600 ml-1">{line.homeTeamCode || TEAM_CODES[line.homeTeam] || '0000'}</span>
         </div>
       </div>
 
       {/* Lines Table */}
       <div className="grid grid-cols-5 gap-1 text-center">
-        <div className="text-[10px] text-text-tertiary uppercase font-semibold py-1">
+        <div className="text-[10px] text-[#94A3B8] uppercase font-semibold py-1">
           M.L
         </div>
-        <div className="text-[10px] text-text-tertiary uppercase font-semibold py-1">
+        <div className="text-[10px] text-[#94A3B8] uppercase font-semibold py-1">
           R.L
         </div>
-        <div className="text-[10px] text-text-tertiary uppercase font-semibold py-1">
+        <div className="text-[10px] text-[#94A3B8] uppercase font-semibold py-1">
           Spread
         </div>
-        <div className="text-[10px] text-text-tertiary uppercase font-semibold py-1">
+        <div className="text-[10px] text-[#94A3B8] uppercase font-semibold py-1">
           Solo
         </div>
-        <div className="text-[10px] text-text-tertiary uppercase font-semibold py-1">
+        <div className="text-[10px] text-[#94A3B8] uppercase font-semibold py-1">
           Puntos
         </div>
 
@@ -838,7 +838,7 @@ function LineCell({
   const numVal = typeof value === 'string' ? parseFloat(value.replace(/[OU+\s]/g, '')) : value;
   const display = typeof value === 'string' ? value : formatOdds(value);
 
-  let colorClass = 'text-text-primary';
+  let colorClass = 'text-[#1E293B]';
   if (type === 'odds') {
     colorClass = numVal >= 0 ? 'text-accent-green' : 'text-accent-red';
   } else if (type === 'over') {

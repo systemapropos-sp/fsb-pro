@@ -1,326 +1,508 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import type { Ticket } from '@/lib/storage';
+import { updateTicketStatus, formatAmount } from '@/lib/storage';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search,
-  DollarSign,
-  CheckCircle2,
-  Clock,
+  CreditCard,
+  Pencil,
+  X,
+  CheckCircle,
   AlertTriangle,
-  TrendingUp,
-  Calendar,
-  Download,
-  Printer,
-  Eye,
-} from "lucide-react";
+  Clock,
+  CheckCircle2,
+} from 'lucide-react';
 
-interface PendingTicket {
-  id: string;
-  code: string;
-  date: string;
-  time: string;
-  customer: string;
-  seller: string;
-  description: string;
-  risk: number;
-  toWin: number;
-  potential: number;
-  status: "pendiente_pago" | "por_confirmar" | "aprobado";
-}
+// ── Types ──────────────────────────────────────────────────
+type StatusFilter = 'todos' | 'ganador' | 'perdedor' | 'pendiente' | 'cancelado';
 
-const pendingData: PendingTicket[] = [
+const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
+  { key: 'todos',     label: 'Todos' },
+  { key: 'ganador',   label: 'Ganadores' },
+  { key: 'perdedor',  label: 'Perdedores' },
+  { key: 'pendiente', label: 'Pendientes' },
+  { key: 'cancelado', label: 'Cancelados' },
+];
+
+// ── Seed 7 pending winner tickets ──────────────────────────
+const PENDING_TICKETS: Ticket[] = [
   {
-    id: "P-001",
-    code: "TK-784521",
-    date: "2024-01-15",
-    time: "14:30",
-    customer: "Juan Perez",
-    seller: "Carlos Ruiz",
-    description: "MLB Yankees -1.5 / NBA Lakers -6.5",
-    risk: 500,
-    toWin: 1250,
-    potential: 1750,
-    status: "pendiente_pago",
+    id: 'MMW-003-029340799',
+    seller: 'sportmmwmaster',
+    date: '2026-04-06T17:24:00',
+    plays: [],
+    amount: 3000.00,
+    payout: 6150.00,
+    profit: 3150.00,
+    status: 'ganador',
+    createdAt: new Date('2026-04-06T17:24:00').getTime(),
   },
   {
-    id: "P-002",
-    code: "TK-784527",
-    date: "2024-01-13",
-    time: "20:00",
-    customer: "Diego Hernandez",
-    seller: "Luis Torres",
-    description: "NFL Cowboys -4.5 / MLB Astros ML",
-    risk: 450,
-    toWin: 1125,
-    potential: 1575,
-    status: "pendiente_pago",
+    id: 'MMW-003-029349174',
+    seller: 'mmw03',
+    date: '2026-04-07T12:58:00',
+    plays: [],
+    amount: 675.00,
+    payout: 1175.00,
+    profit: 500.00,
+    status: 'ganador',
+    createdAt: new Date('2026-04-07T12:58:00').getTime(),
   },
   {
-    id: "P-003",
-    code: "TK-784524",
-    date: "2024-01-14",
-    time: "18:20",
-    customer: "Ana Lopez",
-    seller: "Maria Lopez",
-    description: "NBA Celtics +3.5",
-    risk: 150,
-    toWin: 210,
-    potential: 360,
-    status: "por_confirmar",
+    id: 'MMW-003-029358140',
+    seller: 'mmw03',
+    date: '2026-04-07T19:06:00',
+    plays: [],
+    amount: 550.00,
+    payout: 1050.00,
+    profit: 500.00,
+    status: 'ganador',
+    createdAt: new Date('2026-04-07T19:06:00').getTime(),
   },
   {
-    id: "P-004",
-    code: "TK-784530",
-    date: "2024-01-15",
-    time: "10:00",
-    customer: "Roberto Sanchez",
-    seller: "Ana Martinez",
-    description: "MLB Red Sox +1.5 / NFL Eagles +4.5 / NBA Heat +2.5",
-    risk: 800,
-    toWin: 3200,
-    potential: 4000,
-    status: "pendiente_pago",
+    id: 'MMW-003-029360124',
+    seller: 'mmw03',
+    date: '2026-04-07T22:38:00',
+    plays: [],
+    amount: 550.00,
+    payout: 1050.00,
+    profit: 500.00,
+    status: 'ganador',
+    createdAt: new Date('2026-04-07T22:38:00').getTime(),
   },
   {
-    id: "P-005",
-    code: "TK-784531",
-    date: "2024-01-14",
-    time: "16:45",
-    customer: "Laura Jimenez",
-    seller: "Carlos Ruiz",
-    description: "NFL Chiefs -3.0",
-    risk: 600,
-    toWin: 900,
-    potential: 1500,
-    status: "aprobado",
+    id: 'MMW-003-029365743',
+    seller: 'mmw03',
+    date: '2026-04-08T14:50:00',
+    plays: [],
+    amount: 435.00,
+    payout: 935.00,
+    profit: 500.00,
+    status: 'ganador',
+    createdAt: new Date('2026-04-08T14:50:00').getTime(),
   },
   {
-    id: "P-006",
-    code: "TK-784532",
-    date: "2024-01-15",
-    time: "09:30",
-    customer: "Fernando Castillo",
-    seller: "Luis Torres",
-    description: "NBA Suns +1.0 / MLB Dodgers ML / NFL Rams +6.0",
-    risk: 1000,
-    toWin: 4500,
-    potential: 5500,
-    status: "pendiente_pago",
+    id: 'MMW-003-029374254',
+    seller: 'mmw03',
+    date: '2026-04-09T12:52:00',
+    plays: [],
+    amount: 550.00,
+    payout: 1028.00,
+    profit: 478.00,
+    status: 'ganador',
+    createdAt: new Date('2026-04-09T12:52:00').getTime(),
+  },
+  {
+    id: 'MMW-003-029379969',
+    seller: 'mmw03',
+    date: '2026-04-09T19:04:00',
+    plays: [],
+    amount: 300.00,
+    payout: 2939.00,
+    profit: 2639.00,
+    status: 'ganador',
+    createdAt: new Date('2026-04-09T19:04:00').getTime(),
   },
 ];
 
-type StatusFilter = "todos" | "pendiente_pago" | "por_confirmar" | "aprobado";
-
-const statusFilters: { key: StatusFilter; label: string; className: string }[] = [
-  {
-    key: "todos",
-    label: "Todos",
-    className: "bg-gray-100 text-[#475569] hover:bg-gray-200 border-transparent",
-  },
-  {
-    key: "pendiente_pago",
-    label: "Pendiente Pago",
-    className: "bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200",
-  },
-  {
-    key: "por_confirmar",
-    label: "Por Confirmar",
-    className: "bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200",
-  },
-  {
-    key: "aprobado",
-    label: "Aprobado",
-    className: "bg-green-50 text-green-700 hover:bg-green-100 border-green-200",
-  },
-];
-
-function StatusBadge({ status }: { status: PendingTicket["status"] }) {
-  const styles = {
-    pendiente_pago: "bg-amber-50 text-amber-700 border-amber-200",
-    por_confirmar: "bg-blue-50 text-blue-700 border-blue-200",
-    aprobado: "bg-green-50 text-green-700 border-green-200",
-  };
-  const icons = {
-    pendiente_pago: <Clock className="w-3.5 h-3.5" />,
-    por_confirmar: <AlertTriangle className="w-3.5 h-3.5" />,
-    aprobado: <CheckCircle2 className="w-3.5 h-3.5" />,
-  };
-  const labels = {
-    pendiente_pago: "Pendiente",
-    por_confirmar: "Por Confirmar",
-    aprobado: "Aprobado",
-  };
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${styles[status]}`}
-    >
-      {icons[status]}
-      {labels[status]}
-    </span>
-  );
+// ── Helpers ────────────────────────────────────────────────
+function getDaysPending(dateStr: string): number {
+  const ticketDate = new Date(dateStr);
+  const now = new Date('2026-04-10T12:00:00'); // Reference date
+  const diffMs = now.getTime() - ticketDate.getTime();
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
 }
 
+function getDiasColor(days: number): string {
+  if (days <= 1) return 'text-text-tertiary';
+  if (days <= 3) return 'text-accent-amber';
+  return 'text-accent-red';
+}
+
+// ── Main Component ─────────────────────────────────────────
 export default function Pendientes() {
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("todos");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [tickets, setTickets] = useState<Ticket[]>(PENDING_TICKETS);
+  const [activeFilter, setActiveFilter] = useState<StatusFilter>('todos');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [payingId, setPayingId] = useState<string | null>(null);
+  const [allPaid, setAllPaid] = useState(false);
 
-  const filteredTickets = pendingData.filter((t) => {
-    const matchesStatus = statusFilter === "todos" || t.status === statusFilter;
-    const matchesSearch =
-      searchQuery === "" ||
-      t.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.customer.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesStatus && matchesSearch;
-  });
+  // Also seed these into localStorage so Pagar page can find them
+  useEffect(() => {
+    const existing = localStorage.getItem('fsb_tickets');
+    if (!existing || JSON.parse(existing).length === 0) {
+      localStorage.setItem('fsb_tickets', JSON.stringify(PENDING_TICKETS));
+    }
+  }, []);
 
-  const totalPendiente = pendingData
-    .filter((t) => t.status === "pendiente_pago")
-    .reduce((sum, t) => sum + t.toWin, 0);
+  // Filtered tickets
+  const filteredTickets = useMemo(() => {
+    let result = tickets;
+    if (activeFilter !== 'todos') {
+      result = result.filter((t) => t.status === activeFilter);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter((t) => t.id.toLowerCase().includes(q));
+    }
+    return result;
+  }, [tickets, activeFilter, searchQuery]);
+
+  // Status counts (fixed from original data)
+  const statusCounts = useMemo(
+    () => ({
+      todos: 7,
+      ganador: 7,
+      perdedor: 0,
+      pendiente: 0,
+      cancelado: 0,
+    }),
+    []
+  );
+
+  // Summary
+  const summary = useMemo(() => {
+    const montoTotal = tickets.reduce((s, t) => s + t.amount, 0);
+    const premioTotal = tickets.reduce((s, t) => s + t.payout, 0);
+    return { montoTotal, premioTotal };
+  }, [tickets]);
+
+  // Pay single ticket
+  const handlePay = useCallback(
+    (id: string, payout: number) => {
+      if (!confirm(`Confirmar pago de ${formatAmount(payout)}?`)) return;
+      setPayingId(id);
+      setTimeout(() => {
+        updateTicketStatus(id, 'pagado');
+        setTickets((prev) => prev.filter((t) => t.id !== id));
+        setPayingId(null);
+        // If all paid
+        setTimeout(() => {
+          setTickets((prev) => {
+            if (prev.length === 0) setAllPaid(true);
+            return prev;
+          });
+        }, 50);
+      }, 300);
+    },
+    []
+  );
+
+  // Pay all tickets
+  const handlePayAll = useCallback(() => {
+    if (
+      !confirm(
+        `Esta seguro de pagar todos los tickets pendientes? Total: ${formatAmount(summary.premioTotal)}`
+      )
+    )
+      return;
+    setAllPaid(true);
+    tickets.forEach((t) => updateTicketStatus(t.id, 'pagado'));
+    setTickets([]);
+  }, [tickets, summary.premioTotal]);
+
+  // Format date
+  const fmtDate = (d: string) =>
+    new Date(d).toLocaleDateString('es-DO', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-[#1E293B]">Pendientes de Pago</h1>
-          <p className="text-[#475569] mt-1">
-            Tickets ganadores pendientes de pago con procesamiento de pagos.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-[#475569] hover:shadow-md hover:-translate-y-0.5 transition-all shadow-sm">
-            <Calendar className="w-4 h-4" />
-            <span className="text-sm font-medium">Hoy</span>
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-[#475569] hover:shadow-md hover:-translate-y-0.5 transition-all shadow-sm">
-            <Download className="w-4 h-4" />
-            <span className="text-sm font-medium">Exportar</span>
-          </button>
-        </div>
-      </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] }}
+      className="p-6 space-y-5"
+    >
+      {/* ── Page Header ── */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <h1 className="text-h2 font-semibold text-text-primary">Pendientes de Pago</h1>
+        <p className="text-sm text-text-tertiary mt-1">Tickets ganadores que requieren pago</p>
+      </motion.div>
 
-      {/* Summary Banner */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-            <DollarSign className="w-5 h-5 text-amber-700" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-amber-800">Total Pendiente de Pago</p>
-            <p className="text-sm text-amber-600">
-              <span className="font-bold font-['JetBrains_Mono'] text-amber-900">${totalPendiente.toLocaleString()}</span> en {pendingData.filter((t) => t.status === "pendiente_pago").length} tickets
-            </p>
-          </div>
-        </div>
-        <button className="flex items-center gap-2 px-6 py-2.5 bg-green-500 text-white rounded-lg font-semibold shadow-sm hover:bg-green-600 hover:shadow-lg transition-all duration-150 hover:-translate-y-0.5">
-          <DollarSign className="w-4 h-4" />
-          Pagar Todos
-        </button>
-      </div>
-
-      {/* Search + Filters */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-        {/* Status Filter Pills */}
-        <div className="flex flex-wrap items-center gap-2">
-          {statusFilters.map((filter) => (
-            <button
-              key={filter.key}
-              onClick={() => setStatusFilter(filter.key)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all duration-150 hover:shadow-md hover:-translate-y-0.5 ${
-                statusFilter === filter.key
-                  ? filter.className + " ring-2 ring-offset-1 ring-blue-200 shadow-sm"
-                  : filter.className
-              }`}
+      {/* ── Summary Banner ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.1 }}
+        className={`gradient-panel border rounded-lg p-6 transition-colors duration-500 ${
+          allPaid
+            ? 'border-l-4 border-l-accent-green bg-accent-green/5'
+            : 'border-l-4 border-l-accent-amber bg-accent-amber/5 border-border-subtle'
+        }`}
+      >
+        {allPaid ? (
+          <div className="flex items-center gap-4">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             >
-              {filter.label}
-            </button>
-          ))}
-        </div>
+              <CheckCircle size={48} className="text-accent-green" />
+            </motion.div>
+            <div>
+              <h2 className="text-h3 text-accent-green font-semibold">
+                Todos los tickets estan pagados
+              </h2>
+              <p className="text-sm text-text-tertiary mt-1">No hay pagos pendientes</p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Clock size={20} className="text-accent-amber" />
+              <span className="text-sm text-text-tertiary">Tickets Pendientes:</span>
+              <motion.span
+                key={tickets.length}
+                initial={{ scale: 1.3 }}
+                animate={{ scale: 1 }}
+                className="text-h3 font-bold text-accent-amber"
+              >
+                {tickets.length}
+              </motion.span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-body-lg text-text-tertiary">Monto Total Pendiente:</span>
+              <motion.span
+                key={summary.premioTotal}
+                initial={{ scale: 1.05 }}
+                animate={{ scale: 1 }}
+                className="text-hero font-bold text-accent-amber font-mono"
+              >
+                {formatAmount(summary.premioTotal)}
+              </motion.span>
+            </div>
+            <div className="flex items-center justify-between pt-2 border-t border-border-subtle">
+              <span className="text-sm text-text-tertiary">Monto apostado total:</span>
+              <span className="font-mono text-mono text-text-primary font-semibold">
+                {formatAmount(summary.montoTotal)}
+              </span>
+            </div>
+          </div>
+        )}
+      </motion.div>
 
-        {/* Search */}
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
+      {/* ── Status Filter Pills ── */}
+      {!allPaid && (
+        <motion.div
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="flex items-center gap-2 flex-wrap"
+        >
+          {STATUS_FILTERS.map((filter) => {
+            const isActive = activeFilter === filter.key;
+            const count = statusCounts[filter.key];
+            return (
+              <button
+                key={filter.key}
+                onClick={() => setActiveFilter(filter.key)}
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 border ${
+                  isActive
+                    ? filter.key === 'ganador'
+                      ? 'bg-accent-green/15 text-accent-green border-accent-green/30'
+                      : filter.key === 'perdedor'
+                      ? 'bg-accent-red/15 text-accent-red border-accent-red/30'
+                      : filter.key === 'pendiente'
+                      ? 'bg-accent-amber/15 text-accent-amber border-accent-amber/30'
+                      : filter.key === 'cancelado'
+                      ? 'bg-text-tertiary/10 text-text-tertiary border-text-tertiary/30'
+                      : 'bg-accent-blue/15 text-accent-blue border-accent-blue/30'
+                    : 'bg-transparent text-text-muted border-border-default hover:text-text-secondary'
+                }`}
+              >
+                {filter.label}
+                <span
+                  className={`min-w-[20px] h-5 flex items-center justify-center rounded-full text-[10px] font-bold ${
+                    isActive
+                      ? filter.key === 'ganador'
+                        ? 'bg-accent-green/25 text-accent-green'
+                        : filter.key === 'perdedor'
+                        ? 'bg-accent-red/25 text-accent-red'
+                        : filter.key === 'pendiente'
+                        ? 'bg-accent-amber/25 text-accent-amber'
+                        : filter.key === 'cancelado'
+                        ? 'bg-text-tertiary/20 text-text-tertiary'
+                        : 'bg-accent-blue/25 text-accent-blue'
+                      : 'bg-white/5 text-text-muted'
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </motion.div>
+      )}
+
+      {/* ── Search ── */}
+      {!allPaid && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-text-secondary">Search:</span>
           <input
             type="text"
-            placeholder="Buscar por codigo o cliente..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-[#1E293B] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            placeholder="Buscar por numero de ticket..."
+            className="input-standard px-3 py-1.5 text-sm w-[260px]"
           />
         </div>
-      </div>
+      )}
 
-      {/* Table */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+      {/* ── Data Table ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.2 }}
+        className="gradient-panel border border-border-subtle rounded-lg overflow-hidden"
+      >
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#475569] uppercase tracking-wider">Codigo</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#475569] uppercase tracking-wider">Fecha</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#475569] uppercase tracking-wider">Cliente</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#475569] uppercase tracking-wider">Vendedor</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#475569] uppercase tracking-wider">Descripcion</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-[#475569] uppercase tracking-wider">Riesgo</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-[#475569] uppercase tracking-wider">A Ganar</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-[#475569] uppercase tracking-wider">Potencial</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-[#475569] uppercase tracking-wider">Estado</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-[#475569] uppercase tracking-wider">Acciones</th>
+          <table className="w-full text-sm">
+            <thead className="sticky top-0 z-10">
+              <tr className="bg-[rgba(17,24,39,0.95)] backdrop-blur-lg">
+                <th className="px-3 py-3 text-center text-xs font-semibold text-text-secondary uppercase tracking-wider w-[5%]">
+                  #
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                  Ticket
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                  Fecha
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                  Usuario
+                </th>
+                <th className="px-3 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                  Monto
+                </th>
+                <th className="px-3 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                  Premio
+                </th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                  Dias
+                </th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-text-secondary uppercase tracking-wider w-[140px]">
+                  Accion
+                </th>
               </tr>
             </thead>
             <tbody>
-              {filteredTickets.map((ticket, idx) => (
-                <tr
-                  key={ticket.id}
-                  className={`border-b border-gray-100 hover:bg-blue-50 transition-colors duration-150 ${
-                    idx % 2 === 0 ? "" : "bg-gray-50"
-                  }`}
-                >
-                  <td className="px-4 py-3 text-sm font-medium text-[#1E293B] font-['JetBrains_Mono']">
-                    {ticket.code}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-[#475569]">{ticket.date}</td>
-                  <td className="px-4 py-3 text-sm font-medium text-[#1E293B]">{ticket.customer}</td>
-                  <td className="px-4 py-3 text-sm text-[#475569]">{ticket.seller}</td>
-                  <td className="px-4 py-3 text-sm text-[#475569] max-w-xs truncate">{ticket.description}</td>
-                  <td className="px-4 py-3 text-sm font-medium text-red-500 font-['JetBrains_Mono'] text-right">
-                    ${ticket.risk.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 text-sm font-medium text-green-600 font-['JetBrains_Mono'] text-right">
-                    ${ticket.toWin.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 text-sm font-bold text-[#1E293B] font-['JetBrains_Mono'] text-right">
-                    ${ticket.potential.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <StatusBadge status={ticket.status} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-center gap-1">
-                      <button className="p-1.5 rounded-md hover:bg-blue-100 text-[#94A3B8] hover:text-blue-600 transition-colors" title="Ver">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button className="p-1.5 rounded-md hover:bg-gray-200 text-[#94A3B8] hover:text-[#475569] transition-colors" title="Imprimir">
-                        <Printer className="w-4 h-4" />
-                      </button>
-                      {ticket.status === "pendiente_pago" && (
-                        <button className="flex items-center gap-1 px-3 py-1 rounded-md bg-green-500 text-white text-xs font-semibold hover:bg-green-600 hover:shadow-md transition-all duration-150 hover:-translate-y-0.5">
-                          <DollarSign className="w-3 h-3" />
-                          Pagar
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              <AnimatePresence mode="popLayout">
+                {filteredTickets.length > 0 ? (
+                  filteredTickets.map((ticket, index) => {
+                    const daysPending = getDaysPending(ticket.date);
+                    const diasClass = getDiasColor(daysPending);
+                    return (
+                      <motion.tr
+                        key={ticket.id}
+                        layout
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        transition={{
+                          duration: 0.3,
+                          delay: index * 0.04,
+                        }}
+                        className={`border-b border-border-subtle transition-colors hover:bg-[rgba(148,163,184,0.04)] ${
+                          index % 2 === 1 ? 'bg-[rgba(148,163,184,0.02)]' : ''
+                        }`}
+                      >
+                        <td className="px-3 py-2.5 text-center text-text-tertiary text-xs">
+                          {index + 1}
+                        </td>
+                        <td className="px-3 py-2.5 font-mono text-sm text-accent-blue">
+                          {ticket.id}
+                        </td>
+                        <td className="px-3 py-2.5 text-text-secondary text-xs whitespace-nowrap">
+                          {fmtDate(ticket.date)}
+                        </td>
+                        <td className="px-3 py-2.5 text-text-secondary text-xs">{ticket.seller}</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-mono text-text-primary">
+                          {formatAmount(ticket.amount)}
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono text-mono font-semibold text-accent-green">
+                          {formatAmount(ticket.payout)}
+                        </td>
+                        <td className="px-3 py-2.5 text-center">
+                          <span className={`text-xs font-medium ${diasClass} inline-flex items-center gap-1`}>
+                            {daysPending >= 4 && <AlertTriangle size={12} />}
+                            {daysPending}d
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => handlePay(ticket.id, ticket.payout)}
+                              disabled={payingId === ticket.id}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md gradient-winner text-white text-xs font-bold hover:shadow-winner transition-all active:scale-[0.97] disabled:opacity-50"
+                            >
+                              <CreditCard size={14} />
+                              {payingId === ticket.id ? '...' : 'PAGAR'}
+                            </button>
+                            <button
+                              title="Editar"
+                              className="p-1.5 rounded-md bg-white/[0.04] text-text-secondary hover:bg-white/[0.1] transition-colors"
+                            >
+                              <Pencil size={13} />
+                            </button>
+                            <button
+                              title="Cancelar"
+                              className="p-1.5 rounded-md bg-accent-red/10 text-accent-red hover:bg-accent-red/20 transition-colors"
+                            >
+                              <X size={13} />
+                            </button>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-16 text-center">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="flex flex-col items-center gap-3"
+                      >
+                        <CheckCircle2 size={64} className="text-accent-green/30" />
+                        <p className="text-body-lg text-text-tertiary">No hay pagos pendientes</p>
+                        <p className="text-sm text-text-muted">
+                          Todos los tickets ganadores han sido pagados
+                        </p>
+                      </motion.div>
+                    </td>
+                  </tr>
+                )}
+              </AnimatePresence>
             </tbody>
           </table>
         </div>
-        {filteredTickets.length === 0 && (
-          <div className="p-8 text-center text-[#94A3B8]">
-            <TrendingUp className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No se encontraron tickets pendientes.</p>
-          </div>
-        )}
-      </div>
-    </div>
+      </motion.div>
+
+      {/* ── Pay All Button ── */}
+      {!allPaid && tickets.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="flex justify-center pt-2 pb-4"
+        >
+          <button
+            onClick={handlePayAll}
+            className="flex items-center justify-center gap-2 w-full max-w-[400px] h-[52px] gradient-winner text-white text-sm font-bold tracking-wider rounded-md hover:shadow-winner hover:scale-[1.02] active:scale-[0.98] transition-all"
+          >
+            <CreditCard size={18} />
+            PAGAR TODOS LOS TICKETS
+          </button>
+        </motion.div>
+      )}
+    </motion.div>
   );
 }

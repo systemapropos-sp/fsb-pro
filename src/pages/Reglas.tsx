@@ -1,150 +1,171 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen } from 'lucide-react';
-
-interface Rule {
-  id: number;
-  text: string;
-}
 
 interface SportRules {
-  sport: string;
-  icon: string;
-  rules: Rule[];
+  key: string;
+  label: string;
+  rules: string[];
 }
 
-const sportsRules: SportRules[] = [
+const SPORTS_RULES: SportRules[] = [
   {
-    sport: 'Beisbol (MLB)',
-    icon: '\u26BE',
+    key: 'baseball',
+    label: 'Baseball',
     rules: [
-      { id: 1, text: 'El partido debe completar al menos 5 innings (4.5 si el equipo local va ganando) para que las apuestas sean validas.' },
-      { id: 2, text: 'Si el pitcher anunciado no inicia el partido, las apuestas de ganador del partido siguen siendo validas.' },
-      { id: 3, text: 'Las apuestas de run line incluyen innings extras.' },
-      { id: 4, text: 'El mercado de alta/baja se decide sobre el total de carreras de ambos equipos.' },
-      { id: 5, text: 'Si el partido es suspendido y no se reanuda dentro de 24 horas, las apuestas se anulan (excepto mercados ya decididos).' },
+      'Todas las apuestas a mas (+) o menos (-) seran validas cuando el equipo que este perdiendo haya agotado su novena (9na.) entrada. Si el partido se encuentra empatado, para que sea valido debera haberse jugado un minimo de nueve entradas completas.',
+      'Todas las apuestas al run line (-1.5) y al money line (J.C.) seran validas cuando el equipo que este perdiendo haya bateado su quinta (5ta.) entrada. Si el partido se encuentra empatado, para que sea valido debera haberse jugado un minimo de cinco entradas completas.',
+      'Todas las apuestas a juego en el medio tiempo seran validas cuando el equipo que este perdiendo haya bateado su quinta (5ta.) entrada. Si el partido se encuentra empatado, para que sea valido debera haberse jugado un minimo de cinco entradas completas.',
+      'Las jugadas a mas (+) o menos (-) en el medio tiempo seran validas cuando se hayan jugado cinco entradas completas.',
+      'Todas las apuestas a carrera por equipo individual (al solo) seran validas cuando el equipo que este perdiendo haya bateado su novena (9na.) entrada. Si el partido se encuentra empatado, para que sea valido debera haberse jugado un minimo de nueve entradas completas.',
+      'La apuestas a primera carrera (F) seran validas al equipo que anote primero, siempre y cuando se haya completado la primera entrada completa.',
+      'Las jugadas a ponches seran validas cuando el juego sea oficial (5 entradas completas). El pitcher debe lanzar al menos un pitch para que la apuesta sea valida.',
+      'Las propuestas de decisiones (si o no) seran validas cuando se haya agotado el inning completo.',
+      'Las apuestas a bases recorridas seran validas cuando el equipo que este perdiendo haya bateado su quinta (5ta.) entrada.',
     ],
   },
   {
-    sport: 'Futbol (NFL/NCAA)',
-    icon: '\u{1F3C8}',
+    key: 'baloncesto',
+    label: 'Baloncesto',
     rules: [
-      { id: 1, text: 'El partido debe completar 55 minutos para que las apuestas sean validas.' },
-      { id: 2, text: 'Las apuestas de spread incluyen overtime.' },
-      { id: 3, text: 'Las apuestas de medio tiempo solo consideran los primeros dos cuartos.' },
-      { id: 4, text: 'Si hay cambio de venue, las apuestas se mantienen si el equipo local sigue siendo el mismo.' },
-      { id: 5, text: 'Los mercados de jugador se basan en estadisticas oficiales de la liga.' },
+      'Un juego de baloncesto debe completar al menos 43 minutos de juego para ser considerado oficial (NBA).',
+      'Las apuestas de spread y total incluyen tiempos extras a menos que se especifique lo contrario.',
+      'Si un juego es suspendido y no se reanuda dentro de 24 horas, las apuestas se reembolsan (push).',
+      'Las apuestas a medio tiempo solo aplican a los primeros dos cuartos del juego.',
     ],
   },
   {
-    sport: 'Baloncesto (NBA/NCAA)',
-    icon: '\u{1F3C0}',
+    key: 'football',
+    label: 'Football',
     rules: [
-      { id: 1, text: 'El partido debe completar al menos 43 minutos para que las apuestas sean validas.' },
-      { id: 2, text: 'Las apuestas de spread y total incluyen overtime.' },
-      { id: 3, text: 'Las apuestas de medio tiempo se deciden al final del segundo cuarto.' },
-      { id: 4, text: 'Los mercados de jugador requieren que el jugador participe para ser validos.' },
-      { id: 5, text: 'Si un partido es suspendido y no se completa en 48 horas, las apuestas se anulan.' },
+      'Un juego de football americano debe completar 55 minutos para ser considerado oficial (NFL).',
+      'Las apuestas de spread y total incluyen tiempos extras.',
+      'Si un juego es suspendido y se reprograma para mas de 7 dias despues, las apuestas se reembolsan.',
+      'Las apuestas a medio tiempo incluyen el segundo y tercer cuarto solamente.',
     ],
   },
   {
-    sport: 'Futbol Soccer',
-    icon: '\u26BD',
+    key: 'hockey',
+    label: 'Hockey',
     rules: [
-      { id: 1, text: 'Las apuestas se basan en el resultado despues de 90 minutos mas tiempo anadido (no incluye tiempo extra).' },
-      { id: 2, text: 'Si un partido es abandonado despues de los 90 minutos, el resultado oficial cuenta.' },
-      { id: 3, text: 'Las apuestas de ambos equipos anotan se deciden en los 90 minutos regulares.' },
-      { id: 4, text: 'Los mercados de tarjetas y corners se basan en estadisticas oficiales del arbitro.' },
-      { id: 5, text: 'Si hay cambio de venue a campo neutral, las apuestas se mantienen.' },
+      'Un juego de hockey debe completar al menos 55 minutos para ser considerado oficial.',
+      'Las apuestas de money line incluyen tiempo extra y shootouts para determinar el ganador.',
+      'Las apuestas de puck line (spread) incluyen tiempo extra pero no shootouts.',
+      'Las apuestas de total (over/under) incluyen tiempo extra y shootouts.',
     ],
   },
   {
-    sport: 'Hockey (NHL)',
-    icon: '\u{1F3D2}',
+    key: 'soccer',
+    label: 'Soccer',
     rules: [
-      { id: 1, text: 'Las apuestas de ganador del partido incluyen overtime y shootouts.' },
-      { id: 2, text: 'El mercado de puck line es un spread de +1.5 / -1.5 goles.' },
-      { id: 3, text: 'Las apuestas de periodo se deciden al final de cada periodo de 20 minutos.' },
-      { id: 4, text: 'Si un partido es suspendido, las apuestas se mantienen si se reanuda dentro de 24 horas.' },
-      { id: 5, text: 'Los mercados de goleadores requieren que el jugador este en la alineacion oficial.' },
+      'Un juego de soccer debe completar 90 minutos de tiempo reglamentario para ser oficial.',
+      'Las apuestas a tiempo reglamentario NO incluyen tiempo extra ni penales, salvo que se indique lo contrario.',
+      'Las apuestas de empate (3-way money line) son validas solo para el resultado al final del tiempo reglamentario.',
+      'Si un juego es suspendido antes de completar los 90 minutos y no se reanuda dentro de 24 horas, las apuestas se reembolsan.',
+    ],
+  },
+  {
+    key: 'tiza',
+    label: 'Tiza',
+    rules: [
+      'Las apuestas de tiza son acumulativas y requieren que todas las selecciones ganen para que el parlay sea ganador.',
+      'Si una seleccion empata (push), se elimina del parlay y se recalcula el pago con las selecciones restantes.',
+      'Un parlay de 2 equipos con un push se convierte automaticamente en una apuesta directa.',
+      'El pago maximo por parlay esta sujeto a los limites establecidos por el administrador.',
+      'No se pueden combinar selecciones del mismo juego en un mismo parlay.',
     ],
   },
 ];
 
+const easeSpring = [0.16, 1, 0.3, 1] as [number, number, number, number];
+
 export default function Reglas() {
-  const [activeSport, setActiveSport] = useState(0);
+  const [activeSport, setActiveSport] = useState('baseball');
+
+  const activeRules = SPORTS_RULES.find((s) => s.key === activeSport);
 
   return (
-    <div className="p-8 bg-[#F1F5F9] min-h-screen">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-          <BookOpen size={20} className="text-blue-600" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-[#1E293B] mb-1">Reglas de Apuestas</h1>
-          <p className="text-[#475569]">Reglas de apuestas por deporte. Texto detallado en espanol.</p>
-        </div>
-      </div>
+    <div className="p-6">
+      {/* Page Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="mb-5"
+      >
+        <h1 className="text-h2 text-text-primary">Reglas de Apuestas</h1>
+        <p className="text-sm text-text-tertiary mt-1">
+          Reglamento de apuestas por deporte
+        </p>
+      </motion.div>
 
-      {/* Card */}
-      <div className="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
-        {/* Sport Tabs */}
-        <div className="flex border-b border-gray-200 overflow-x-auto">
-          {sportsRules.map((sr, idx) => (
+      {/* Sport Tabs */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.25, delay: 0.1 }}
+        className="flex flex-wrap gap-0 border-b border-border-subtle mb-5"
+      >
+        {SPORTS_RULES.map((sport) => {
+          const isActive = activeSport === sport.key;
+          return (
             <button
-              key={sr.sport}
-              onClick={() => setActiveSport(idx)}
-              className={`relative px-5 py-4 text-sm font-medium whitespace-nowrap transition-colors ${
-                activeSport === idx
-                  ? 'text-blue-600'
-                  : 'text-gray-600 bg-gray-100 hover:bg-gray-50'
+              key={sport.key}
+              onClick={() => setActiveSport(sport.key)}
+              className={`relative px-5 py-3 text-sm font-medium transition-colors duration-200 ${
+                isActive
+                  ? 'text-accent-blue'
+                  : 'text-text-muted hover:text-text-secondary'
               }`}
             >
-              <span className="mr-2">{sr.icon}</span>
-              {sr.sport}
-              {activeSport === idx && (
+              {sport.label}
+              {isActive && (
                 <motion.div
-                  layoutId="activeTab"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  layoutId="reglas-tab-underline"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent-blue"
+                  transition={{ duration: 0.25, ease: easeSpring }}
                 />
               )}
             </button>
-          ))}
-        </div>
+          );
+        })}
+      </motion.div>
 
-        {/* Rules List */}
-        <div className="p-6">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeSport}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <h2 className="text-lg font-semibold text-[#1E293B] mb-4">
-                <span className="mr-2">{sportsRules[activeSport].icon}</span>
-                {sportsRules[activeSport].sport}
-              </h2>
-              <ol className="space-y-3">
-                {sportsRules[activeSport].rules.map((rule) => (
-                  <li
-                    key={rule.id}
-                    className="flex gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <span className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-bold text-blue-600">
-                      {rule.id}
-                    </span>
-                    <p className="text-[#475569] leading-relaxed pt-1">{rule.text}</p>
-                  </li>
-                ))}
-              </ol>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </div>
+      {/* Rules Content */}
+      <AnimatePresence mode="wait">
+        {activeRules && (
+          <motion.div
+            key={activeSport}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.25, ease: easeSpring }}
+            className="gradient-panel rounded-lg border border-border-subtle p-6"
+          >
+            <h2 className="text-h3 text-text-primary mb-5 capitalize">
+              {activeRules.label}
+            </h2>
+
+            <ol className="space-y-3">
+              {activeRules.rules.map((rule, idx) => (
+                <motion.li
+                  key={idx}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2, delay: idx * 0.04 }}
+                  className="flex gap-3"
+                >
+                  <span className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-accent-blue/10 text-accent-blue text-xs font-bold mt-0.5">
+                    {idx + 1}
+                  </span>
+                  <p className="text-body text-text-secondary leading-relaxed">
+                    {rule}
+                  </p>
+                </motion.li>
+              ))}
+            </ol>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

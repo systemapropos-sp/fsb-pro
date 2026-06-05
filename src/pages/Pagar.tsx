@@ -1,350 +1,591 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from 'react';
+import type { Ticket } from '@/lib/storage';
+import { getTicketById, updateTicketStatus, formatAmount } from '@/lib/storage';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
-  DollarSign,
-  CheckCircle2,
-  XCircle,
-  Ticket,
+  CreditCard,
+  CheckCircle,
+  Ticket as TicketIcon,
+  AlertCircle,
+  Info,
+  X,
   Calendar,
-  User,
-  Hash,
-  Award,
-  Printer,
-  RotateCcw,
-} from "lucide-react";
+  DollarSign,
+  Trophy,
+} from 'lucide-react';
 
-interface TicketDetail {
-  id: string;
-  code: string;
-  date: string;
-  time: string;
-  customer: string;
-  seller: string;
-  status: "ganador" | "perdedor" | "pendiente";
-  picks: { event: string; selection: string; odds: string; result: string }[];
-  risk: number;
-  toWin: number;
-  totalPayout: number;
+// ── Confetti particle type ─────────────────────────────────
+interface Particle {
+  id: number;
+  x: number;
+  y: number;
+  color: string;
+  size: number;
+  angle: number;
+  velocity: number;
+  opacity: number;
 }
 
-const mockTicketDB: Record<string, TicketDetail> = {
-  "TK-784521": {
-    id: "T-001",
-    code: "TK-784521",
-    date: "2024-01-15",
-    time: "14:30",
-    customer: "Juan Perez",
-    seller: "Carlos Ruiz",
-    status: "ganador",
-    picks: [
-      { event: "MLB: NYY vs BOS", selection: "Yankees -1.5", odds: "+130", result: "Gano" },
-      { event: "NBA: LAL vs SAC", selection: "Lakers -6.5", odds: "-110", result: "Gano" },
-      { event: "NFL: DAL vs PHI", selection: "Cowboys -4.5", odds: "-110", result: "Gano" },
-    ],
-    risk: 500,
-    toWin: 1250,
-    totalPayout: 1750,
-  },
-  "TK-784527": {
-    id: "T-007",
-    code: "TK-784527",
-    date: "2024-01-13",
-    time: "20:00",
-    customer: "Diego Hernandez",
-    seller: "Luis Torres",
-    status: "ganador",
-    picks: [
-      { event: "NFL: KC vs DEN", selection: "Chiefs -3.0", odds: "-150", result: "Gano" },
-      { event: "MLB: HOU vs TEX", selection: "Astros ML", odds: "-180", result: "Gano" },
-    ],
-    risk: 450,
-    toWin: 1125,
-    totalPayout: 1575,
-  },
-};
-
-function PaidStamp() {
-  return (
-    <div className="absolute top-4 right-4 transform rotate-[-15deg]">
-      <div className="border-4 border-red-400 rounded-lg px-4 py-2 bg-red-50/80">
-        <div className="flex items-center gap-2">
-          <CheckCircle2 className="w-6 h-6 text-red-500" />
-          <span className="text-xl font-black text-red-500 tracking-widest uppercase">Pagado</span>
-        </div>
-      </div>
-    </div>
-  );
+// ── Recent payment entry ───────────────────────────────────
+interface RecentPayment {
+  ticketId: string;
+  amount: number;
+  payout: number;
+  paidAt: number;
 }
 
-// Simple confetti particles
-function ConfettiEffect({ active }: { active: boolean }) {
-  const [particles] = useState(() =>
-    Array.from({ length: 30 }, (_, i) => ({
-      id: i,
-      left: `${Math.random() * 100}%`,
-      delay: `${Math.random() * 0.5}s`,
-      color: ["#ef4444", "#22c55e", "#3b82f6", "#f59e0b", "#8b5cf6", "#ec4899"][
-        Math.floor(Math.random() * 6)
-      ],
-    }))
-  );
+const INITIAL_RECENT: RecentPayment[] = [
+  { ticketId: 'MMW-003-029300154', amount: 500.00, payout: 1200.00, paidAt: Date.now() - 3600000 },
+  { ticketId: 'MMW-003-029295871', amount: 250.00, payout: 625.00, paidAt: Date.now() - 7200000 },
+  { ticketId: 'MMW-003-029288432', amount: 1000.00, payout: 2500.00, paidAt: Date.now() - 10800000 },
+  { ticketId: 'MMW-003-029280765', amount: 150.00, payout: 375.00, paidAt: Date.now() - 14400000 },
+];
 
-  if (!active) return null;
-
-  return (
-    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
-      {particles.map((p) => (
-        <div
-          key={p.id}
-          className="absolute w-2 h-2 rounded-sm animate-bounce"
-          style={{
-            left: p.left,
-            top: "-10px",
-            backgroundColor: p.color,
-            animation: `confetti-fall 2s ${p.delay} ease-out forwards`,
-          }}
-        />
-      ))}
-      <style>{`
-        @keyframes confetti-fall {
-          0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
-          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-        }
-      `}</style>
-    </div>
-  );
-}
-
+// ── Main Component ─────────────────────────────────────────
 export default function Pagar() {
-  const [searchCode, setSearchCode] = useState("");
-  const [ticket, setTicket] = useState<TicketDetail | null>(null);
-  const [notFound, setNotFound] = useState(false);
-  const [paid, setPaid] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [codeInput, setCodeInput] = useState('');
+  const [ticket, setTicket] = useState<Ticket | null>(null);
+  const [searchState, setSearchState] = useState<'idle' | 'searching' | 'found' | 'notfound' | 'paid' | 'alreadyPaid'>('idle');
+  const [errorShake, setErrorShake] = useState(false);
+  const [recentPayments, setRecentPayments] = useState<RecentPayment[]>(INITIAL_RECENT);
+  const [particles, setParticles] = useState<Particle[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
 
+  // Seed mock tickets into localStorage if empty
+  useEffect(() => {
+    const existing = localStorage.getItem('fsb_tickets');
+    if (!existing || JSON.parse(existing).length === 0) {
+      const seedTickets: Ticket[] = [
+        {
+          id: 'MMW-003-029340799',
+          seller: 'sportmmwmaster',
+          date: '2026-04-06T17:24:00',
+          plays: [
+            { id: 'p1', team: 'Lakers', teamCode: 'LAL', playType: 'Directa', detail: 'Lakers ML', line: 0, player: '', points: 0, odds: -150, isIF: false },
+            { id: 'p2', team: 'Warriors', teamCode: 'GSW', playType: 'Directa', detail: 'Warriors +4.5', line: 4.5, player: '', points: 0, odds: -110, isIF: false },
+          ],
+          amount: 3000.00,
+          payout: 6150.00,
+          profit: 3150.00,
+          status: 'ganador',
+          createdAt: new Date('2026-04-06T17:24:00').getTime(),
+        },
+        {
+          id: 'MMW-003-029349174',
+          seller: 'mmw03',
+          date: '2026-04-07T12:58:00',
+          plays: [
+            { id: 'p3', team: 'Celtics', teamCode: 'BOS', playType: 'Directa', detail: 'Celtics ML', line: 0, player: '', points: 0, odds: -120, isIF: false },
+          ],
+          amount: 675.00,
+          payout: 1175.00,
+          profit: 500.00,
+          status: 'ganador',
+          createdAt: new Date('2026-04-07T12:58:00').getTime(),
+        },
+      ];
+      localStorage.setItem('fsb_tickets', JSON.stringify(seedTickets));
+    }
+  }, []);
+
+  // Generate confetti particles
+  const generateConfetti = useCallback(() => {
+    const colors = ['#22C55E', '#3B82F6', '#06B6D4', '#F59E0B', '#8B5CF6', '#EF4444'];
+    const newParticles: Particle[] = Array.from({ length: 40 }, (_, i) => ({
+      id: i,
+      x: 50 + (Math.random() - 0.5) * 20,
+      y: 50,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      size: 4 + Math.random() * 6,
+      angle: (Math.random() * 360),
+      velocity: 5 + Math.random() * 15,
+      opacity: 1,
+    }));
+    setParticles(newParticles);
+    setTimeout(() => setParticles([]), 1200);
+  }, []);
+
+  // Search for ticket
   const handleSearch = useCallback(() => {
-    setPaid(false);
-    setShowConfetti(false);
-    const trimmed = searchCode.trim().toUpperCase();
-    if (!trimmed) {
-      setTicket(null);
-      setNotFound(false);
+    const rawCode = codeInput.trim();
+    if (!rawCode) {
+      setErrorShake(true);
+      setTimeout(() => setErrorShake(false), 500);
       return;
     }
-    const found = mockTicketDB[trimmed];
-    if (found) {
+
+    setSearchState('searching');
+
+    // Format: try both full ID and partial
+    const fullCode = rawCode.startsWith('MMW') ? rawCode : `MMW-003-${rawCode}`;
+
+    setTimeout(() => {
+      const found = getTicketById(fullCode);
+      if (!found) {
+        setSearchState('notfound');
+        setErrorShake(true);
+        setTimeout(() => setErrorShake(false), 500);
+        setTimeout(() => setSearchState('idle'), 2500);
+        return;
+      }
+
+      if (found.status === 'pagado' || found.paidAt) {
+        setTicket(found);
+        setSearchState('alreadyPaid');
+        return;
+      }
+
       setTicket(found);
-      setNotFound(false);
-    } else {
-      setTicket(null);
-      setNotFound(true);
-    }
-  }, [searchCode]);
+      setSearchState('found');
+    }, 400);
+  }, [codeInput]);
 
-  const handlePay = () => {
-    setPaid(true);
-    setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 2500);
+  // Handle enter key
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleSearch();
   };
 
+  // Confirm payment
+  const handleConfirmPayment = useCallback(() => {
+    if (!ticket) return;
+    setSearchState('searching');
+
+    setTimeout(() => {
+      const updated = updateTicketStatus(ticket.id, 'pagado');
+      if (updated) {
+        setSearchState('paid');
+        generateConfetti();
+        // Add to recent payments
+        setRecentPayments((prev) => [
+          {
+            ticketId: ticket.id,
+            amount: ticket.amount,
+            payout: ticket.payout,
+            paidAt: Date.now(),
+          },
+          ...prev.slice(0, 9),
+        ]);
+        // Reset after 3 seconds
+        setTimeout(() => {
+          setCodeInput('');
+          setTicket(null);
+          setSearchState('idle');
+        }, 3500);
+      }
+    }, 500);
+  }, [ticket, generateConfetti]);
+
+  // Reset form
   const handleReset = () => {
-    setSearchCode("");
+    setCodeInput('');
     setTicket(null);
-    setNotFound(false);
-    setPaid(false);
-    setShowConfetti(false);
+    setSearchState('idle');
   };
 
-  useEffect(() => {
-    if (searchCode === "") {
-      setNotFound(false);
-    }
-  }, [searchCode]);
+  // Format date
+  const fmtDate = (ts: number) =>
+    new Date(ts).toLocaleDateString('es-DO', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+  const fmtTime = (ts: number) =>
+    new Date(ts).toLocaleTimeString('es-DO', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
 
   return (
-    <div className="p-6 max-w-[900px] mx-auto">
-      <ConfettiEffect active={showConfetti} />
-
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#1E293B]">Pagar</h1>
-        <p className="text-[#475569] mt-1">
-          Ingrese el codigo de ticket para buscar y pagar.
-        </p>
-      </div>
-
-      {/* Search Card */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-xl p-6 mb-6">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <div className="relative flex-1">
-            <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#94A3B8]" />
-            <input
-              type="text"
-              placeholder="Ej: TK-784521"
-              value={searchCode}
-              onChange={(e) => setSearchCode(e.target.value.toUpperCase())}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className="w-full pl-11 pr-4 py-3 bg-white border border-gray-300 rounded-lg text-lg text-[#1E293B] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-['JetBrains_Mono']"
-            />
-          </div>
-          <button
-            onClick={handleSearch}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 hover:shadow-md hover:-translate-y-0.5 transition-all shadow-sm"
-          >
-            <Search className="w-5 h-5" />
-            Buscar
-          </button>
-          <button
-            onClick={handleReset}
-            className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-[#475569] rounded-lg font-medium hover:bg-gray-200 hover:shadow-md hover:-translate-y-0.5 transition-all"
-          >
-            <RotateCcw className="w-4 h-4" />
-            Limpiar
-          </button>
-        </div>
-
-        {notFound && (
-          <div className="mt-4 flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600">
-            <XCircle className="w-5 h-5 flex-shrink-0" />
-            <p className="text-sm">No se encontro ningun ticket con el codigo <span className="font-bold font-['JetBrains_Mono']">{searchCode}</span>.</p>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] }}
+      className="p-6 space-y-6 relative"
+    >
+      {/* ── Confetti Overlay ── */}
+      <AnimatePresence>
+        {particles.length > 0 && (
+          <div className="fixed inset-0 z-[100] pointer-events-none overflow-hidden">
+            {particles.map((p) => (
+              <motion.div
+                key={p.id}
+                initial={{ x: `${p.x}vw`, y: `${p.y}vh`, opacity: 1, scale: 1, rotate: 0 }}
+                animate={{
+                  x: `${p.x + Math.cos((p.angle * Math.PI) / 180) * p.velocity * 3}vw`,
+                  y: `${p.y + Math.sin((p.angle * Math.PI) / 180) * p.velocity * 3 + 40}vh`,
+                  opacity: 0,
+                  scale: 0.2,
+                  rotate: 720,
+                }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1.2, ease: 'easeOut' }}
+                style={{
+                  position: 'absolute',
+                  width: p.size,
+                  height: p.size,
+                  backgroundColor: p.color,
+                  borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+                }}
+              />
+            ))}
           </div>
         )}
-      </div>
+      </AnimatePresence>
 
-      {/* Ticket Details */}
-      {ticket && (
-        <div className="bg-white rounded-lg border border-gray-200 shadow-xl overflow-hidden relative">
-          {paid && <PaidStamp />}
+      {/* ── Page Header ── */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <h1 className="text-h2 font-semibold text-text-primary">Pagar Ticket</h1>
+        <p className="text-sm text-text-tertiary mt-1">
+          Ingrese el codigo del ticket para procesar el pago
+        </p>
+      </motion.div>
 
-          {/* Ticket Header */}
-          <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                  <Ticket className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-lg font-bold text-[#1E293B] font-['JetBrains_Mono']">{ticket.code}</p>
-                  <p className="text-xs text-[#94A3B8]">ID: {ticket.id}</p>
-                </div>
-              </div>
-              <div
-                className={`px-3 py-1.5 rounded-full text-xs font-bold ${
-                  ticket.status === "ganador"
-                    ? "bg-green-50 text-green-700 border border-green-200"
-                    : ticket.status === "perdedor"
-                    ? "bg-red-50 text-red-700 border border-red-200"
-                    : "bg-amber-50 text-amber-700 border border-amber-200"
-                }`}
-              >
-                {ticket.status === "ganador" ? "GANADOR" : ticket.status === "perdedor" ? "PERDEDOR" : "PENDIENTE"}
-              </div>
-            </div>
+      {/* ── Search Card ── */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.1 }}
+        className="max-w-[480px] mx-auto gradient-card border border-border-subtle rounded-xl p-8 shadow-modal"
+      >
+        {/* Icon */}
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.3, delay: 0.2, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
+          className="flex justify-center mb-6"
+        >
+          <div className="w-16 h-16 rounded-full bg-accent-green/10 flex items-center justify-center">
+            <CreditCard size={32} className="text-accent-green" />
           </div>
+        </motion.div>
 
-          {/* Ticket Info */}
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-[#94A3B8]" />
-                <div>
-                  <p className="text-xs text-[#94A3B8]">Fecha</p>
-                  <p className="text-sm font-medium text-[#1E293B]">{ticket.date} — {ticket.time}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-[#94A3B8]" />
-                <div>
-                  <p className="text-xs text-[#94A3B8]">Cliente</p>
-                  <p className="text-sm font-medium text-[#1E293B]">{ticket.customer}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Award className="w-4 h-4 text-[#94A3B8]" />
-                <div>
-                  <p className="text-xs text-[#94A3B8]">Vendedor</p>
-                  <p className="text-sm font-medium text-[#1E293B]">{ticket.seller}</p>
-                </div>
-              </div>
-            </div>
+        {/* Label */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.25 }}
+          className="text-center text-xs text-text-tertiary font-medium uppercase tracking-wider mb-3"
+        >
+          Codigo de Ticket
+        </motion.p>
+
+        {/* Input */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className={`relative mb-5 ${errorShake ? 'animate-shake' : ''}`}
+        >
+          <div className="flex items-center bg-[rgba(30,41,59,0.8)] border-2 border-border-default rounded-lg overflow-hidden focus-within:border-accent-green focus-within:shadow-[0_0_0_4px_rgba(34,197,94,0.2)] transition-all">
+            <span className="pl-4 pr-1 font-mono text-h4 text-text-tertiary select-none whitespace-nowrap">
+              MMW-003-
+            </span>
+            <input
+              ref={inputRef}
+              type="text"
+              value={codeInput}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                setCodeInput(val);
+              }}
+              onKeyDown={handleKeyDown}
+              placeholder="______"
+              maxLength={6}
+              disabled={searchState === 'paid'}
+              className="flex-1 bg-transparent py-3.5 pr-4 font-mono text-h4 text-text-primary text-center placeholder:text-text-tertiary/50 outline-none border-none disabled:opacity-50"
+            />
           </div>
+        </motion.div>
 
-          {/* Picks */}
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-sm font-semibold text-[#1E293B] mb-3 uppercase tracking-wider">Selecciones</h3>
-            <div className="space-y-2">
-              {ticket.picks.map((pick, idx) => (
-                <div
-                  key={idx}
-                  className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex items-center justify-between"
-                >
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-[#1E293B]">{pick.event}</p>
-                    <p className="text-xs text-[#475569]">{pick.selection}</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-[#1E293B] font-['JetBrains_Mono']">{pick.odds}</span>
-                    <span
-                      className={`px-2 py-0.5 rounded text-xs font-bold ${
-                        pick.result === "Gano"
-                          ? "bg-green-50 text-green-700"
-                          : pick.result === "Perdio"
-                          ? "bg-red-50 text-red-700"
-                          : "bg-amber-50 text-amber-700"
-                      }`}
-                    >
-                      {pick.result}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Totals */}
-          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center">
-                <p className="text-xs text-[#94A3B8] mb-1">Riesgo</p>
-                <p className="text-lg font-bold text-red-500 font-['JetBrains_Mono']">${ticket.risk.toLocaleString()}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xs text-[#94A3B8] mb-1">A Ganar</p>
-                <p className="text-lg font-bold text-green-600 font-['JetBrains_Mono']">${ticket.toWin.toLocaleString()}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xs text-[#94A3B8] mb-1">Pago Total</p>
-                <p className="text-lg font-bold text-[#1E293B] font-['JetBrains_Mono']">${ticket.totalPayout.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="px-6 py-4 flex items-center justify-between">
-            <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-[#475569] rounded-lg font-medium hover:bg-gray-200 hover:shadow-md hover:-translate-y-0.5 transition-all">
-              <Printer className="w-4 h-4" />
-              Imprimir
+        {/* Search Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          {searchState === 'idle' || searchState === 'notfound' ? (
+            <button
+              onClick={handleSearch}
+              className="w-full h-12 gradient-accent text-white text-sm font-bold tracking-wider rounded-md hover:shadow-accent active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            >
+              <Search size={16} />
+              BUSCAR Y PAGAR
             </button>
+          ) : searchState === 'searching' ? (
+            <button
+              disabled
+              className="w-full h-12 gradient-accent text-white text-sm font-bold tracking-wider rounded-md opacity-70 flex items-center justify-center gap-2"
+            >
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Buscando...
+            </button>
+          ) : searchState === 'found' || searchState === 'alreadyPaid' ? (
+            <button
+              onClick={handleReset}
+              className="w-full h-12 bg-bg-tertiary text-text-secondary text-sm font-bold tracking-wider rounded-md hover:bg-bg-quaternary transition-all flex items-center justify-center gap-2"
+            >
+              <X size={16} />
+              LIMPIAR
+            </button>
+          ) : null}
+        </motion.div>
 
-            {!paid && ticket.status === "ganador" && (
-              <button
-                onClick={handlePay}
-                className="flex items-center gap-2 px-8 py-3 bg-green-500 text-white rounded-lg font-bold text-lg shadow-sm hover:bg-green-600 hover:shadow-lg transition-all duration-150 hover:-translate-y-0.5"
-              >
-                <DollarSign className="w-5 h-5" />
-                Pagar ${ticket.totalPayout.toLocaleString()}
-              </button>
-            )}
+        {/* Error: Not Found */}
+        <AnimatePresence>
+          {searchState === 'notfound' && (
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="mt-4 p-3 rounded-md bg-accent-red/10 border border-accent-red/20 text-center"
+            >
+              <p className="text-sm text-accent-red flex items-center justify-center gap-2">
+                <AlertCircle size={16} />
+                Ticket no encontrado
+              </p>
+              <p className="text-xs text-text-muted mt-1">Verifique el codigo e intente de nuevo</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-            {paid && (
-              <div className="flex items-center gap-2 px-6 py-3 bg-green-50 border border-green-200 rounded-lg text-green-700 font-bold">
-                <CheckCircle2 className="w-5 h-5" />
-                Pago Completado
+        {/* Already Paid */}
+        <AnimatePresence>
+          {searchState === 'alreadyPaid' && ticket && (
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="mt-4 p-3 rounded-md bg-accent-blue/10 border border-accent-blue/20 text-center"
+            >
+              <p className="text-sm text-accent-blue flex items-center justify-center gap-2">
+                <Info size={16} />
+                Este ticket ya fue pagado
+              </p>
+              <p className="text-xs text-text-muted mt-1">
+                {ticket.paidAt ? `Pagado el ${fmtDate(ticket.paidAt)}` : 'Pagado anteriormente'}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ── Ticket Details (when found) ── */}
+        <AnimatePresence>
+          {searchState === 'found' && ticket && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
+              className="mt-6 space-y-4 overflow-hidden"
+            >
+              {/* Divider */}
+              <div className="border-t border-border-subtle" />
+
+              {/* Ticket Number */}
+              <div className="text-center">
+                <p className="text-xs text-text-tertiary uppercase tracking-wider mb-1">Ticket</p>
+                <p className="font-mono text-h3 text-accent-blue font-bold">{ticket.id}</p>
               </div>
-            )}
-          </div>
+
+              {/* Info Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-bg-primary/50 rounded-md p-3 border border-border-subtle">
+                  <div className="flex items-center gap-1.5 text-text-tertiary text-xs mb-1">
+                    <Calendar size={12} />
+                    Fecha
+                  </div>
+                  <p className="text-sm text-text-primary font-medium">
+                    {fmtDate(ticket.createdAt)}
+                  </p>
+                </div>
+                <div className="bg-bg-primary/50 rounded-md p-3 border border-border-subtle">
+                  <div className="flex items-center gap-1.5 text-text-tertiary text-xs mb-1">
+                    <DollarSign size={12} />
+                    Monto
+                  </div>
+                  <p className="font-mono text-mono text-text-primary font-semibold">
+                    {formatAmount(ticket.amount)}
+                  </p>
+                </div>
+                <div className="col-span-2 bg-bg-primary/50 rounded-md p-4 border border-border-subtle text-center">
+                  <div className="flex items-center justify-center gap-1.5 text-text-tertiary text-xs mb-1">
+                    <Trophy size={14} />
+                    Premio / A pagar
+                  </div>
+                  <p className="font-mono text-mono-lg text-accent-green font-bold">
+                    {formatAmount(ticket.payout)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Plays list */}
+              {ticket.plays.length > 0 && (
+                <div>
+                  <p className="text-xs text-text-tertiary uppercase tracking-wider mb-2">Jugadas</p>
+                  <div className="space-y-2">
+                    {ticket.plays.map((play) => (
+                      <div
+                        key={play.id}
+                        className="bg-bg-primary/50 rounded-md p-3 border border-border-subtle"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-text-primary font-medium">{play.team}</span>
+                          <span className="text-xs text-accent-blue">{play.playType}</span>
+                        </div>
+                        <p className="text-xs text-text-secondary mt-1">{play.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Confirm Payment Button */}
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                onClick={handleConfirmPayment}
+                className="w-full h-14 gradient-winner text-white text-sm font-bold tracking-wider rounded-md hover:shadow-winner hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              >
+                <CreditCard size={18} />
+                CONFIRMAR PAGO DE {formatAmount(ticket.payout)}
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ── Paid Success State ── */}
+        <AnimatePresence>
+          {searchState === 'paid' && ticket && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              className="mt-6 overflow-hidden"
+            >
+              <div className="border-t border-border-subtle mb-4" />
+              <div className="bg-accent-green/5 border-2 border-accent-green/30 rounded-xl p-6 text-center relative overflow-hidden">
+                {/* Paid stamp overlay effect */}
+                <div className="absolute top-2 right-2 opacity-10 pointer-events-none">
+                  <span className="text-6xl font-black text-accent-green rotate-[-15deg] block tracking-tighter">
+                    PAGADO
+                  </span>
+                </div>
+
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                  className="w-16 h-16 rounded-full bg-accent-green/20 flex items-center justify-center mx-auto mb-3"
+                >
+                  <CheckCircle size={36} className="text-accent-green" />
+                </motion.div>
+
+                <h3 className="text-h3 text-accent-green font-bold mb-1">Pago Exitoso</h3>
+                <p className="font-mono text-mono text-accent-green font-semibold">
+                  {formatAmount(ticket.payout)}
+                </p>
+                <p className="text-xs text-text-tertiary mt-2">
+                  Ticket {ticket.id}
+                </p>
+                <p className="text-xs text-text-muted mt-1">
+                  Redirigiendo en un momento...
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
+      {/* ── Recent Payments Table ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.3 }}
+        className="gradient-panel border border-border-subtle rounded-lg overflow-hidden"
+      >
+        <div className="px-5 py-4 border-b border-border-subtle">
+          <h3 className="text-h3 text-text-primary font-semibold">Ultimos Tickets Pagados</h3>
+          <p className="text-xs text-text-tertiary mt-0.5">Hoy</p>
         </div>
-      )}
-    </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-[rgba(17,24,39,0.8)]">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                  Ticket
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                  Hora
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                  Monto
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                  Premio
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                  Estado
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <AnimatePresence>
+                {recentPayments.map((rp, index) => (
+                  <motion.tr
+                    key={`${rp.ticketId}-${rp.paidAt}`}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.25, delay: index * 0.03 }}
+                    className={`border-b border-border-subtle hover:bg-[rgba(148,163,184,0.04)] ${
+                      index % 2 === 1 ? 'bg-[rgba(148,163,184,0.02)]' : ''
+                    }`}
+                  >
+                    <td className="px-4 py-2.5 font-mono text-sm text-accent-blue">
+                      {rp.ticketId}
+                    </td>
+                    <td className="px-4 py-2.5 text-text-secondary text-xs">
+                      {fmtTime(rp.paidAt)}
+                    </td>
+                    <td className="px-4 py-2.5 text-right font-mono text-mono text-text-primary">
+                      {formatAmount(rp.amount)}
+                    </td>
+                    <td className="px-4 py-2.5 text-right font-mono text-mono font-semibold text-accent-green">
+                      {formatAmount(rp.payout)}
+                    </td>
+                    <td className="px-4 py-2.5 text-center">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold badge-pagado">
+                        Pagado
+                      </span>
+                    </td>
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
+
+              {recentPayments.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <TicketIcon size={48} className="text-text-muted/20" />
+                      <p className="text-sm text-text-tertiary">No hay pagos recientes</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }

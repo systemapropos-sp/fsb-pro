@@ -1,316 +1,614 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import type { Ticket } from '@/lib/storage';
+import {
+  getTickets,
+  updateTicketStatus,
+  formatAmount,
+} from '@/lib/storage';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
-  Filter,
-  Ticket,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Ban,
+  Calendar,
+  RefreshCw,
   Download,
   Eye,
-  Printer,
-} from "lucide-react";
+  Pencil,
+  DollarSign,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  TicketIcon,
+  SearchX,
+} from 'lucide-react';
 
-interface TicketItem {
-  id: string;
-  code: string;
-  date: string;
-  time: string;
-  customer: string;
-  seller: string;
-  picks: number;
-  risk: number;
-  toWin: number;
-  status: "ganador" | "perdedor" | "pendiente" | "cancelado";
+// ── Status config ──────────────────────────────────────────
+const STATUS_CONFIG = {
+  pendiente: { label: 'Pendiente', className: 'badge-pendiente' },
+  ganador:   { label: 'Ganador',   className: 'badge-ganador' },
+  perdedor:  { label: 'Perdedor',  className: 'badge-perdedor' },
+  cancelado: { label: 'Cancelado', className: 'badge-cancelado' },
+  pagado:    { label: 'Pagado',    className: 'badge-pagado' },
+} as const;
+
+type StatusFilter = 'todos' | 'ganador' | 'perdedor' | 'pendiente' | 'cancelado';
+
+const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
+  { key: 'todos',     label: 'Todos' },
+  { key: 'ganador',   label: 'Ganadores' },
+  { key: 'perdedor',  label: 'Perdedores' },
+  { key: 'pendiente', label: 'Pendientes' },
+  { key: 'cancelado', label: 'Cancelados' },
+];
+
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+
+// ── Seed mock data ─────────────────────────────────────────
+function seedMockTickets(): Ticket[] {
+  const statuses: Ticket['status'][] = ['pendiente', 'ganador', 'perdedor', 'cancelado', 'pagado'];
+  const tickets: Ticket[] = [];
+  const baseDate = new Date('2026-04-06T12:00:00');
+
+  const sellers = ['mmw03', 'sportmmwmaster', 'admin01', 'vendedor02'];
+
+  for (let i = 1; i <= 15; i++) {
+    const status = statuses[i % statuses.length];
+    const amount = [100, 200, 300, 500, 675, 800, 1000, 1500, 2000, 3000, 50, 75, 150, 400, 550][i - 1];
+    const payoutMultiplier = [2.5, 2.0, 1.8, 3.0, 1.5, 2.2, 1.75, 2.8, 1.9, 2.05, 3.5, 2.4, 1.6, 2.1, 1.85][i - 1];
+
+    tickets.push({
+      id: `MMW-003-${(29340799 + i * 10001).toString().padStart(6, '0')}`,
+      seller: sellers[i % sellers.length],
+      date: new Date(baseDate.getTime() + i * 3600000 * (i % 5 + 1)).toISOString(),
+      plays: [],
+      amount,
+      payout: +(amount * payoutMultiplier).toFixed(2),
+      profit: +(amount * payoutMultiplier - amount).toFixed(2),
+      status,
+      createdAt: baseDate.getTime() + i * 3600000,
+      paidAt: status === 'pagado' ? baseDate.getTime() + i * 3600000 + 7200000 : undefined,
+    });
+  }
+
+  // Save to localStorage
+  localStorage.setItem('fsb_tickets', JSON.stringify(tickets));
+  return tickets;
 }
 
-const ticketsData: TicketItem[] = [
-  {
-    id: "T-001",
-    code: "TK-784521",
-    date: "2024-01-15",
-    time: "14:30",
-    customer: "Juan Perez",
-    seller: "Carlos Ruiz",
-    picks: 3,
-    risk: 500,
-    toWin: 1250,
-    status: "ganador",
-  },
-  {
-    id: "T-002",
-    code: "TK-784522",
-    date: "2024-01-15",
-    time: "13:15",
-    customer: "Maria Garcia",
-    seller: "Ana Martinez",
-    picks: 2,
-    risk: 200,
-    toWin: 380,
-    status: "pendiente",
-  },
-  {
-    id: "T-003",
-    code: "TK-784523",
-    date: "2024-01-15",
-    time: "12:45",
-    customer: "Luis Torres",
-    seller: "Carlos Ruiz",
-    picks: 5,
-    risk: 1000,
-    toWin: 5200,
-    status: "perdedor",
-  },
-  {
-    id: "T-004",
-    code: "TK-784524",
-    date: "2024-01-14",
-    time: "18:20",
-    customer: "Ana Lopez",
-    seller: "Maria Lopez",
-    picks: 1,
-    risk: 150,
-    toWin: 210,
-    status: "ganador",
-  },
-  {
-    id: "T-005",
-    code: "TK-784525",
-    date: "2024-01-14",
-    time: "16:00",
-    customer: "Pedro Martinez",
-    seller: "Luis Torres",
-    picks: 4,
-    risk: 750,
-    toWin: 2800,
-    status: "cancelado",
-  },
-  {
-    id: "T-006",
-    code: "TK-784526",
-    date: "2024-01-14",
-    time: "11:30",
-    customer: "Sofia Ramirez",
-    seller: "Ana Martinez",
-    picks: 2,
-    risk: 300,
-    toWin: 540,
-    status: "pendiente",
-  },
-  {
-    id: "T-007",
-    code: "TK-784527",
-    date: "2024-01-13",
-    time: "20:00",
-    customer: "Diego Hernandez",
-    seller: "Luis Torres",
-    picks: 3,
-    risk: 450,
-    toWin: 1125,
-    status: "ganador",
-  },
-  {
-    id: "T-008",
-    code: "TK-784528",
-    date: "2024-01-13",
-    time: "15:45",
-    customer: "Carmen Diaz",
-    seller: "Maria Lopez",
-    picks: 6,
-    risk: 1200,
-    toWin: 8400,
-    status: "perdedor",
-  },
-];
+function loadTickets(): Ticket[] {
+  const stored = getTickets();
+  if (stored.length === 0) {
+    return seedMockTickets();
+  }
+  return stored;
+}
 
-type StatusFilter = "todos" | "ganador" | "perdedor" | "pendiente" | "cancelado";
-
-const statusFilters: { key: StatusFilter; label: string; className: string }[] = [
-  {
-    key: "todos",
-    label: "Todos",
-    className: "bg-gray-100 text-[#475569] hover:bg-gray-200 border-transparent",
-  },
-  {
-    key: "ganador",
-    label: "Ganadores",
-    className: "bg-green-50 text-green-700 hover:bg-green-100 border-green-200",
-  },
-  {
-    key: "perdedor",
-    label: "Perdedores",
-    className: "bg-red-50 text-red-700 hover:bg-red-100 border-red-200",
-  },
-  {
-    key: "pendiente",
-    label: "Pendientes",
-    className: "bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200",
-  },
-  {
-    key: "cancelado",
-    label: "Cancelados",
-    className: "bg-gray-100 text-gray-500 hover:bg-gray-200 border-gray-200",
-  },
-];
-
-function StatusBadge({ status }: { status: TicketItem["status"] }) {
-  const styles = {
-    ganador: "bg-green-50 text-green-700 border-green-200",
-    perdedor: "bg-red-50 text-red-700 border-red-200",
-    pendiente: "bg-amber-50 text-amber-700 border-amber-200",
-    cancelado: "bg-gray-100 text-gray-500 border-gray-200",
-  };
-  const icons = {
-    ganador: <CheckCircle2 className="w-3.5 h-3.5" />,
-    perdedor: <XCircle className="w-3.5 h-3.5" />,
-    pendiente: <Clock className="w-3.5 h-3.5" />,
-    cancelado: <Ban className="w-3.5 h-3.5" />,
-  };
+// ── Status Badge ───────────────────────────────────────────
+function StatusBadge({ status }: { status: Ticket['status'] }) {
+  const cfg = STATUS_CONFIG[status];
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${styles[status]}`}
-    >
-      {icons[status]}
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${cfg.className}`}>
+      {status === 'pagado' && <span className="w-1.5 h-1.5 rounded-full bg-accent-green" />}
+      {cfg.label}
     </span>
   );
 }
 
+// ── Main Component ─────────────────────────────────────────
 export default function Tickets() {
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("todos");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [allTickets, setAllTickets] = useState<Ticket[]>([]);
+  const [activeFilter, setActiveFilter] = useState<StatusFilter>('todos');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [refreshSpin, setRefreshSpin] = useState(false);
 
-  const filteredTickets = ticketsData.filter((t) => {
-    const matchesStatus = statusFilter === "todos" || t.status === statusFilter;
-    const matchesSearch =
-      searchQuery === "" ||
-      t.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.seller.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesStatus && matchesSearch;
-  });
+  // Load data on mount
+  useEffect(() => {
+    setAllTickets(loadTickets());
+  }, []);
+
+  // Set default date to today
+  useEffect(() => {
+    const today = new Date();
+    setDateFilter(today.toISOString().split('T')[0]);
+  }, []);
+
+  // Filter & search
+  const filteredTickets = useMemo(() => {
+    let result = allTickets;
+
+    // Status filter
+    if (activeFilter !== 'todos') {
+      result = result.filter((t) => t.status === activeFilter);
+    }
+
+    // Search by ticket number
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter((t) => t.id.toLowerCase().includes(q));
+    }
+
+    // Date filter
+    if (dateFilter) {
+      const filterDate = new Date(dateFilter);
+      result = result.filter((t) => {
+        const ticketDate = new Date(t.date);
+        return (
+          ticketDate.getDate() === filterDate.getDate() &&
+          ticketDate.getMonth() === filterDate.getMonth() &&
+          ticketDate.getFullYear() === filterDate.getFullYear()
+        );
+      });
+    }
+
+    return result;
+  }, [allTickets, activeFilter, searchQuery, dateFilter]);
+
+  // Pagination
+  const totalEntries = filteredTickets.length;
+  const totalPages = Math.max(1, Math.ceil(totalEntries / pageSize));
+  const startIdx = (currentPage - 1) * pageSize;
+  const endIdx = Math.min(startIdx + pageSize, totalEntries);
+  const paginatedTickets = filteredTickets.slice(startIdx, endIdx);
+
+  // Status counts
+  const statusCounts = useMemo(() => {
+    const counts = {
+      todos: allTickets.length,
+      ganador: allTickets.filter((t) => t.status === 'ganador').length,
+      perdedor: allTickets.filter((t) => t.status === 'perdedor').length,
+      pendiente: allTickets.filter((t) => t.status === 'pendiente').length,
+      cancelado: allTickets.filter((t) => t.status === 'cancelado').length,
+    };
+    return counts;
+  }, [allTickets]);
+
+  // Summary
+  const summary = useMemo(() => {
+    const montoTotal = filteredTickets.reduce((sum, t) => sum + t.amount, 0);
+    const premioTotal = filteredTickets.reduce((sum, t) => sum + t.payout, 0);
+    return { montoTotal, premioTotal };
+  }, [filteredTickets]);
+
+  // Handlers
+  const handleRefresh = useCallback(() => {
+    setRefreshSpin(true);
+    setAllTickets(loadTickets());
+    setTimeout(() => setRefreshSpin(false), 500);
+  }, []);
+
+  const handleCancelTicket = useCallback(
+    (id: string) => {
+      if (!confirm('Esta seguro de cancelar este ticket?')) return;
+      const updated = updateTicketStatus(id, 'cancelado');
+      if (updated) {
+        setAllTickets((prev) => prev.map((t) => (t.id === id ? { ...t, status: 'cancelado' as const } : t)));
+      }
+    },
+    []
+  );
+
+  const handlePayTicket = useCallback(
+    (id: string) => {
+      if (!confirm('Confirmar pago de este ticket?')) return;
+      const updated = updateTicketStatus(id, 'pagado');
+      if (updated) {
+        setAllTickets((prev) => prev.map((t) => (t.id === id ? { ...t, status: 'pagado' as const, paidAt: Date.now() } : t)));
+      }
+    },
+    []
+  );
+
+  const handlePageChange = useCallback(
+    (page: number) => {
+      if (page >= 1 && page <= totalPages) setCurrentPage(page);
+    },
+    [totalPages]
+  );
+
+  // Reset page on filter change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeFilter, searchQuery, dateFilter, pageSize]);
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-[#1E293B]">Tickets</h1>
-          <p className="text-[#475569] mt-1">
-            Gestion completa de tickets con filtros, busqueda y acciones.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-[#475569] hover:shadow-md hover:-translate-y-0.5 transition-all shadow-sm">
-            <Download className="w-4 h-4" />
-            <span className="text-sm font-medium">Exportar</span>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] }}
+      className="p-6 space-y-5"
+    >
+      {/* ── Page Header ── */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <h1 className="text-h2 font-semibold text-text-primary">Gestion de Tickets</h1>
+        <p className="text-sm text-text-tertiary mt-1">Administre todos los tickets del sistema</p>
+      </motion.div>
+
+      {/* ── Toolbar ── */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.25, delay: 0.1 }}
+        className="flex flex-wrap items-center justify-between gap-3"
+      >
+        {/* Left: Date picker */}
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none" />
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="input-standard pl-9 pr-3 py-2 text-sm cursor-pointer"
+            />
+          </div>
+          <button className="gradient-accent text-white text-sm font-semibold px-5 py-2 rounded-md hover:brightness-110 transition-all active:scale-[0.98]">
+            Buscar tickets
+          </button>
+          <button className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold border border-border-default text-text-secondary hover:bg-white/5 transition-all">
+            <Download size={15} />
+            Imprimir pendientes de pago
           </button>
         </div>
-      </div>
 
-      {/* Search + Filters */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-        {/* Status Filter Pills */}
-        <div className="flex flex-wrap items-center gap-2">
-          {statusFilters.map((filter) => (
+        {/* Right: Search + actions */}
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Buscar por numero de ticket..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="input-standard pl-9 pr-3 py-2 text-sm w-[280px]"
+            />
+          </div>
+          <button
+            onClick={handleRefresh}
+            className={`p-2 rounded-md bg-white/[0.04] text-text-tertiary hover:text-text-secondary hover:bg-white/[0.08] transition-all ${
+              refreshSpin ? 'animate-spin-once' : ''
+            }`}
+          >
+            <RefreshCw size={16} />
+          </button>
+        </div>
+      </motion.div>
+
+      {/* ── Status Filter Pills ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 5 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, delay: 0.15 }}
+        className="flex items-center gap-2 flex-wrap"
+      >
+        {STATUS_FILTERS.map((filter) => {
+          const isActive = activeFilter === filter.key;
+          const count = statusCounts[filter.key];
+          return (
             <button
               key={filter.key}
-              onClick={() => setStatusFilter(filter.key)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all duration-150 hover:shadow-md hover:-translate-y-0.5 ${
-                statusFilter === filter.key
-                  ? filter.className + " ring-2 ring-offset-1 ring-blue-200 shadow-sm"
-                  : filter.className
+              onClick={() => setActiveFilter(filter.key)}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 border ${
+                isActive
+                  ? filter.key === 'ganador'
+                    ? 'bg-accent-green/15 text-accent-green border-accent-green/30'
+                    : filter.key === 'perdedor'
+                    ? 'bg-accent-red/15 text-accent-red border-accent-red/30'
+                    : filter.key === 'pendiente'
+                    ? 'bg-accent-amber/15 text-accent-amber border-accent-amber/30'
+                    : filter.key === 'cancelado'
+                    ? 'bg-accent-red-dim/10 text-text-tertiary border-text-tertiary/30'
+                    : 'bg-accent-blue/15 text-accent-blue border-accent-blue/30'
+                  : 'bg-transparent text-text-muted border-border-default hover:text-text-secondary hover:border-text-tertiary/40'
               }`}
             >
               {filter.label}
+              <span
+                className={`min-w-[20px] h-5 flex items-center justify-center rounded-full text-[10px] font-bold ${
+                  isActive
+                    ? filter.key === 'ganador'
+                      ? 'bg-accent-green/25 text-accent-green'
+                      : filter.key === 'perdedor'
+                      ? 'bg-accent-red/25 text-accent-red'
+                      : filter.key === 'pendiente'
+                      ? 'bg-accent-amber/25 text-accent-amber'
+                      : filter.key === 'cancelado'
+                      ? 'bg-text-tertiary/20 text-text-tertiary'
+                      : 'bg-accent-blue/25 text-accent-blue'
+                    : 'bg-white/5 text-text-muted'
+                }`}
+              >
+                {count}
+              </span>
             </button>
-          ))}
-        </div>
+          );
+        })}
+      </motion.div>
 
-        {/* Search */}
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
-          <input
-            type="text"
-            placeholder="Buscar por codigo, cliente o vendedor..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-[#1E293B] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-          />
+      {/* ── Summary Banner ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
+        className="gradient-panel border border-border-subtle rounded-lg p-4 flex items-center justify-between"
+      >
+        <div className="flex items-center gap-6">
+          <div>
+            <span className="text-sm text-text-tertiary mr-2">Monto total:</span>
+            <span className="font-mono text-mono text-text-primary font-semibold">
+              {formatAmount(summary.montoTotal)}
+            </span>
+          </div>
+          <div className="w-px h-6 bg-border-default" />
+          <div>
+            <span className="text-sm text-text-tertiary mr-2">Total de premios:</span>
+            <span className="font-mono text-mono text-accent-green font-semibold">
+              {formatAmount(summary.premioTotal)}
+            </span>
+          </div>
         </div>
+        <div className="text-xs text-text-muted">
+          {filteredTickets.length} ticket{filteredTickets.length !== 1 ? 's' : ''} encontrado
+          {filteredTickets.length !== 1 ? 's' : ''}
+        </div>
+      </motion.div>
+
+      {/* ── Search Box ── */}
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-text-secondary">Search:</span>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Buscar por numero..."
+          className="input-standard px-3 py-1.5 text-sm w-[220px]"
+        />
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+      {/* ── Data Table ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.25 }}
+        className="gradient-panel border border-border-subtle rounded-lg overflow-hidden"
+      >
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#475569] uppercase tracking-wider">Codigo</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#475569] uppercase tracking-wider">Fecha</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#475569] uppercase tracking-wider">Hora</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#475569] uppercase tracking-wider">Cliente</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[#475569] uppercase tracking-wider">Vendedor</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-[#475569] uppercase tracking-wider">Picks</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-[#475569] uppercase tracking-wider">Riesgo</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-[#475569] uppercase tracking-wider">A Ganar</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-[#475569] uppercase tracking-wider">Estado</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-[#475569] uppercase tracking-wider">Acciones</th>
+          <table className="w-full text-sm">
+            {/* Table Header */}
+            <thead className="sticky top-0 z-10">
+              <tr className="bg-[rgba(17,24,39,0.95)] backdrop-blur-lg">
+                <th className="px-3 py-3 text-center text-xs font-semibold text-text-secondary uppercase tracking-wider w-[5%]">
+                  #
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                  Numero
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                  Fecha de creacion
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                  Usuario
+                </th>
+                <th className="px-3 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                  Monto
+                </th>
+                <th className="px-3 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                  Pago
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                  Cancelado por
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                  Fecha cancelado
+                </th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                  Estado
+                </th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                  Pagado
+                </th>
+                <th className="px-3 py-3 text-center text-xs font-semibold text-text-secondary uppercase tracking-wider w-[140px]">
+                  Acciones
+                </th>
               </tr>
             </thead>
+
+            {/* Table Body */}
             <tbody>
-              {filteredTickets.map((ticket, idx) => (
-                <tr
-                  key={ticket.id}
-                  className={`border-b border-gray-100 hover:bg-blue-50 transition-colors duration-150 ${
-                    idx % 2 === 0 ? "" : "bg-gray-50"
-                  }`}
-                >
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <Ticket className="w-4 h-4 text-[#94A3B8]" />
-                      <span className="text-sm font-medium text-[#1E293B] font-['JetBrains_Mono']">
-                        {ticket.code}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-[#475569]">{ticket.date}</td>
-                  <td className="px-4 py-3 text-sm text-[#94A3B8] font-['JetBrains_Mono']">{ticket.time}</td>
-                  <td className="px-4 py-3 text-sm font-medium text-[#1E293B]">{ticket.customer}</td>
-                  <td className="px-4 py-3 text-sm text-[#475569]">{ticket.seller}</td>
-                  <td className="px-4 py-3 text-sm text-[#475569] text-center">{ticket.picks}</td>
-                  <td className="px-4 py-3 text-sm font-medium text-red-500 font-['JetBrains_Mono'] text-right">
-                    ${ticket.risk.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 text-sm font-medium text-green-600 font-['JetBrains_Mono'] text-right">
-                    ${ticket.toWin.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <StatusBadge status={ticket.status} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-center gap-1">
-                      <button className="p-1.5 rounded-md hover:bg-blue-100 text-[#94A3B8] hover:text-blue-600 transition-colors" title="Ver">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button className="p-1.5 rounded-md hover:bg-gray-200 text-[#94A3B8] hover:text-[#475569] transition-colors" title="Imprimir">
-                        <Printer className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              <AnimatePresence mode="wait">
+                {paginatedTickets.length > 0 ? (
+                  paginatedTickets.map((ticket, index) => (
+                    <motion.tr
+                      key={ticket.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.15, delay: index * 0.025 }}
+                      className={`border-b border-border-subtle transition-colors hover:bg-[rgba(148,163,184,0.04)] ${
+                        index % 2 === 1 ? 'bg-[rgba(148,163,184,0.02)]' : ''
+                      }`}
+                    >
+                      <td className="px-3 py-2.5 text-center text-text-tertiary text-xs">
+                        {startIdx + index + 1}
+                      </td>
+                      <td className="px-3 py-2.5 font-mono text-sm text-accent-blue cursor-pointer hover:underline">
+                        {ticket.id}
+                      </td>
+                      <td className="px-3 py-2.5 text-text-secondary text-xs whitespace-nowrap">
+                        {new Date(ticket.date).toLocaleDateString('es-DO', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </td>
+                      <td className="px-3 py-2.5 text-text-secondary text-xs">{ticket.seller}</td>
+                      <td className="px-3 py-2.5 text-right font-mono text-mono text-text-primary">
+                        {formatAmount(ticket.amount)}
+                      </td>
+                      <td className="px-3 py-2.5 text-right font-mono text-mono text-accent-green">
+                        {formatAmount(ticket.payout)}
+                      </td>
+                      <td className="px-3 py-2.5 text-text-muted text-xs">
+                        {ticket.status === 'cancelado' ? 'Sistema' : '-'}
+                      </td>
+                      <td className="px-3 py-2.5 text-text-muted text-xs">
+                        {ticket.status === 'cancelado'
+                          ? new Date(ticket.createdAt + 3600000).toLocaleDateString('es-DO', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : '-'}
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        <StatusBadge status={ticket.status} />
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        {ticket.status === 'pagado' ? (
+                          <span className="text-accent-green text-xs font-semibold">Si</span>
+                        ) : (
+                          <span className="text-text-muted text-xs">No</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            title="Ver ticket"
+                            className="p-1.5 rounded-md bg-white/[0.04] text-accent-blue hover:bg-white/[0.1] transition-colors"
+                          >
+                            <Eye size={14} />
+                          </button>
+                          <button
+                            title="Editar ticket"
+                            className="p-1.5 rounded-md bg-white/[0.04] text-text-secondary hover:bg-white/[0.1] hover:text-text-primary transition-colors"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          {ticket.status === 'ganador' && (
+                            <button
+                              title="Pagar ticket"
+                              onClick={() => handlePayTicket(ticket.id)}
+                              className="p-1.5 rounded-md bg-accent-green/10 text-accent-green hover:bg-accent-green/20 transition-colors"
+                            >
+                              <DollarSign size={14} />
+                            </button>
+                          )}
+                          {ticket.status === 'pendiente' && (
+                            <button
+                              title="Cancelar ticket"
+                              onClick={() => handleCancelTicket(ticket.id)}
+                              className="p-1.5 rounded-md bg-accent-red/10 text-accent-red hover:bg-accent-red/20 transition-colors"
+                            >
+                              <X size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={11} className="px-6 py-16 text-center">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="flex flex-col items-center gap-3"
+                      >
+                        {searchQuery || dateFilter || activeFilter !== 'todos' ? (
+                          <>
+                            <SearchX size={48} className="text-text-muted/30" />
+                            <p className="text-sm text-text-tertiary">No se encontraron tickets</p>
+                            <button
+                              onClick={() => {
+                                setSearchQuery('');
+                                setDateFilter('');
+                                setActiveFilter('todos');
+                              }}
+                              className="mt-2 text-xs text-accent-blue hover:text-accent-blue-bright font-medium border border-accent-blue/30 px-4 py-2 rounded-md hover:bg-accent-blue/10 transition-all"
+                            >
+                              Limpiar filtros
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <TicketIcon size={64} className="text-text-muted/20" />
+                            <p className="text-body-lg text-text-tertiary">No hay tickets</p>
+                            <p className="text-sm text-text-muted">
+                              Los tickets apareceran aqui cuando se procesen
+                            </p>
+                          </>
+                        )}
+                      </motion.div>
+                    </td>
+                  </tr>
+                )}
+              </AnimatePresence>
             </tbody>
           </table>
         </div>
-        {filteredTickets.length === 0 && (
-          <div className="p-8 text-center text-[#94A3B8]">
-            <Filter className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No se encontraron tickets con los filtros seleccionados.</p>
+
+        {/* ── Pagination ── */}
+        {totalEntries > 0 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border-subtle">
+            <div className="text-xs text-text-tertiary">
+              Showing {totalEntries > 0 ? startIdx + 1 : 0} to {endIdx} of {totalEntries} entries
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="p-1.5 rounded-md text-text-muted hover:text-text-secondary hover:bg-white/[0.05] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`min-w-[32px] h-8 flex items-center justify-center rounded-md text-xs font-medium transition-all ${
+                    page === currentPage
+                      ? 'bg-accent-blue/20 text-accent-blue'
+                      : 'text-text-muted hover:text-text-secondary hover:bg-white/[0.05]'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="p-1.5 rounded-md text-text-muted hover:text-text-secondary hover:bg-white/[0.05] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-text-tertiary">Show</span>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="input-standard py-1 px-2 text-xs w-[60px]"
+              >
+                {PAGE_SIZE_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+              <span className="text-xs text-text-tertiary">entries</span>
+            </div>
           </div>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

@@ -1,296 +1,465 @@
-import { useState } from "react";
+import { useState } from 'react';
+import { motion } from 'framer-motion';
 import {
-  Trophy,
-  Filter,
   Calendar,
-  Activity,
-  ChevronRight,
-} from "lucide-react";
+  Filter,
+  Printer,
+  MapPin,
+  User,
+  Trophy,
+  CircleDot,
+} from 'lucide-react';
+import { formatDate } from '@/lib/storage';
+
+/* ---------- types ---------- */
+interface InningScore {
+  inning: number;
+  away: number;
+  home: number;
+}
 
 interface GameResult {
   id: string;
   sport: string;
-  league: string;
-  homeTeam: string;
   awayTeam: string;
-  homeScore: number;
-  awayScore: number;
-  status: "live" | "final" | "upcoming";
+  awayCode: string;
+  homeTeam: string;
+  homeCode: string;
+  time: string;
+  status: 'Final' | 'En Vivo' | 'Pendiente';
   inning?: string;
-  period?: string;
-  timeRemaining?: string;
-  innings?: { home: number[]; away: number[] };
+  outs?: number;
+  innings: InningScore[];
+  awayTotals: { R: number; H: number; E: number };
+  homeTotals: { R: number; H: number; E: number };
+  pitcherAway?: string;
+  pitcherHome?: string;
+  stadium?: string;
+  lastPlay?: string;
 }
 
-const gameResults: GameResult[] = [
+/* ---------- easing ---------- */
+const easeSpring = [0.16, 1, 0.3, 1] as [number, number, number, number];
+
+const containerAnim = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
+};
+
+const itemAnim = {
+  hidden: { opacity: 0, y: 15 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: easeSpring } },
+};
+
+/* ---------- sports ---------- */
+const SPORTS = ['MLB', 'NBA', 'NFL', 'WNBA', 'CFL', 'Soccer', 'Loteria'];
+
+/* ---------- mock data ---------- */
+const MOCK_GAMES: GameResult[] = [
   {
-    id: "G-001",
-    sport: "MLB",
-    league: "Major League Baseball",
-    homeTeam: "New York Yankees",
-    awayTeam: "Boston Red Sox",
-    homeScore: 5,
-    awayScore: 3,
-    status: "live",
-    inning: "7mo",
-    innings: {
-      home: [0, 1, 0, 2, 0, 1, 1],
-      away: [0, 0, 2, 0, 1, 0, 0],
-    },
+    id: 'game-1',
+    sport: 'MLB',
+    awayTeam: 'Giants', awayCode: 'SF',
+    homeTeam: 'Cubs', homeCode: 'CHC',
+    time: '02:20 PM',
+    status: 'Final',
+    pitcherAway: 'R Ray', pitcherHome: 'S Steele',
+    stadium: 'Wrigley Field',
+    innings: [
+      { inning: 1, away: 1, home: 0 },
+      { inning: 2, away: 0, home: 2 },
+      { inning: 3, away: 2, home: 0 },
+      { inning: 4, away: 0, home: 0 },
+      { inning: 5, away: 1, home: 1 },
+      { inning: 6, away: 0, home: 0 },
+      { inning: 7, away: 3, home: 0 },
+      { inning: 8, away: 0, home: 0 },
+      { inning: 9, away: 0, home: 1 },
+    ],
+    awayTotals: { R: 7, H: 11, E: 0 },
+    homeTotals: { R: 4, H: 7, E: 1 },
   },
   {
-    id: "G-002",
-    sport: "MLB",
-    league: "Major League Baseball",
-    homeTeam: "LA Dodgers",
-    awayTeam: "SF Giants",
-    homeScore: 2,
-    awayScore: 4,
-    status: "live",
-    inning: "5to",
-    innings: {
-      home: [0, 0, 1, 0, 1],
-      away: [1, 0, 2, 1, 0],
-    },
+    id: 'game-2',
+    sport: 'MLB',
+    awayTeam: 'Mariners', awayCode: 'SEA',
+    homeTeam: 'Tigers', homeCode: 'DET',
+    time: '04:10 PM',
+    status: 'Final',
+    pitcherAway: 'L Castillo', pitcherHome: 'T Skubal',
+    stadium: 'Comerica Park',
+    innings: [
+      { inning: 1, away: 0, home: 0 },
+      { inning: 2, away: 0, home: 0 },
+      { inning: 3, away: 2, home: 0 },
+      { inning: 4, away: 1, home: 1 },
+      { inning: 5, away: 0, home: 0 },
+      { inning: 6, away: 0, home: 3 },
+      { inning: 7, away: 0, home: 0 },
+      { inning: 8, away: 1, home: 0 },
+      { inning: 9, away: 0, home: 0 },
+    ],
+    awayTotals: { R: 4, H: 9, E: 0 },
+    homeTotals: { R: 4, H: 8, E: 1 },
   },
   {
-    id: "G-003",
-    sport: "NBA",
-    league: "National Basketball Association",
-    homeTeam: "Miami Heat",
-    awayTeam: "Boston Celtics",
-    homeScore: 98,
-    awayScore: 102,
-    status: "final",
-    period: "4to",
-    timeRemaining: "FINAL",
+    id: 'game-3',
+    sport: 'MLB',
+    awayTeam: 'White Sox', awayCode: 'CWS',
+    homeTeam: 'Phillies', homeCode: 'PHI',
+    time: '06:05 PM',
+    status: 'En Vivo',
+    inning: '7mo inning', outs: 2,
+    pitcherAway: 'D Cease', pitcherHome: 'Z Wheeler',
+    stadium: 'Citizens Bank Park',
+    lastPlay: 'Home run by Schwarber, 2 RBI',
+    innings: [
+      { inning: 1, away: 0, home: 1 },
+      { inning: 2, away: 1, home: 0 },
+      { inning: 3, away: 0, home: 2 },
+      { inning: 4, away: 0, home: 0 },
+      { inning: 5, away: 2, home: 0 },
+      { inning: 6, away: 0, home: 3 },
+      { inning: 7, away: 0, home: 0 },
+      { inning: 8, away: 0, home: 0 },
+      { inning: 9, away: 0, home: 0 },
+    ],
+    awayTotals: { R: 3, H: 6, E: 2 },
+    homeTotals: { R: 6, H: 10, E: 0 },
   },
   {
-    id: "G-004",
-    sport: "NBA",
-    league: "National Basketball Association",
-    homeTeam: "LA Lakers",
-    awayTeam: "GS Warriors",
-    homeScore: 112,
-    awayScore: 108,
-    status: "final",
-    period: "4to",
-    timeRemaining: "FINAL",
+    id: 'game-4',
+    sport: 'MLB',
+    awayTeam: 'Red Sox', awayCode: 'BOS',
+    homeTeam: 'Yankees', homeCode: 'NYY',
+    time: '07:05 PM',
+    status: 'Pendiente',
+    pitcherAway: 'B Bello', pitcherHome: 'G Cole',
+    stadium: 'Yankee Stadium',
+    innings: [
+      { inning: 1, away: 0, home: 0 },
+      { inning: 2, away: 0, home: 0 },
+      { inning: 3, away: 0, home: 0 },
+      { inning: 4, away: 0, home: 0 },
+      { inning: 5, away: 0, home: 0 },
+      { inning: 6, away: 0, home: 0 },
+      { inning: 7, away: 0, home: 0 },
+      { inning: 8, away: 0, home: 0 },
+      { inning: 9, away: 0, home: 0 },
+    ],
+    awayTotals: { R: 0, H: 0, E: 0 },
+    homeTotals: { R: 0, H: 0, E: 0 },
   },
   {
-    id: "G-005",
-    sport: "NFL",
-    league: "National Football League",
-    homeTeam: "Dallas Cowboys",
-    awayTeam: "Philadelphia Eagles",
-    homeScore: 0,
-    awayScore: 0,
-    status: "upcoming",
-    timeRemaining: "20:00",
+    id: 'game-5',
+    sport: 'MLB',
+    awayTeam: 'Orioles', awayCode: 'BAL',
+    homeTeam: 'Blue Jays', homeCode: 'TOR',
+    time: '07:07 PM',
+    status: 'Pendiente',
+    pitcherAway: 'C Burnes', pitcherHome: 'K Gausman',
+    stadium: 'Rogers Centre',
+    innings: [
+      { inning: 1, away: 0, home: 0 },
+      { inning: 2, away: 0, home: 0 },
+      { inning: 3, away: 0, home: 0 },
+      { inning: 4, away: 0, home: 0 },
+      { inning: 5, away: 0, home: 0 },
+      { inning: 6, away: 0, home: 0 },
+      { inning: 7, away: 0, home: 0 },
+      { inning: 8, away: 0, home: 0 },
+      { inning: 9, away: 0, home: 0 },
+    ],
+    awayTotals: { R: 0, H: 0, E: 0 },
+    homeTotals: { R: 0, H: 0, E: 0 },
   },
   {
-    id: "G-006",
-    sport: "MLB",
-    league: "Major League Baseball",
-    homeTeam: "Houston Astros",
-    awayTeam: "Texas Rangers",
-    homeScore: 7,
-    awayScore: 6,
-    status: "final",
-    innings: {
-      home: [1, 0, 2, 0, 1, 0, 3, 0],
-      away: [0, 1, 0, 2, 0, 1, 2, 0],
-    },
+    id: 'game-6',
+    sport: 'MLB',
+    awayTeam: 'Rays', awayCode: 'TB',
+    homeTeam: 'Marlins', homeCode: 'MIA',
+    time: '06:40 PM',
+    status: 'Final',
+    pitcherAway: 'Z Littell', pitcherHome: 'J Luzardo',
+    stadium: 'LoanDepot Park',
+    innings: [
+      { inning: 1, away: 0, home: 0 },
+      { inning: 2, away: 0, home: 1 },
+      { inning: 3, away: 1, home: 0 },
+      { inning: 4, away: 0, home: 0 },
+      { inning: 5, away: 0, home: 0 },
+      { inning: 6, away: 2, home: 0 },
+      { inning: 7, away: 0, home: 1 },
+      { inning: 8, away: 1, home: 0 },
+      { inning: 9, away: 0, home: 0 },
+    ],
+    awayTotals: { R: 4, H: 8, E: 1 },
+    homeTotals: { R: 2, H: 5, E: 0 },
+  },
+  {
+    id: 'game-7',
+    sport: 'MLB',
+    awayTeam: 'Pirates', awayCode: 'PIT',
+    homeTeam: 'Braves', homeCode: 'ATL',
+    time: '07:20 PM',
+    status: 'Final',
+    pitcherAway: 'M Keller', pitcherHome: 'M Fried',
+    stadium: 'Truist Park',
+    innings: [
+      { inning: 1, away: 0, home: 2 },
+      { inning: 2, away: 0, home: 1 },
+      { inning: 3, away: 1, home: 0 },
+      { inning: 4, away: 0, home: 3 },
+      { inning: 5, away: 2, home: 0 },
+      { inning: 6, away: 0, home: 1 },
+      { inning: 7, away: 0, home: 0 },
+      { inning: 8, away: 1, home: 0 },
+      { inning: 9, away: 0, home: 0 },
+    ],
+    awayTotals: { R: 4, H: 9, E: 0 },
+    homeTotals: { R: 7, H: 12, E: 0 },
+  },
+  {
+    id: 'game-8',
+    sport: 'MLB',
+    awayTeam: 'Athletics', awayCode: 'OAK',
+    homeTeam: 'Astros', homeCode: 'HOU',
+    time: '08:10 PM',
+    status: 'En Vivo',
+    inning: '5to inning', outs: 1,
+    pitcherAway: 'P Blackburn', pitcherHome: 'F Valdez',
+    stadium: 'Minute Maid Park',
+    lastPlay: 'Double by Alvarez, 1 RBI',
+    innings: [
+      { inning: 1, away: 0, home: 0 },
+      { inning: 2, away: 1, home: 2 },
+      { inning: 3, away: 0, home: 1 },
+      { inning: 4, away: 0, home: 0 },
+      { inning: 5, away: 0, home: 0 },
+      { inning: 6, away: 0, home: 0 },
+      { inning: 7, away: 0, home: 0 },
+      { inning: 8, away: 0, home: 0 },
+      { inning: 9, away: 0, home: 0 },
+    ],
+    awayTotals: { R: 1, H: 3, E: 0 },
+    homeTotals: { R: 3, H: 6, E: 0 },
   },
 ];
 
-const sportFilters = ["Todos", "MLB", "NBA", "NFL"];
+/* ---------- helpers ---------- */
+const statusBadge = (status: GameResult['status']) => {
+  switch (status) {
+    case 'Final':
+      return 'bg-accent-green/15 text-accent-green border border-accent-green/30';
+    case 'En Vivo':
+      return 'bg-accent-red/15 text-accent-red border border-accent-red/30 animate-pulse';
+    case 'Pendiente':
+      return 'bg-accent-amber/15 text-accent-amber border border-accent-amber/30';
+  }
+};
 
-function LiveIndicator() {
+/* ---------- scoreboard cell ---------- */
+function ScoreCell({ value, highlight }: { value: number; highlight?: boolean }) {
   return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-600 text-xs font-bold">
-      <span className="relative flex h-2 w-2">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-      </span>
-      EN VIVO
-    </span>
+    <td
+      className={`w-8 text-center text-sm font-semibold text-text-primary py-1.5 ${
+        highlight ? 'bg-accent-blue/10 rounded-sm' : ''
+      } ${value > 0 ? 'text-text-primary' : 'text-text-muted'}`}
+    >
+      {value}
+    </td>
   );
 }
 
-function InningScoreboard({ innings }: { innings: { home: number[]; away: number[] } }) {
-  const maxInnings = Math.max(innings.home.length, innings.away.length);
-  const inningLabels = Array.from({ length: maxInnings }, (_, i) =>
-    i < 9 ? `${i + 1}` : i === 9 ? "X" : `${i + 1}`
-  );
+/* ---------- game card ---------- */
+function GameCard({ game }: { game: GameResult }) {
+  const isLive = game.status === 'En Vivo';
+  const innings = game.innings;
 
   return (
-    <div className="overflow-x-auto mt-3">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="bg-gray-50">
-            <th className="px-2 py-1.5 text-left text-xs font-semibold text-[#475569] border border-gray-200">Equipo</th>
-            {inningLabels.map((label, i) => (
-              <th key={i} className="px-2 py-1.5 text-center text-xs font-semibold text-[#475569] border border-gray-200 w-8">
-                {label}
-              </th>
-            ))}
-            <th className="px-2 py-1.5 text-center text-xs font-bold text-[#1E293B] border border-gray-200 w-10">T</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td className="px-2 py-1.5 font-medium text-[#1E293B] border border-gray-200 bg-white">Visitante</td>
-            {innings.away.map((score, i) => (
-              <td key={i} className="px-2 py-1.5 text-center text-[#475569] border border-gray-200 bg-white">{score}</td>
-            ))}
-            <td className="px-2 py-1.5 text-center font-bold text-[#1E293B] border border-gray-200 bg-white">
-              {innings.away.reduce((a, b) => a + b, 0)}
-            </td>
-          </tr>
-          <tr>
-            <td className="px-2 py-1.5 font-medium text-[#1E293B] border border-gray-200 bg-white">Local</td>
-            {innings.home.map((score, i) => (
-              <td key={i} className="px-2 py-1.5 text-center text-[#475569] border border-gray-200 bg-white">{score}</td>
-            ))}
-            <td className="px-2 py-1.5 text-center font-bold text-[#1E293B] border border-gray-200 bg-white">
-              {innings.home.reduce((a, b) => a + b, 0)}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div className="gradient-card rounded-lg border border-border-subtle overflow-hidden">
+      {/* Card Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
+        <div className="flex items-center gap-2">
+          <span className="text-h4 font-semibold text-text-primary">
+            {game.awayTeam} <span className="text-text-tertiary text-sm font-normal">vs</span> {game.homeTeam}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-mono text-text-tertiary">{game.time}</span>
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusBadge(game.status)}`}>
+            {isLive && <CircleDot size={12} className="animate-pulse" />}
+            {game.status === 'En Vivo' ? 'En Vivo' : game.status}
+          </span>
+        </div>
+      </div>
+
+      {/* Live info */}
+      {isLive && (
+        <div className="px-4 py-2 bg-accent-red/5 border-b border-border-subtle flex items-center gap-4">
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-accent-red animate-pulse" />
+            <span className="text-xs text-accent-red font-medium">{game.inning}, {game.outs} outs</span>
+          </div>
+          {game.lastPlay && (
+            <span className="text-xs text-accent-amber">{game.lastPlay}</span>
+          )}
+        </div>
+      )}
+
+      {/* Scoreboard */}
+      <div className="px-4 py-3 overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr>
+              <th className="w-12 text-left text-xs text-text-tertiary font-medium" />
+              {innings.map((inn) => (
+                <th key={inn.inning} className="w-8 text-center text-xs text-text-tertiary font-medium">
+                  {inn.inning}
+                </th>
+              ))}
+              <th className="w-4 text-center text-xs text-text-muted font-medium">|</th>
+              <th className="w-8 text-center text-xs text-text-primary font-bold">R</th>
+              <th className="w-8 text-center text-xs text-text-primary font-bold">H</th>
+              <th className="w-8 text-center text-xs text-text-primary font-bold">E</th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* Away row */}
+            <tr>
+              <td className="text-sm font-semibold text-text-primary py-1.5">{game.awayCode}</td>
+              {innings.map((inn, i) => (
+                <ScoreCell
+                  key={`a-${i}`}
+                  value={inn.away}
+                  highlight={isLive && game.inning?.includes(inn.inning.toString())}
+                />
+              ))}
+              <td className="text-center text-xs text-text-muted">|</td>
+              <td className="text-center text-sm font-bold text-text-primary">{game.awayTotals.R}</td>
+              <td className="text-center text-sm text-text-secondary">{game.awayTotals.H}</td>
+              <td className="text-center text-sm text-text-secondary">{game.awayTotals.E}</td>
+            </tr>
+            {/* Home row */}
+            <tr>
+              <td className="text-sm font-semibold text-text-primary py-1.5">{game.homeCode}</td>
+              {innings.map((inn, i) => (
+                <ScoreCell
+                  key={`h-${i}`}
+                  value={inn.home}
+                  highlight={isLive && game.inning?.includes(inn.inning.toString())}
+                />
+              ))}
+              <td className="text-center text-xs text-text-muted">|</td>
+              <td className="text-center text-sm font-bold text-text-primary">{game.homeTotals.R}</td>
+              <td className="text-center text-sm text-text-secondary">{game.homeTotals.H}</td>
+              <td className="text-center text-sm text-text-secondary">{game.homeTotals.E}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pitcher & Stadium info */}
+      <div className="px-4 py-2.5 border-t border-border-subtle flex items-center gap-6">
+        <div className="flex items-center gap-1.5">
+          <User size={12} className="text-text-tertiary" />
+          <span className="text-xs text-text-secondary">
+            {game.pitcherAway} ({game.awayCode}) <span className="text-text-muted">vs</span> {game.pitcherHome} ({game.homeCode})
+          </span>
+        </div>
+        {game.stadium && (
+          <div className="flex items-center gap-1.5">
+            <MapPin size={12} className="text-text-tertiary" />
+            <span className="text-xs text-text-tertiary">{game.stadium}</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
+/* ---------- page ---------- */
 export default function Resultados() {
-  const [activeSport, setActiveSport] = useState("Todos");
+  const [selectedDate, setSelectedDate] = useState(formatDate(new Date()));
+  const [activeSport, setActiveSport] = useState('MLB');
 
-  const filteredGames =
-    activeSport === "Todos"
-      ? gameResults
-      : gameResults.filter((g) => g.sport === activeSport);
+  const filteredGames = MOCK_GAMES.filter((g) => g.sport === activeSport);
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-[#1E293B]">Resultados</h1>
-          <p className="text-[#475569] mt-1">
-            Resultados deportivos en vivo con marcadores por inning/periodo.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-[#475569] hover:shadow-md hover:-translate-y-0.5 transition-all shadow-sm">
-            <Calendar className="w-4 h-4" />
-            <span className="text-sm font-medium">Hoy</span>
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-[#475569] hover:shadow-md hover:-translate-y-0.5 transition-all shadow-sm">
-            <Filter className="w-4 h-4" />
-            <span className="text-sm font-medium">Filtrar</span>
-          </button>
-        </div>
-      </div>
+    <motion.div
+      variants={containerAnim}
+      initial="hidden"
+      animate="show"
+      className="px-6 py-5 space-y-5"
+    >
+      {/* ====== Page Header ====== */}
+      <motion.div variants={itemAnim} className="border-b border-border-subtle pb-4">
+        <h1 className="text-h2 text-text-primary">Resultados Deportivos</h1>
+        <p className="text-sm text-text-tertiary mt-1">Puntuaciones en vivo y resultados finales</p>
+      </motion.div>
 
-      {/* Sport Filter Pills */}
-      <div className="flex items-center gap-2 mb-6">
-        {sportFilters.map((sport) => (
+      {/* ====== Top Bar: Date + Actions ====== */}
+      <motion.div variants={itemAnim} className="flex items-center gap-4">
+        <div className="relative">
+          <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+          <input
+            type="date"
+            value={selectedDate.split('/').reverse().join('-')}
+            onChange={(e) => {
+              const d = new Date(e.target.value);
+              setSelectedDate(formatDate(d));
+            }}
+            className="bg-bg-tertiary/60 border border-border-default rounded-md pl-9 pr-3 py-2 text-sm text-text-primary focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/20 outline-none transition-all"
+          />
+        </div>
+        <button className="flex items-center gap-2 px-4 py-2 rounded-md bg-bg-tertiary text-text-secondary text-sm font-semibold border border-border-default hover:bg-bg-quaternary transition-all">
+          <Filter size={16} /> Filtrar
+        </button>
+        <button className="flex items-center gap-2 px-4 py-2 rounded-md bg-bg-tertiary text-text-secondary text-sm font-semibold border border-border-default hover:bg-bg-quaternary transition-all">
+          <Printer size={16} /> Imprimir
+        </button>
+      </motion.div>
+
+      {/* ====== Sport Tabs ====== */}
+      <motion.div variants={itemAnim} className="flex gap-2 overflow-x-auto pb-1">
+        {SPORTS.map((sport) => (
           <button
             key={sport}
             onClick={() => setActiveSport(sport)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 hover:shadow-md hover:-translate-y-0.5 ${
+            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
               activeSport === sport
-                ? "bg-blue-600 text-white shadow-sm"
-                : "bg-gray-100 text-[#475569] hover:bg-gray-200"
+                ? 'bg-accent-blue/15 text-accent-blue border border-accent-blue/30'
+                : 'text-text-muted hover:text-text-secondary hover:bg-white/5 border border-transparent'
             }`}
           >
             {sport}
           </button>
         ))}
-      </div>
+      </motion.div>
 
-      {/* Game Cards Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {filteredGames.map((game) => (
-          <div
-            key={game.id}
-            className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
-          >
-            {/* Card Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
-              <div className="flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-[#94A3B8]" />
-                <span className="text-xs font-semibold text-[#475569] uppercase tracking-wider">
-                  {game.sport} — {game.league}
-                </span>
-              </div>
-              {game.status === "live" && <LiveIndicator />}
-              {game.status === "final" && (
-                <span className="px-2.5 py-1 rounded-full bg-gray-100 text-[#475569] text-xs font-bold">
-                  FINAL
-                </span>
-              )}
-              {game.status === "upcoming" && (
-                <span className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold">
-                  PENDIENTE
-                </span>
-              )}
-            </div>
+      {/* ====== Sport Title ====== */}
+      <motion.div variants={itemAnim}>
+        <h2 className="text-h3 text-text-primary">{activeSport} - Resultados</h2>
+      </motion.div>
 
-            {/* Teams & Score */}
-            <div className="px-4 py-4">
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-3 flex-1">
-                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-[#475569]">
-                    V
-                  </div>
-                  <span className="font-bold text-[#1E293B] text-base">{game.awayTeam}</span>
-                </div>
-                <span
-                  className={`text-2xl font-bold font-['JetBrains_Mono'] ${
-                    game.awayScore > game.homeScore ? "text-[#1E293B]" : "text-[#94A3B8]"
-                  }`}
-                >
-                  {game.awayScore}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 flex-1">
-                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-[#475569]">
-                    L
-                  </div>
-                  <span className="font-bold text-[#1E293B] text-base">{game.homeTeam}</span>
-                </div>
-                <span
-                  className={`text-2xl font-bold font-['JetBrains_Mono'] ${
-                    game.homeScore > game.awayScore ? "text-[#1E293B]" : "text-[#94A3B8]"
-                  }`}
-                >
-                  {game.homeScore}
-                </span>
-              </div>
-
-              {game.inning && (
-                <div className="flex items-center gap-1 mt-2 text-xs text-[#94A3B8]">
-                  <Activity className="w-3 h-3" />
-                  {game.inning} inning
-                </div>
-              )}
-              {game.timeRemaining && game.status === "final" && (
-                <div className="flex items-center gap-1 mt-2 text-xs text-[#94A3B8]">
-                  <ChevronRight className="w-3 h-3" />
-                  {game.timeRemaining}
-                </div>
-              )}
-            </div>
-
-            {/* Inning Detail Scoreboard */}
-            {game.innings && <InningScoreboard innings={game.innings} />}
-          </div>
-        ))}
-      </div>
-    </div>
+      {/* ====== Games Grid ====== */}
+      {filteredGames.length > 0 ? (
+        <div className="grid grid-cols-2 gap-4">
+          {filteredGames.map((game) => (
+            <motion.div key={game.id} variants={itemAnim}>
+              <GameCard game={game} />
+            </motion.div>
+          ))}
+        </div>
+      ) : (
+        <motion.div variants={itemAnim} className="flex flex-col items-center justify-center py-16">
+          <Trophy size={64} className="text-text-muted/20 mb-4" />
+          <p className="text-body-lg text-text-tertiary">No hay resultados disponibles</p>
+          <p className="text-sm text-text-muted mt-1">
+            Los resultados apareceran cuando los juegos finalicen
+          </p>
+        </motion.div>
+      )}
+    </motion.div>
   );
 }
