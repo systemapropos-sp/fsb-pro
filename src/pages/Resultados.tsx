@@ -281,7 +281,7 @@ function GameCard({ game }: { game: GameResult }) {
       {/* Card Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
         <div className="flex items-center gap-2">
-          <span className="text-h4 font-semibold text-text-primary">
+          <span className="text-base md:text-lg font-semibold text-text-primary">
             {game.awayTeam} <span className="text-text-tertiary text-sm font-normal">vs</span> {game.homeTeam}
           </span>
         </div>
@@ -327,7 +327,7 @@ function GameCard({ game }: { game: GameResult }) {
           <tbody>
             {/* Away row */}
             <tr>
-              <td className="text-sm font-semibold text-text-primary py-1.5">{game.awayCode}</td>
+              <td className="text-xs md:text-sm font-semibold text-text-primary py-1.5">{game.awayCode}</td>
               {innings.map((inn, i) => (
                 <ScoreCell
                   key={`a-${i}`}
@@ -336,8 +336,8 @@ function GameCard({ game }: { game: GameResult }) {
                 />
               ))}
               <td className="text-center text-xs text-text-muted">|</td>
-              <td className="text-center text-sm font-bold text-text-primary">{game.awayTotals.R}</td>
-              <td className="text-center text-sm text-text-secondary">{game.awayTotals.H}</td>
+              <td className="text-center text-xs md:text-sm font-bold text-text-primary">{game.awayTotals.R}</td>
+              <td className="text-center text-xs md:text-sm text-text-secondary">{game.awayTotals.H}</td>
               <td className="text-center text-sm text-text-secondary">{game.awayTotals.E}</td>
             </tr>
             {/* Home row */}
@@ -390,7 +390,7 @@ export default function Resultados() {
       variants={containerAnim}
       initial="hidden"
       animate="show"
-      className="px-6 py-5 space-y-5"
+      className="px-4 md:px-6 lg:px-8 py-5 space-y-5"
     >
       {/* ====== Page Header ====== */}
       <motion.div variants={itemAnim} className="border-b border-border-subtle pb-4">
@@ -409,10 +409,10 @@ export default function Resultados() {
               const d = new Date(e.target.value);
               setSelectedDate(formatDate(d));
             }}
-            className="bg-bg-tertiary/60 border border-border-default rounded-md pl-9 pr-3 py-2 text-sm text-text-primary focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/20 outline-none transition-all"
+            className="bg-bg-tertiary/60 border border-border-default rounded-md pl-9 pr-3 h-12 md:h-10 text-sm text-text-primary focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/20 outline-none transition-all w-full md:w-auto"
           />
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-md bg-bg-tertiary text-text-secondary text-sm font-semibold border border-border-default hover:bg-bg-quaternary transition-all">
+        <button className="flex items-center gap-2 px-4 min-h-[44px] rounded-md bg-bg-tertiary text-text-secondary text-sm font-semibold border border-border-default hover:bg-bg-quaternary transition-all">
           <Filter size={16} /> Filtrar
         </button>
         <button className="flex items-center gap-2 px-4 py-2 rounded-md bg-bg-tertiary text-text-secondary text-sm font-semibold border border-border-default hover:bg-bg-quaternary transition-all">
@@ -444,7 +444,7 @@ export default function Resultados() {
 
       {/* ====== Games Grid ====== */}
       {filteredGames.length > 0 ? (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           {filteredGames.map((game) => (
             <motion.div key={game.id} variants={itemAnim}>
               <GameCard game={game} />

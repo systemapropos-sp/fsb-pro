@@ -103,7 +103,7 @@ export default function Jugadas() {
   };
 
   return (
-    <div className="p-6">
+    <div className="px-4 md:px-6 lg:px-8 py-5">
       {/* Page Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -112,14 +112,14 @@ export default function Jugadas() {
         className="flex items-start justify-between mb-4"
       >
         <div>
-          <h1 className="text-h2 text-text-primary">Tipos de Jugadas</h1>
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-semibold text-text-primary">Tipos de Jugadas</h1>
           <p className="text-sm text-text-tertiary mt-1">
             Referencia completa de tipos de jugadas y sus codigos
           </p>
         </div>
         <button
           onClick={handlePrint}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-text-secondary bg-[rgba(148,163,184,0.06)] border border-border-default rounded-md hover:bg-[rgba(148,163,184,0.12)] hover:text-text-primary transition-all duration-200"
+          className="flex items-center gap-2 px-4 min-h-[44px] text-sm font-semibold text-text-secondary bg-[rgba(148,163,184,0.06)] border border-border-default rounded-md hover:bg-[rgba(148,163,184,0.12)] hover:text-text-primary transition-all duration-200 w-full sm:w-auto justify-center"
         >
           <Printer size={15} />
           Imprimir
@@ -131,7 +131,7 @@ export default function Jugadas() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.25, delay: 0.1 }}
-        className="relative max-w-md mb-4"
+        className="relative w-full md:max-w-md mb-4"
       >
         <Search
           size={16}
@@ -142,7 +142,7 @@ export default function Jugadas() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar por codigo o descripcion..."
-          className="w-full pl-9 pr-9 py-2.5 bg-[rgba(30,41,59,0.6)] border border-border-default rounded-md text-sm text-text-primary placeholder-text-tertiary outline-none transition-all duration-200 focus:border-accent-blue focus:ring-[0_0_0_3px_rgba(59,130,246,0.2)]"
+          className="w-full h-12 md:h-10 pl-9 pr-9 py-2.5 bg-[rgba(30,41,59,0.6)] border border-border-default rounded-md text-sm text-text-primary placeholder-text-tertiary outline-none transition-all duration-200 focus:border-accent-blue focus:ring-[0_0_0_3px_rgba(59,130,246,0.2)]"
         />
         {search && (
           <button
@@ -159,7 +159,7 @@ export default function Jugadas() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.25, delay: 0.15 }}
-        className="flex flex-wrap gap-2 mb-4"
+        className="flex gap-2 overflow-x-auto flex-nowrap pb-2 mb-4 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap md:overflow-visible"
       >
         {FILTER_PILLS.map((pill) => {
           const isActive = activeFilter === pill.value;
@@ -168,7 +168,7 @@ export default function Jugadas() {
             <button
               key={pill.value}
               onClick={() => setActiveFilter(pill.value)}
-              className="px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200"
+              className="px-4 py-1.5 min-h-[44px] text-sm font-medium rounded-full transition-all duration-200 flex-shrink-0"
               style={
                 isActive
                   ? {
@@ -209,7 +209,7 @@ export default function Jugadas() {
         className="gradient-panel rounded-lg border border-border-subtle overflow-hidden"
       >
         {/* Table Header */}
-        <div className="grid grid-cols-[60px_1fr_100px_140px] gap-0 bg-[rgba(17,24,39,0.8)] backdrop-blur-sm border-b border-border-subtle">
+        <div className="hidden md:grid grid-cols-[60px_1fr_100px_140px] gap-0 bg-[rgba(17,24,39,0.8)] backdrop-blur-sm border-b border-border-subtle">
           <div className="px-4 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider">
             #
           </div>
@@ -237,27 +237,27 @@ export default function Jugadas() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.15, delay: idx * 0.02 }}
-                  className="grid grid-cols-[60px_1fr_100px_140px] gap-0 items-center hover:bg-[rgba(59,130,246,0.04)] transition-colors duration-150"
+                  className="md:grid grid-cols-[60px_1fr_100px_140px] gap-0 items-center hover:bg-[rgba(59,130,246,0.04)] transition-colors duration-150 flex flex-col sm:flex-row sm:items-start p-4 md:p-0 border-b border-border-subtle md:border-0 gap-2 md:gap-0"
                   style={
                     idx % 2 === 1
                       ? { background: 'rgba(148,163,184,0.02)' }
                       : undefined
                   }
                 >
-                  <div className="px-4 py-2.5 text-sm font-mono text-text-tertiary">
+                  <div className="px-4 py-2 text-sm font-mono text-text-tertiary font-bold md:font-normal">
                     {play.id}
                   </div>
-                  <div className="px-4 py-2.5 text-sm text-text-primary">
+                  <div className="px-4 py-2 text-sm text-text-primary flex-1">
                     {play.description}
                   </div>
-                  <div className="px-4 py-2.5 text-center">
+                  <div className="px-4 py-2 text-center">
                     <span className="font-mono text-sm font-bold text-accent-blue">
                       {play.code}
                     </span>
                   </div>
-                  <div className="px-4 py-2.5 flex justify-center">
+                  <div className="px-4 py-2 flex justify-center">
                     <span
-                      className="inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full"
+                      className="inline-block px-2.5 py-1 text-xs font-semibold rounded-full"
                       style={{
                         background: colors.bg,
                         color: colors.text,
@@ -275,7 +275,7 @@ export default function Jugadas() {
 
         {/* Empty state */}
         {filteredPlays.length === 0 && (
-          <div className="py-10 text-center">
+          <div className="py-8 md:py-10 text-center">
             <p className="text-sm text-text-tertiary">
               No se encontraron jugadas que coincidan con la busqueda
             </p>
@@ -289,7 +289,7 @@ export default function Jugadas() {
       </p>
 
       {/* Category Legend */}
-      <div className="flex flex-wrap gap-4 mt-4">
+      <div className="flex flex-wrap gap-4 mt-4 justify-center md:justify-start">
         {(Object.keys(CATEGORY_COLORS) as Array<Category | 'All'>)
           .filter((k) => k !== 'All')
           .map((cat) => {

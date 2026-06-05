@@ -84,15 +84,15 @@ export default function Reglas() {
   const activeRules = SPORTS_RULES.find((s) => s.key === activeSport);
 
   return (
-    <div className="p-6">
+    <div className="px-4 md:px-6 lg:px-8 py-5">
       {/* Page Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="mb-5"
+        className="mb-4 md:mb-5"
       >
-        <h1 className="text-h2 text-text-primary">Reglas de Apuestas</h1>
+        <h1 className="text-xl md:text-2xl lg:text-3xl font-semibold text-text-primary">Reglas de Apuestas</h1>
         <p className="text-sm text-text-tertiary mt-1">
           Reglamento de apuestas por deporte
         </p>
@@ -103,7 +103,7 @@ export default function Reglas() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.25, delay: 0.1 }}
-        className="flex flex-wrap gap-0 border-b border-border-subtle mb-5"
+        className="flex overflow-x-auto flex-nowrap gap-0 border-b border-border-subtle mb-5 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap md:overflow-visible"
       >
         {SPORTS_RULES.map((sport) => {
           const isActive = activeSport === sport.key;
@@ -139,9 +139,9 @@ export default function Reglas() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -5 }}
             transition={{ duration: 0.25, ease: easeSpring }}
-            className="gradient-panel rounded-lg border border-border-subtle p-6"
+            className="gradient-panel rounded-lg border border-border-subtle p-4 md:p-6"
           >
-            <h2 className="text-h3 text-text-primary mb-5 capitalize">
+            <h2 className="text-lg md:text-xl font-semibold text-text-primary mb-4 md:mb-5 capitalize">
               {activeRules.label}
             </h2>
 
@@ -154,10 +154,10 @@ export default function Reglas() {
                   transition={{ duration: 0.2, delay: idx * 0.04 }}
                   className="flex gap-3"
                 >
-                  <span className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-accent-blue/10 text-accent-blue text-xs font-bold mt-0.5">
+                  <span className="shrink-0 w-8 h-8 md:w-6 md:h-6 flex items-center justify-center rounded-full bg-accent-blue/10 text-accent-blue text-xs font-bold mt-0.5">
                     {idx + 1}
                   </span>
-                  <p className="text-body text-text-secondary leading-relaxed">
+                  <p className="text-sm md:text-base text-text-secondary leading-relaxed">
                     {rule}
                   </p>
                 </motion.li>

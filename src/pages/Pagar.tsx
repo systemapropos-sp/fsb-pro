@@ -204,7 +204,7 @@ export default function Pagar() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] }}
-      className="p-6 space-y-6 relative"
+      className="px-4 md:px-6 lg:px-8 py-5 space-y-5 md:space-y-6 relative"
     >
       {/* ── Confetti Overlay ── */}
       <AnimatePresence>
@@ -242,7 +242,7 @@ export default function Pagar() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <h1 className="text-h2 font-semibold text-text-primary">Pagar Ticket</h1>
+        <h1 className="text-xl md:text-2xl lg:text-3xl font-semibold text-text-primary">Pagar Ticket</h1>
         <p className="text-sm text-text-tertiary mt-1">
           Ingrese el codigo del ticket para procesar el pago
         </p>
@@ -253,7 +253,7 @@ export default function Pagar() {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.1 }}
-        className="max-w-[480px] mx-auto gradient-card border border-border-subtle rounded-xl p-8 shadow-modal"
+        className="max-w-[480px] mx-auto gradient-card border border-border-subtle rounded-xl p-5 md:p-8 shadow-modal w-full"
       >
         {/* Icon */}
         <motion.div
@@ -262,7 +262,7 @@ export default function Pagar() {
           transition={{ duration: 0.3, delay: 0.2, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
           className="flex justify-center mb-6"
         >
-          <div className="w-16 h-16 rounded-full bg-accent-green/10 flex items-center justify-center">
+          <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-accent-green/10 flex items-center justify-center">
             <CreditCard size={32} className="text-accent-green" />
           </div>
         </motion.div>
@@ -284,8 +284,8 @@ export default function Pagar() {
           transition={{ delay: 0.3 }}
           className={`relative mb-5 ${errorShake ? 'animate-shake' : ''}`}
         >
-          <div className="flex items-center bg-[rgba(30,41,59,0.8)] border-2 border-border-default rounded-lg overflow-hidden focus-within:border-accent-green focus-within:shadow-[0_0_0_4px_rgba(34,197,94,0.2)] transition-all">
-            <span className="pl-4 pr-1 font-mono text-h4 text-text-tertiary select-none whitespace-nowrap">
+          <div className="flex items-center bg-[rgba(30,41,59,0.8)] border-2 border-border-default rounded-lg overflow-hidden focus-within:border-accent-green focus-within:shadow-[0_0_0_4px_rgba(34,197,94,0.2)] transition-all h-14 md:h-12">
+            <span className="pl-4 pr-1 font-mono text-lg md:text-xl text-text-tertiary select-none whitespace-nowrap">
               MMW-003-
             </span>
             <input
@@ -300,7 +300,7 @@ export default function Pagar() {
               placeholder="______"
               maxLength={6}
               disabled={searchState === 'paid'}
-              className="flex-1 bg-transparent py-3.5 pr-4 font-mono text-h4 text-text-primary text-center placeholder:text-text-tertiary/50 outline-none border-none disabled:opacity-50"
+              className="flex-1 bg-transparent py-3.5 pr-4 font-mono text-lg md:text-xl text-text-primary text-center placeholder:text-text-tertiary/50 outline-none border-none disabled:opacity-50"
             />
           </div>
         </motion.div>
@@ -314,7 +314,7 @@ export default function Pagar() {
           {searchState === 'idle' || searchState === 'notfound' ? (
             <button
               onClick={handleSearch}
-              className="w-full h-12 gradient-accent text-white text-sm font-bold tracking-wider rounded-md hover:shadow-accent active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              className="w-full h-14 md:h-12 gradient-accent text-white text-sm font-bold tracking-wider rounded-md hover:shadow-accent active:scale-[0.98] transition-all flex items-center justify-center gap-2"
             >
               <Search size={16} />
               BUSCAR Y PAGAR
@@ -322,7 +322,7 @@ export default function Pagar() {
           ) : searchState === 'searching' ? (
             <button
               disabled
-              className="w-full h-12 gradient-accent text-white text-sm font-bold tracking-wider rounded-md opacity-70 flex items-center justify-center gap-2"
+              className="w-full h-14 md:h-12 gradient-accent text-white text-sm font-bold tracking-wider rounded-md opacity-70 flex items-center justify-center gap-2"
             >
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               Buscando...
@@ -330,7 +330,7 @@ export default function Pagar() {
           ) : searchState === 'found' || searchState === 'alreadyPaid' ? (
             <button
               onClick={handleReset}
-              className="w-full h-12 bg-bg-tertiary text-text-secondary text-sm font-bold tracking-wider rounded-md hover:bg-bg-quaternary transition-all flex items-center justify-center gap-2"
+              className="w-full h-14 md:h-12 bg-bg-tertiary text-text-secondary text-sm font-bold tracking-wider rounded-md hover:bg-bg-quaternary transition-all flex items-center justify-center gap-2"
             >
               <X size={16} />
               LIMPIAR
@@ -345,7 +345,7 @@ export default function Pagar() {
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="mt-4 p-3 rounded-md bg-accent-red/10 border border-accent-red/20 text-center"
+              className="mt-4 p-3 rounded-md bg-accent-red/10 border border-accent-red/20 text-center text-sm"
             >
               <p className="text-sm text-accent-red flex items-center justify-center gap-2">
                 <AlertCircle size={16} />
@@ -363,7 +363,7 @@ export default function Pagar() {
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="mt-4 p-3 rounded-md bg-accent-blue/10 border border-accent-blue/20 text-center"
+              className="mt-4 p-3 rounded-md bg-accent-blue/10 border border-accent-blue/20 text-center text-sm"
             >
               <p className="text-sm text-accent-blue flex items-center justify-center gap-2">
                 <Info size={16} />
@@ -384,7 +384,7 @@ export default function Pagar() {
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
-              className="mt-6 space-y-4 overflow-hidden"
+              className="mt-4 md:mt-6 space-y-3 md:space-y-4 overflow-hidden"
             >
               {/* Divider */}
               <div className="border-t border-border-subtle" />
@@ -392,11 +392,11 @@ export default function Pagar() {
               {/* Ticket Number */}
               <div className="text-center">
                 <p className="text-xs text-text-tertiary uppercase tracking-wider mb-1">Ticket</p>
-                <p className="font-mono text-h3 text-accent-blue font-bold">{ticket.id}</p>
+                <p className="font-mono text-xl md:text-2xl text-accent-blue font-bold">{ticket.id}</p>
               </div>
 
               {/* Info Grid */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="bg-bg-primary/50 rounded-md p-3 border border-border-subtle">
                   <div className="flex items-center gap-1.5 text-text-tertiary text-xs mb-1">
                     <Calendar size={12} />
@@ -517,8 +517,8 @@ export default function Pagar() {
           <p className="text-xs text-text-tertiary mt-0.5">Hoy</p>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+          <table className="min-w-[640px] md:min-w-0 w-full text-sm">
             <thead>
               <tr className="bg-[rgba(17,24,39,0.8)]">
                 <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">

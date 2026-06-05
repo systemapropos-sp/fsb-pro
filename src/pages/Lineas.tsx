@@ -180,11 +180,11 @@ function SpreadCell({ value, price }: { value: string; price: number }) {
 function TotalCell({ points, overPrice, underPrice }: { points: number; overPrice: number; underPrice: number }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-mono text-text-primary font-medium">{points.toFixed(1)}</span>
-      <button className="px-2 py-0.5 rounded text-xs font-mono text-accent-green transition-all hover:bg-accent-green/10 cursor-pointer">
+      <span className="text-xs md:text-sm font-mono text-text-primary font-medium">{points.toFixed(1)}</span>
+      <button className="px-2 py-1 min-h-[44px] min-w-[60px] rounded text-xs font-mono text-accent-green transition-all hover:bg-accent-green/10 cursor-pointer flex items-center justify-center">
         O {overPrice}
       </button>
-      <button className="px-2 py-0.5 rounded text-xs font-mono text-accent-red transition-all hover:bg-accent-red/10 cursor-pointer">
+      <button className="px-2 py-1 min-h-[44px] min-w-[60px] rounded text-xs font-mono text-accent-red transition-all hover:bg-accent-red/10 cursor-pointer flex items-center justify-center">
         U {underPrice}
       </button>
     </div>
@@ -194,12 +194,12 @@ function TotalCell({ points, overPrice, underPrice }: { points: number; overPric
 function TeamTotalCell({ points, overPrice, underPrice }: { points: number; overPrice: number; underPrice: number }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-mono text-text-secondary">{points.toFixed(1)}</span>
+      <span className="text-xs md:text-sm font-mono text-text-secondary">{points.toFixed(1)}</span>
       <div className="flex flex-col gap-0.5">
-        <button className="px-1.5 py-0 rounded text-[10px] font-mono text-accent-green transition-all hover:bg-accent-green/10 cursor-pointer leading-tight">
+        <button className="px-1.5 py-1 min-h-[36px] min-w-[50px] rounded text-[10px] font-mono text-accent-green transition-all hover:bg-accent-green/10 cursor-pointer leading-tight flex items-center justify-center">
           O {overPrice}
         </button>
-        <button className="px-1.5 py-0 rounded text-[10px] font-mono text-accent-red transition-all hover:bg-accent-red/10 cursor-pointer leading-tight">
+        <button className="px-1.5 py-1 min-h-[36px] min-w-[50px] rounded text-[10px] font-mono text-accent-red transition-all hover:bg-accent-red/10 cursor-pointer leading-tight flex items-center justify-center">
           U {underPrice}
         </button>
       </div>
@@ -234,18 +234,18 @@ export default function Lineas() {
       variants={containerAnim}
       initial="hidden"
       animate="show"
-      className="px-6 py-5 space-y-4"
+      className="px-4 md:px-6 lg:px-8 py-5 space-y-4"
     >
       {/* ====== Page Header ====== */}
       <motion.div variants={itemAnim} className="border-b border-border-subtle pb-4">
-        <h1 className="text-h2 text-text-primary">Lineas de Apuesta</h1>
+        <h1 className="text-xl md:text-2xl lg:text-3xl font-semibold text-text-primary">Lineas de Apuesta</h1>
         <p className="text-sm text-text-tertiary mt-1">Todas las lineas disponibles por deporte</p>
       </motion.div>
 
       {/* ====== Sport Filter Pills ====== */}
       <motion.div
         variants={itemAnim}
-        className="flex gap-2 overflow-x-auto pb-2 border-b border-border-subtle"
+        className="flex gap-2 overflow-x-auto flex-nowrap pb-2 border-b border-border-subtle -mx-4 px-4 md:mx-0 md:px-0"
       >
         {SPORTS.map((sport) => (
           <button
@@ -265,9 +265,9 @@ export default function Lineas() {
       {/* ====== Period Sub-Tabs ====== */}
       <motion.div
         variants={itemAnim}
-        className="flex items-center justify-between border-b border-border-subtle pb-2"
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border-subtle pb-2 gap-2"
       >
-        <div className="flex gap-1 overflow-x-auto">
+        <div className="flex gap-1 overflow-x-auto flex-nowrap -mx-4 px-4 md:mx-0 md:px-0 pb-1">
           {PERIODS.map((period) => (
             <button
               key={period}

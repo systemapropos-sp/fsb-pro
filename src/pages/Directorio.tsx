@@ -135,7 +135,7 @@ export default function Directorio() {
   };
 
   return (
-    <div className="p-6">
+    <div className="px-4 md:px-6 lg:px-8 py-5">
       {/* Page Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -143,31 +143,31 @@ export default function Directorio() {
         transition={{ duration: 0.3 }}
       >
         <div className="flex items-center justify-between mb-1">
-          <h1 className="text-h2 text-text-primary">Directorio Telefonico</h1>
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-semibold text-text-primary">Directorio Telefonico</h1>
           <button
             onClick={() => {
               resetForm();
               setActiveTab('crear');
             }}
-            className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white rounded-md gradient-accent hover:brightness-110 hover:-translate-y-px hover:shadow-accent transition-all duration-200 active:scale-[0.98]"
+            className="flex items-center gap-2 px-5 min-h-[44px] text-sm font-semibold text-white rounded-md gradient-accent hover:brightness-110 hover:-translate-y-px hover:shadow-accent transition-all duration-200 active:scale-[0.98]"
           >
             <UserPlus size={16} />
             Crear contacto
           </button>
         </div>
-        <p className="text-xs text-text-tertiary mb-6">Inicio / Directorio</p>
+        <p className="text-xs text-text-tertiary mb-4 md:mb-6">Inicio / Directorio</p>
       </motion.div>
 
-      <div className="flex gap-6">
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6">
         {/* Left: Tabs + Form */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3, ease: easeSpring }}
-          className="w-[400px] shrink-0"
+          className="w-full md:w-[400px] md:shrink-0"
         >
           {/* Tabs */}
-          <div className="flex gap-1 p-1 rounded-md bg-[rgba(17,24,39,0.8)] mb-4">
+          <div className="flex gap-1 p-1 rounded-md bg-[rgba(17,24,39,0.8)] mb-4 overflow-x-auto flex-nowrap">
             <button
               onClick={() => setActiveTab('crear')}
               className={`flex items-center gap-2 px-5 py-2 text-sm font-medium rounded-sm transition-all duration-200 flex-1 justify-center ${
@@ -200,9 +200,9 @@ export default function Directorio() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="gradient-panel rounded-lg border border-border-subtle p-5"
+                className="gradient-panel rounded-lg border border-border-subtle p-4 md:p-5"
               >
-                <h3 className="text-h4 text-text-primary mb-4">
+                <h3 className="text-base md:text-lg font-semibold text-text-primary mb-4">
                   {editingId ? 'Editar Contacto' : 'Crear Contacto'}
                 </h3>
 
@@ -279,7 +279,7 @@ export default function Directorio() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="gradient-panel rounded-lg border border-border-subtle p-8 text-center"
+                className="gradient-panel rounded-lg border border-border-subtle p-6 md:p-8 text-center"
               >
                 <Users size={48} className="mx-auto mb-3" style={{ color: 'rgba(100,116,139,0.2)' }} />
                 <p className="text-body-lg text-text-tertiary mb-1">Seleccione la pestana Lista</p>
@@ -299,9 +299,9 @@ export default function Directorio() {
           className="flex-1"
         >
           {/* Search */}
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-3 mb-3 flex-wrap">
             <label className="text-sm text-text-secondary font-medium">Buscar:</label>
-            <div className="relative flex-1 max-w-sm">
+            <div className="relative w-full md:flex-1 md:max-w-sm">
               <Search
                 size={16}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary"

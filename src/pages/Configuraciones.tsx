@@ -80,7 +80,7 @@ function SegmentedButton({
   onChange: (value: string) => void;
 }) {
   return (
-    <div className="inline-flex bg-[rgba(17,24,39,0.8)] rounded-md p-1 gap-1">
+    <div className="inline-flex w-full md:w-auto bg-[rgba(17,24,39,0.8)] rounded-md p-1 gap-1">
       {options.map((opt) => {
         const isActive = value === opt.value;
         return (
@@ -113,7 +113,7 @@ function ToggleRow({
   onChange: (val: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between py-2">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 gap-1 sm:gap-0">
       <div className="flex flex-col gap-0.5">
         <span className="text-sm font-medium text-text-primary">{label}</span>
         <span className="text-xs text-text-tertiary">{description}</span>
@@ -126,7 +126,7 @@ function ToggleRow({
         style={{ flexShrink: 0 }}
       >
         <div
-          className="absolute top-[2px] left-[2px] w-[18px] h-[18px] rounded-full bg-text-primary transition-transform duration-200"
+          className="absolute top-[2px] left-[2px] w-[22px] h-[22px] md:w-[18px] md:h-[18px] rounded-full bg-text-primary transition-transform duration-200"
           style={{
             transform: checked ? 'translateX(18px)' : 'translateX(0)',
           }}
@@ -156,17 +156,17 @@ function SettingsCard({
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
-      className="mx-6 mb-4"
+      className="mb-4 px-4 md:px-6 lg:px-8"
     >
       <div
-        className="gradient-card rounded-xl border border-border-subtle shadow-panel overflow-hidden"
+        className="gradient-card rounded-xl border border-border-subtle shadow-panel overflow-hidden w-full"
         style={borderTopColor ? { borderTop: `3px solid ${borderTopColor}` } : undefined}
       >
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           {/* Card header */}
-          <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border-subtle">
+          <div className="flex items-center gap-3 mb-3 md:mb-4 pb-3 md:pb-4 border-b border-border-subtle">
             <Icon size={20} style={{ color: iconColor }} />
-            <h3 className="text-h3 text-text-primary">{title}</h3>
+            <h3 className="text-lg md:text-xl font-semibold text-text-primary">{title}</h3>
           </div>
           {children}
         </div>
@@ -220,7 +220,7 @@ function ChangePasswordModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm p-4"
             onClick={handleClose}
           />
           {/* Modal */}
@@ -229,14 +229,14 @@ function ChangePasswordModal({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
-            className="fixed top-1/2 left-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 -translate-y-1/2 bg-bg-secondary border border-border-default rounded-xl shadow-modal p-6"
+            className="fixed top-1/2 left-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 -translate-y-1/2 bg-bg-secondary border border-border-default rounded-xl shadow-modal p-4 md:p-6 mx-4"
           >
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-h3 text-text-primary">Cambiar Contraseña</h3>
+            <div className="flex items-center justify-between mb-4 md:mb-6">
+              <h3 className="text-lg md:text-xl font-semibold text-text-primary">Cambiar Contraseña</h3>
               <button
                 onClick={handleClose}
-                className="w-8 h-8 flex items-center justify-center rounded-md bg-[rgba(148,163,184,0.06)] hover:bg-[rgba(148,163,184,0.12)] transition-colors cursor-pointer"
+                className="w-10 h-10 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md bg-[rgba(148,163,184,0.06)] hover:bg-[rgba(148,163,184,0.12)] transition-colors cursor-pointer"
               >
                 <X size={16} className="text-text-secondary" />
               </button>
@@ -253,7 +253,7 @@ function ChangePasswordModal({
                   type="text"
                   value="mmw03"
                   readOnly
-                  className="w-full px-3.5 py-2.5 rounded-md bg-[rgba(30,41,59,0.6)] border border-border-default text-text-secondary text-sm font-mono cursor-not-allowed"
+                  className="w-full px-3.5 h-12 md:h-10 py-2.5 rounded-md bg-[rgba(30,41,59,0.6)] border border-border-default text-text-secondary text-sm font-mono cursor-not-allowed"
                 />
               </div>
 
@@ -271,7 +271,7 @@ function ChangePasswordModal({
                       setError('');
                     }}
                     placeholder="Minimo 4 caracteres"
-                    className="w-full px-3.5 py-2.5 pr-10 rounded-md bg-[rgba(30,41,59,0.6)] border border-border-default text-text-primary text-sm placeholder:text-text-tertiary focus:border-accent-blue focus:outline-none transition-colors"
+                    className="w-full px-3.5 h-12 md:h-10 py-2.5 pr-10 rounded-md bg-[rgba(30,41,59,0.6)] border border-border-default text-text-primary text-sm placeholder:text-text-tertiary focus:border-accent-blue focus:outline-none transition-colors"
                   />
                   <button
                     onClick={() => setShowPassword(!showPassword)}
@@ -288,7 +288,7 @@ function ChangePasswordModal({
                       {[0, 1, 2, 3].map((i) => (
                         <div
                           key={i}
-                          className="h-1 flex-1 rounded-full transition-all duration-200"
+                          className="h-2 md:h-1 flex-1 rounded-full transition-all duration-200"
                           style={{
                             backgroundColor: i < strength.score ? strength.color : 'rgba(100,116,139,0.3)',
                           }}
@@ -319,7 +319,7 @@ function ChangePasswordModal({
                       setError('');
                     }}
                     placeholder="Repite la contraseña"
-                    className="w-full px-3.5 py-2.5 pr-10 rounded-md bg-[rgba(30,41,59,0.6)] border border-border-default text-text-primary text-sm placeholder:text-text-tertiary focus:border-accent-blue focus:outline-none transition-colors"
+                    className="w-full px-3.5 h-12 md:h-10 py-2.5 pr-10 rounded-md bg-[rgba(30,41,59,0.6)] border border-border-default text-text-primary text-sm placeholder:text-text-tertiary focus:border-accent-blue focus:outline-none transition-colors"
                   />
                   <button
                     onClick={() => setShowConfirm(!showConfirm)}
@@ -396,7 +396,7 @@ function LogoutConfirmModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm p-4"
             onClick={onClose}
           />
           <motion.div

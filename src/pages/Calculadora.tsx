@@ -174,16 +174,16 @@ export default function Calculadora() {
   };
 
   return (
-    <div className="pt-4 pb-8">
+    <div className="pt-4 pb-8 px-4 md:px-6 lg:px-8">
       {/* Page header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="mx-6 mb-6"
+        className="mb-4 md:mb-6"
       >
-        <h1 className="text-h2 text-text-primary font-semibold">Calculadora Parlay</h1>
-        <p className="text-body text-text-secondary mt-1">
+        <h1 className="text-xl md:text-2xl lg:text-3xl font-semibold text-text-primary">Calculadora Parlay</h1>
+        <p className="text-sm md:text-base text-text-secondary mt-1">
           Ingrese los valores de las apuestas individuales
         </p>
       </motion.div>
@@ -197,17 +197,17 @@ export default function Calculadora() {
           delay: 0.1,
           ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
         }}
-        className="mx-6"
+        className="mx-0 md:mx-6"
       >
-        <div className="gradient-card rounded-xl border border-border-subtle shadow-panel overflow-hidden max-w-[640px]">
+        <div className="gradient-card rounded-xl border border-border-subtle shadow-panel overflow-hidden max-w-[640px] w-full">
           {/* Card header */}
-          <div className="flex items-center gap-3 px-6 py-5 border-b border-border-subtle">
+          <div className="flex items-center gap-3 px-4 md:px-6 py-4 md:py-5 border-b border-border-subtle">
             <Calculator size={20} className="text-accent-blue" />
-            <h3 className="text-h3 text-text-primary">Parlay</h3>
+            <h3 className="text-lg md:text-xl font-semibold text-text-primary">Parlay</h3>
           </div>
 
           {/* Table header */}
-          <div className="grid grid-cols-[28px_1fr_100px_32px] gap-2 px-6 py-2.5 border-b border-border-subtle">
+          <div className="hidden md:grid grid-cols-[28px_1fr_100px_32px] gap-2 px-4 md:px-6 py-2.5 border-b border-border-subtle">
             <span className="text-xs text-text-tertiary text-center">#</span>
             <span className="text-xs text-text-tertiary">Apuesta ($)</span>
             <span className="text-xs text-text-tertiary">Linea (Odds)</span>
@@ -229,10 +229,10 @@ export default function Calculadora() {
                     delay: index * 0.03,
                     ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
                   }}
-                  className="grid grid-cols-[28px_1fr_100px_32px] gap-2 items-center py-1"
+                  className="grid grid-cols-1 md:grid-cols-[28px_1fr_100px_32px] gap-2 items-center py-2 md:py-1 border-b border-border-subtle md:border-0"
                 >
                   {/* Row number */}
-                  <span className="text-xs text-text-tertiary text-center font-mono">
+                  <span className="text-xs text-text-tertiary text-center font-mono hidden md:block">
                     {index + 1}
                   </span>
 
@@ -249,7 +249,7 @@ export default function Calculadora() {
                         updateRow(row.id, 'amount', formatAmountInput(e.target.value))
                       }
                       placeholder="0.00"
-                      className="w-full pl-7 pr-2.5 py-2 rounded-sm bg-[rgba(30,41,59,0.6)] border border-border-default text-text-primary text-sm font-mono text-right placeholder:text-text-tertiary focus:border-accent-blue focus:outline-none transition-colors"
+                      className="w-full h-12 md:h-10 pl-7 pr-2.5 py-2 rounded-sm bg-[rgba(30,41,59,0.6)] border border-border-default text-text-primary text-sm font-mono text-right placeholder:text-text-tertiary focus:border-accent-blue focus:outline-none transition-colors"
                     />
                   </div>
 
@@ -281,7 +281,7 @@ export default function Calculadora() {
                     {visibleRows.length > MIN_ROWS && index >= MIN_ROWS && (
                       <button
                         onClick={() => removeRow(row.id)}
-                        className="w-7 h-7 flex items-center justify-center rounded-md bg-[rgba(148,163,184,0.06)] hover:bg-accent-red/20 text-text-tertiary hover:text-accent-red transition-all opacity-0 hover:opacity-100 focus:opacity-100 cursor-pointer"
+                        className="w-8 h-8 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md bg-[rgba(148,163,184,0.06)] hover:bg-accent-red/20 text-text-tertiary hover:text-accent-red transition-all opacity-100 md:opacity-0 md:hover:opacity-100 md:focus:opacity-100 cursor-pointer"
                         title="Eliminar fila"
                       >
                         <X size={14} />
@@ -294,11 +294,11 @@ export default function Calculadora() {
           </div>
 
           {/* Results summary */}
-          <div className="mt-2 mx-0 bg-[rgba(17,24,39,0.8)] border-t border-border-subtle px-6 py-5">
+          <div className="mt-2 mx-0 bg-[rgba(17,24,39,0.8)] border-t border-border-subtle px-4 md:px-6 py-4 md:py-5">
             {/* Apuesta Total */}
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-text-secondary">Apuesta Total</span>
-              <span className="text-h4 font-semibold text-text-primary font-mono text-right">
+              <span className="text-base md:text-lg font-semibold text-text-primary font-mono text-right">
                 {calculated && result ? (
                   <CountUp
                     key={`bet-${resultKeyRef.current}`}
@@ -319,7 +319,7 @@ export default function Calculadora() {
             <div className="flex items-center justify-between mb-2 border-l-[3px] border-accent-green pl-3 -ml-3">
               <span className="text-sm text-text-secondary">Premio Total</span>
               <motion.span
-                className="text-h2 font-bold text-accent-green font-mono text-right"
+                className="text-2xl md:text-3xl font-bold text-accent-green font-mono text-right"
                 animate={
                   calculated
                     ? {
