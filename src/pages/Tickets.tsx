@@ -119,11 +119,8 @@ export default function Tickets() {
     };
   }, []);
 
-  // Set default date to today
-  useEffect(() => {
-    const today = new Date();
-    setDateFilter(today.toISOString().split('T')[0]);
-  }, []);
+  // Date filter starts empty so ALL tickets are visible by default
+  // User can optionally filter by date if they want
 
   // Filter & search
   const filteredTickets = useMemo(() => {

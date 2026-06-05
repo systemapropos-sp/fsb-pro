@@ -28,6 +28,7 @@ import {
   type BettingLine,
 } from '@/lib/storage';
 import confetti from 'canvas-confetti';
+import { toast } from 'react-hot-toast';
 
 type TabMode = 'teaser' | 'teaserIF';
 type PlaysTab = 'jugadas' | 'jugadasIF';
@@ -95,15 +96,56 @@ export default function Dashboard() {
   const pago = cantidadNum > 0 ? cantidadNum * totalOdds : 0;
   const ganancia = pago - cantidadNum;
 
+  // --- Validation: Business Rules ---
+  // Rule 1: Cannot select the same team twice
+  // Rule 2: Cannot select both teams from the same match
+  const validatePlayAddition = (line: BettingLine, teamCode: string): boolean => {
+    const currentPlays = getSelectedPlays();
+    const isAway = line.awayTeamCode === teamCode;
+    const opponentCode = isAway ? line.homeTeamCode : line.awayTeamCode;
+
+    // Check if this exact team is already selected
+    const teamAlreadySelected = currentPlays.some(
+      (p) => p.teamCode.includes(teamCode)
+    );
+    if (teamAlreadySelected) {
+      toast.error(`${isAway ? line.awayTeam : line.homeTeam} ya fue seleccionado`, {
+        duration: 2000,
+        icon: '⚠️',
+      });
+      return false;
+    }
+
+    // Check if the opponent from this same match is already selected
+    const opponentAlreadySelected = currentPlays.some(
+      (p) => p.teamCode.includes(opponentCode)
+    );
+    if (opponentAlreadySelected) {
+      toast.error(
+        `No puede seleccionar ambos equipos del mismo partido`,
+        { duration: 2500, icon: '🚫' }
+      );
+      return false;
+    }
+
+    return true;
+  };
+
   // --- Handlers ---
   const handleAddPlay = useCallback(
-    (line: BettingLine, type: string, value: number, points: number = 0) => {
+    (line: BettingLine, type: string, value: number, points: number = 0, teamCode?: string) => {
+      const tc = teamCode || line.awayTeamCode;
+
+      // Validate business rules
+      if (!validatePlayAddition(line, tc)) return;
+
+      const isAway = line.awayTeamCode === tc;
       const newPlay: Play = {
         id: `play-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
         team: `${line.awayTeam} @ ${line.homeTeam}`,
         teamCode: `${line.awayTeamCode}/${line.homeTeamCode}`,
         playType: type,
-        detail: `${line.awayTeam} vs ${line.homeTeam}`,
+        detail: `${isAway ? line.awayTeam : line.homeTeam} vs ${isAway ? line.homeTeam : line.awayTeam}`,
         line: value,
         player: '',
         points,
@@ -129,6 +171,9 @@ export default function Dashboard() {
         (l) => l.awayTeamCode === teamCode || l.homeTeamCode === teamCode
       );
       if (!line) return; // No line found for this team
+
+      // Validate business rules (no repeat team, no both teams from same match)
+      if (!validatePlayAddition(line, teamCode)) return;
 
       const isAway = line.awayTeamCode === teamCode;
       const teamName = isAway ? line.awayTeam : line.homeTeam;
@@ -204,7 +249,7 @@ export default function Dashboard() {
       addSelectedPlay(newPlay);
       setSelectedPlays(getSelectedPlays());
     },
-    [lines, modeTab]
+    [lines, modeTab, validatePlayAddition]
   );
 
   const handleClearAll = () => {
@@ -703,7 +748,7 @@ function GameCard({
   setEquipo,
 }: {
   line: BettingLine;
-  onAddPlay: (line: BettingLine, type: string, value: number, points?: number) => void;
+  onAddPlay: (line: BettingLine, type: string, value: number, points?: number, teamCode?: string) => void;
   setEquipo: (v: string) => void;
 }) {
   const [flash, setFlash] = useState(false);
@@ -712,7 +757,7 @@ function GameCard({
     setFlash(true);
     setTimeout(() => setFlash(false), 200);
     setEquipo(`${teamCode} - ${teamName}`);
-    onAddPlay(line, type, value, points);
+    onAddPlay(line, type, value, points, teamCode);
   };
 
   return (

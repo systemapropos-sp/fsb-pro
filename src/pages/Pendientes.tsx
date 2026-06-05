@@ -126,37 +126,40 @@ export default function Pendientes() {
   const [payingId, setPayingId] = useState<string | null>(null);
   const [allPaid, setAllPaid] = useState(false);
 
-  // Load tickets from localStorage + sync with other pages
-  useEffect(() => {
-    const load = () => {
-      const stored = localStorage.getItem('fsb_tickets');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored) as Ticket[];
-          // Only show pending winners (status=ganador without paidAt)
-          const pending = parsed.filter((t: Ticket) => t.status === 'ganador' && !t.paidAt);
-          setTickets(pending.length > 0 ? pending : PENDING_TICKETS);
-          if (pending.length === 0) setAllPaid(true);
-        } catch {
-          setTickets(PENDING_TICKETS);
-        }
-      } else {
-        // Seed initial data if nothing exists
-        localStorage.setItem('fsb_tickets', JSON.stringify(PENDING_TICKETS));
-        setTickets(PENDING_TICKETS);
+  // Load pending winning tickets from localStorage
+  const loadPending = useCallback(() => {
+    const stored = localStorage.getItem('fsb_tickets');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as Ticket[];
+        // Show tickets with status=ganador that haven't been paid yet
+        const pendingWinners = parsed.filter((t: Ticket) => t.status === 'ganador' && !t.paidAt);
+        setTickets(pendingWinners);
+        setAllPaid(pendingWinners.length === 0);
+      } catch {
+        setTickets([]);
+        setAllPaid(true);
       }
-    };
-    load();
+    } else {
+      // Seed initial demo data
+      localStorage.setItem('fsb_tickets', JSON.stringify(PENDING_TICKETS));
+      setTickets(PENDING_TICKETS);
+      setAllPaid(false);
+    }
+  }, []);
 
-    // Listen for ticket creation events from Dashboard
-    window.addEventListener('fsb:ticketCreated', load);
-    window.addEventListener('focus', load);
+  useEffect(() => {
+    loadPending();
+
+    // Listen for changes (ticket created, paid, etc)
+    window.addEventListener('fsb:ticketCreated', loadPending);
+    window.addEventListener('focus', loadPending);
 
     return () => {
-      window.removeEventListener('fsb:ticketCreated', load);
-      window.removeEventListener('focus', load);
+      window.removeEventListener('fsb:ticketCreated', loadPending);
+      window.removeEventListener('focus', loadPending);
     };
-  }, []);
+  }, [loadPending]);
 
   // Filtered tickets
   const filteredTickets = useMemo(() => {
