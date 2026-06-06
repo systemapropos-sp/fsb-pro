@@ -48,7 +48,7 @@ export default function Header() {
       </div>
 
       {/* Center: Live Clock - hidden on mobile */}
-      <div className="hidden md:block absolute left-1/2 -translate-x-1/2 font-mono text-sm tracking-wider" style={{ color: '#767676' }}>
+      <div className="hidden md:block absolute left-1/2 -translate-x-1/2 font-mono text-sm tracking-wider" style={{ color: '#333333' }}>
         {formatTime(time)}
       </div>
 
@@ -90,7 +90,7 @@ export default function Header() {
               <User size={14} style={{ color: '#FF3008' }} />
             </div>
             <span className="text-sm font-medium hidden sm:inline">mmw03</span>
-            <ChevronDown size={14} style={{ color: '#ABABAB' }} className={`transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown size={14} style={{ color: '#555555' }} className={`transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
           <AnimatePresence>
@@ -106,17 +106,17 @@ export default function Header() {
                   style={{ background: '#FFFFFF', borderColor: '#E0E0E0', boxShadow: '0 10px 15px rgba(0,0,0,0.1)' }}
                 >
                   <div className="py-1">
-                    <div className="px-4 py-2 text-xs border-b sm:hidden" style={{ color: '#ABABAB', borderColor: '#EEEEEE' }}>
+                    <div className="px-4 py-2 text-xs border-b sm:hidden" style={{ color: '#555555', borderColor: '#EEEEEE' }}>
                       mmw03
                     </div>
                     <button
                       onClick={() => setDropdownOpen(false)}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors"
-                      style={{ color: '#767676' }}
+                      style={{ color: '#333333' }}
                       onMouseEnter={(e) => { e.currentTarget.style.background = '#F7F7F7'; e.currentTarget.style.color = '#191919'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#767676'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#333333'; }}
                     >
-                      <Key size={16} style={{ color: '#ABABAB' }} />
+                      <Key size={16} style={{ color: '#555555' }} />
                       Cambiar contrasena
                     </button>
                     <div className="mx-3 my-1 border-t" style={{ borderColor: '#EEEEEE' }} />

@@ -158,19 +158,19 @@ export default function SalesForm({
       {/* Seller Info */}
       <div className="space-y-1">
         <div className="flex items-center gap-2">
-          <User size={14} style={{ color: '#ABABAB' }} className="shrink-0" />
-          <span className="text-xs" style={{ color: '#ABABAB', width: 60 }}>Vendedor:</span>
+          <User size={14} style={{ color: '#555555' }} className="shrink-0" />
+          <span className="text-xs" style={{ color: '#555555', width: 60 }}>Vendedor:</span>
           <span className="text-sm font-bold font-mono" style={{ color: '#191919' }}>mmw03</span>
         </div>
         <div className="flex items-center gap-2">
-          <Calendar size={14} style={{ color: '#ABABAB' }} className="shrink-0" />
-          <span className="text-xs" style={{ color: '#ABABAB', width: 60 }}>Fecha:</span>
-          <span className="text-xs" style={{ color: '#767676' }}>{formatDate(currentTime)}</span>
+          <Calendar size={14} style={{ color: '#555555' }} className="shrink-0" />
+          <span className="text-xs" style={{ color: '#555555', width: 60 }}>Fecha:</span>
+          <span className="text-xs" style={{ color: '#333333' }}>{formatDate(currentTime)}</span>
         </div>
         <div className="flex items-center gap-2">
-          <Clock size={14} style={{ color: '#ABABAB' }} className="shrink-0" />
-          <span className="text-xs" style={{ color: '#ABABAB', width: 60 }}>Hora:</span>
-          <span className="text-xs font-mono" style={{ color: '#767676' }}>{formatTime(currentTime)}</span>
+          <Clock size={14} style={{ color: '#555555' }} className="shrink-0" />
+          <span className="text-xs" style={{ color: '#555555', width: 60 }}>Hora:</span>
+          <span className="text-xs font-mono" style={{ color: '#333333' }}>{formatTime(currentTime)}</span>
         </div>
       </div>
 
@@ -188,7 +188,7 @@ export default function SalesForm({
             className="flex-1 py-2 px-4 rounded-sm text-sm font-bold transition-all duration-200 min-h-[36px]"
             style={{
               background: modeTab === key ? 'rgba(0,176,255,0.1)' : 'transparent',
-              color: modeTab === key ? '#191919' : '#ABABAB',
+              color: modeTab === key ? '#191919' : '#555555',
               border: modeTab === key ? '1px solid rgba(0,176,255,0.3)' : '1px solid transparent',
             }}
           >
@@ -282,7 +282,7 @@ export default function SalesForm({
           <div>
             <label className="block text-[11px] font-bold mb-1 tracking-wide" style={{ color: '#555555' }}>CANTIDAD</label>
             <div className="relative">
-              <span className="absolute left-2 top-1/2 -translate-y-1/2 font-mono text-sm" style={{ color: '#ABABAB' }}>$</span>
+              <span className="absolute left-2 top-1/2 -translate-y-1/2 font-mono text-sm" style={{ color: '#555555' }}>$</span>
               <input
                 type="text"
                 inputMode="decimal"
@@ -326,7 +326,7 @@ export default function SalesForm({
                 <div>
                   <label className="block text-[11px] font-bold mb-1" style={{ color: '#8B5CF6' }}>MONTO IF</label>
                   <div className="relative">
-                    <span className="absolute left-2 top-1/2 -translate-y-1/2 font-mono text-xs" style={{ color: '#ABABAB' }}>$</span>
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2 font-mono text-xs" style={{ color: '#555555' }}>$</span>
                     <input type="text" inputMode="decimal" placeholder="0" className="input-standard w-full h-8 pl-5 pr-1 text-right font-mono text-xs" />
                   </div>
                 </div>
@@ -357,15 +357,15 @@ export default function SalesForm({
         <button
           onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
           className="px-3 py-2 rounded-md text-xs font-bold transition-colors min-h-[36px]"
-          style={{ background: '#F7F7F7', color: '#767676' }}
+          style={{ background: '#F7F7F7', color: '#333333' }}
         >
           {language === 'es' ? 'ES | EN' : 'EN | ES'}
         </button>
         {showConfirmClear ? (
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs" style={{ color: '#ABABAB' }}>Seguro?</span>
+            <span className="text-xs" style={{ color: '#555555' }}>Seguro?</span>
             <button onClick={onClearAll} className="px-3 py-1.5 rounded text-xs font-bold text-white min-h-[32px]" style={{ background: '#E53935' }}>Si</button>
-            <button onClick={() => setShowConfirmClear(false)} className="px-3 py-1.5 rounded text-xs font-bold min-h-[32px]" style={{ background: '#F7F7F7', color: '#767676' }}>No</button>
+            <button onClick={() => setShowConfirmClear(false)} className="px-3 py-1.5 rounded text-xs font-bold min-h-[32px]" style={{ background: '#F7F7F7', color: '#333333' }}>No</button>
           </div>
         ) : (
           <button
@@ -388,7 +388,7 @@ export default function SalesForm({
           background: selectedPlaysCount > 0 && cantidadNum > 0 && !processingTicket
             ? 'linear-gradient(135deg, #22C55E, #16A34A)'
             : 'rgba(0,0,0,0.08)',
-          color: selectedPlaysCount > 0 && cantidadNum > 0 && !processingTicket ? '#FFFFFF' : '#ABABAB',
+          color: selectedPlaysCount > 0 && cantidadNum > 0 && !processingTicket ? '#FFFFFF' : '#555555',
           boxShadow: selectedPlaysCount > 0 && cantidadNum > 0 && !processingTicket
             ? '0 4px 16px rgba(34,197,94,0.3)'
             : 'none',

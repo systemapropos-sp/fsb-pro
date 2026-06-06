@@ -440,9 +440,9 @@ export default function Dashboard() {
                       <button
                         onClick={() => handleRemovePlay(play.id)}
                         className="w-8 h-8 rounded-full flex items-center justify-center transition-colors active:scale-95"
-                        style={{ color: '#ABABAB' }}
+                        style={{ color: '#555555' }}
                         onMouseEnter={(e) => { e.currentTarget.style.color = '#E53935'; e.currentTarget.style.background = 'rgba(229,57,53,0.1)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.color = '#ABABAB'; e.currentTarget.style.background = 'transparent'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = '#555555'; e.currentTarget.style.background = 'transparent'; }}
                       >
                         <X size={14} />
                       </button>

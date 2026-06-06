@@ -626,7 +626,7 @@ export default function Configuraciones() {
               Guardar
             </button>
           </div>
-          <p className="text-[10px] mt-1.5" style={{ color: '#ABABAB' }}>
+          <p className="text-[10px] mt-1.5" style={{ color: '#555555' }}>
             {getSavedApiKey() ? '✓ API key configurada - Resultados en tiempo real activos' : 'Sin API key - Usando datos de demostracion'}
           </p>
         </div>

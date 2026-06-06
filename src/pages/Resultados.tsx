@@ -18,7 +18,7 @@ function StatusBadge({ status }: { status: GameResult['status'] }) {
   const config: Record<string, { color: string; bg: string; label: string }> = {
     LIVE: { color: '#E53935', bg: 'rgba(229,57,53,0.1)', label: 'EN VIVO' },
     FT: { color: '#00C853', bg: 'rgba(0,200,83,0.1)', label: 'FINAL' },
-    NS: { color: '#ABABAB', bg: 'rgba(0,0,0,0.05)', label: 'PENDIENTE' },
+    NS: { color: '#555555', bg: 'rgba(0,0,0,0.05)', label: 'PENDIENTE' },
     HT: { color: '#FF9800', bg: 'rgba(255,152,0,0.1)', label: 'DESCANSO' },
     POST: { color: '#00C853', bg: 'rgba(0,200,83,0.1)', label: 'POSTERGADO' },
   };
@@ -50,7 +50,7 @@ function ScoreCard({ game }: { game: GameResult }) {
         </span>
         <div className="flex items-center gap-2">
           <StatusBadge status={game.status} />
-          <span className="text-[10px] font-mono" style={{ color: '#ABABAB' }}>{game.time}</span>
+          <span className="text-[10px] font-mono" style={{ color: '#555555' }}>{game.time}</span>
         </div>
       </div>
 
@@ -106,11 +106,11 @@ export default function Resultados() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
         <div>
           <h1 className="text-xl md:text-2xl font-bold" style={{ color: '#191919' }}>Resultados Deportivos</h1>
-          <p className="text-xs mt-0.5" style={{ color: '#767676' }}>
+          <p className="text-xs mt-0.5" style={{ color: '#333333' }}>
             {getSavedApiKey() ? (
               <span className="flex items-center gap-1"><Wifi size={12} style={{ color: '#00C853' }} /> Datos en tiempo real</span>
             ) : (
-              <span className="flex items-center gap-1"><WifiOff size={12} style={{ color: '#ABABAB' }} /> Modo demo - Configure API key en Configuracion</span>
+              <span className="flex items-center gap-1"><WifiOff size={12} style={{ color: '#555555' }} /> Modo demo - Configure API key en Configuracion</span>
             )}
           </p>
         </div>
@@ -139,8 +139,8 @@ export default function Resultados() {
 
       {/* Last Updated */}
       <div className="flex items-center gap-1 mb-3">
-        <Clock size={12} style={{ color: '#ABABAB' }} />
-        <span className="text-[11px]" style={{ color: '#ABABAB' }}>
+        <Clock size={12} style={{ color: '#555555' }} />
+        <span className="text-[11px]" style={{ color: '#555555' }}>
           Actualizado: {lastUpdated.toLocaleTimeString()}
         </span>
       </div>
@@ -154,7 +154,7 @@ export default function Resultados() {
             className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95"
             style={{
               background: selectedSport === s.key ? '#FF3008' : '#FFFFFF',
-              color: selectedSport === s.key ? '#FFFFFF' : '#767676',
+              color: selectedSport === s.key ? '#FFFFFF' : '#333333',
               border: selectedSport === s.key ? 'none' : '1px solid #E0E0E0',
             }}
           >
@@ -167,7 +167,7 @@ export default function Resultados() {
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <RefreshCw size={24} className="animate-spin" style={{ color: '#FF3008' }} />
-          <span className="ml-2 text-sm font-medium" style={{ color: '#767676' }}>Cargando resultados...</span>
+          <span className="ml-2 text-sm font-medium" style={{ color: '#333333' }}>Cargando resultados...</span>
         </div>
       ) : error ? (
         <div className="flex items-center justify-center py-20 text-center">
@@ -176,8 +176,8 @@ export default function Resultados() {
         </div>
       ) : filteredGames.length === 0 ? (
         <div className="flex items-center justify-center py-20 text-center">
-          <Trophy size={24} style={{ color: '#ABABAB' }} />
-          <span className="ml-2 text-sm" style={{ color: '#ABABAB' }}>No hay juegos para mostrar</span>
+          <Trophy size={24} style={{ color: '#555555' }} />
+          <span className="ml-2 text-sm" style={{ color: '#555555' }}>No hay juegos para mostrar</span>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
