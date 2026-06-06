@@ -37,6 +37,9 @@ export interface Ticket {
   status: 'pendiente' | 'ganador' | 'perdedor' | 'cancelado' | 'pagado';
   createdAt: number;
   paidAt?: number;
+  customerId?: string;
+  customerName?: string;
+  paymentType?: 'cash' | 'credit';
 }
 
 export interface BettingLine {
@@ -63,6 +66,9 @@ export interface Contact {
   category: string;
   notes?: string;
   createdAt: number;
+  creditLimit: number;
+  creditUsed: number;
+  isActive: boolean;
 }
 
 export interface Transaction {
@@ -88,6 +94,18 @@ export interface LoginAttempt {
   lockedUntil: number | null;
 }
 
+export interface CreditTransaction {
+  id: string;
+  customerId: string;
+  customerName: string;
+  type: 'abono' | 'cargo' | 'pago';
+  amount: number;
+  balanceAfter: number;
+  date: string;
+  notes: string;
+  createdAt: number;
+}
+
 // --- Constants ---
 
 const STORAGE_KEYS = {
@@ -103,6 +121,7 @@ const STORAGE_KEYS = {
   LOGIN_ATTEMPTS: 'fsb_login_attempts',
   ACTIVITY_LOG: 'fsb_activity_log',
   SELECTED_PLAYS: 'fsb_selected_plays',
+  CREDIT_TRANSACTIONS: 'fsb_credit_transactions',
 } as const;
 
 const DEFAULT_PIN = '1234';
@@ -130,6 +149,115 @@ function setItem(key: string, value: unknown): void {
 
 function removeItem(key: string): void {
   localStorage.removeItem(key);
+}
+
+// --- Credit System Functions ---
+
+export function getCreditTransactions(customerId?: string): CreditTransaction[] {
+  const all = getItem<CreditTransaction[]>(STORAGE_KEYS.CREDIT_TRANSACTIONS, []);
+  return customerId ? all.filter((t) => t.customerId === customerId) : all;
+}
+
+export function addCreditTransaction(
+  tx: Omit<CreditTransaction, 'id' | 'createdAt'>
+): CreditTransaction {
+  const all = getCreditTransactions();
+  const newTx: CreditTransaction = { ...tx, id: `CTX-${Date.now()}`, createdAt: Date.now() };
+  all.push(newTx);
+  setItem(STORAGE_KEYS.CREDIT_TRANSACTIONS, all);
+  return newTx;
+}
+
+export function getCustomerTickets(customerId: string): Ticket[] {
+  return getTickets().filter((t) => t.customerId === customerId);
+}
+
+export function getCustomerCreditSummary(customerId: string) {
+  const contacts = getContacts();
+  const contact = contacts.find((c) => c.id === customerId);
+  if (!contact) return null;
+  const tickets = getCustomerTickets(customerId);
+  const creditTxs = getCreditTransactions(customerId);
+  const totalAbonos = creditTxs
+    .filter((t) => t.type === 'abono' || t.type === 'pago')
+    .reduce((s, t) => s + t.amount, 0);
+  const totalTicketsCredit = tickets
+    .filter((t) => t.paymentType === 'credit' && t.status !== 'cancelado')
+    .reduce((s, t) => s + t.amount, 0);
+  return {
+    customerId,
+    customerName: contact.name,
+    creditLimit: contact.creditLimit,
+    totalCreditUsed: contact.creditUsed,
+    creditAvailable: contact.creditLimit - contact.creditUsed,
+    totalAbonos,
+    totalTicketsCredit,
+    ticketCount: tickets.length,
+    isOverLimit: contact.creditUsed > contact.creditLimit,
+    isNearLimit: contact.creditLimit - contact.creditUsed < contact.creditLimit * 0.2,
+  };
+}
+
+export function addAbono(
+  customerId: string,
+  amount: number,
+  notes: string = ''
+): CreditTransaction | null {
+  const contacts = getContacts();
+  const idx = contacts.findIndex((c) => c.id === customerId);
+  if (idx === -1) return null;
+  const contact = contacts[idx];
+  const newUsed = Math.max(0, contact.creditUsed - amount);
+  contact.creditUsed = newUsed;
+  setItem(STORAGE_KEYS.CONTACTS, contacts);
+  return addCreditTransaction({
+    customerId,
+    customerName: contact.name,
+    type: 'abono',
+    amount,
+    balanceAfter: contact.creditLimit - newUsed,
+    date: new Date().toISOString().split('T')[0],
+    notes: notes || `Abono de $${amount.toFixed(2)}`,
+  });
+}
+
+export function useCustomerCredit(customerId: string, amount: number): boolean {
+  const contacts = getContacts();
+  const idx = contacts.findIndex((c) => c.id === customerId);
+  if (idx === -1) return false;
+  const contact = contacts[idx];
+  if (contact.creditUsed + amount > contact.creditLimit) return false;
+  contact.creditUsed += amount;
+  setItem(STORAGE_KEYS.CONTACTS, contacts);
+  addCreditTransaction({
+    customerId,
+    customerName: contact.name,
+    type: 'cargo',
+    amount,
+    balanceAfter: contact.creditLimit - contact.creditUsed,
+    date: new Date().toISOString().split('T')[0],
+    notes: `Ticket credito: $${amount.toFixed(2)}`,
+  });
+  return true;
+}
+
+export function getCreditSummary(): {
+  cashTotal: number;
+  creditTotal: number;
+  creditAvailable: number;
+  creditUsed: number;
+} {
+  const tickets = getTickets();
+  const contacts = getContacts();
+  const cashTotal = tickets
+    .filter((t) => t.paymentType === 'cash' && t.status !== 'cancelado')
+    .reduce((s, t) => s + t.amount, 0);
+  const creditTotal = tickets
+    .filter((t) => t.paymentType === 'credit' && t.status !== 'cancelado')
+    .reduce((s, t) => s + t.amount, 0);
+  const creditUsed = contacts.reduce((s, c) => s + c.creditUsed, 0);
+  const creditLimit = contacts.reduce((s, c) => s + c.creditLimit, 0);
+  return { cashTotal, creditTotal, creditAvailable: creditLimit - creditUsed, creditUsed };
 }
 
 // --- Seeding ---
@@ -278,11 +406,14 @@ export function seedLines(): BettingLine[] {
 
 function seedContacts(): Contact[] {
   const contacts: Contact[] = [
-    { id: 'c-1', name: 'Juan Perez', phone: '809-555-0101', category: 'Jugador', createdAt: Date.now() },
-    { id: 'c-2', name: 'Maria Garcia', phone: '809-555-0102', category: 'Jugador', createdAt: Date.now() },
-    { id: 'c-3', name: 'Pedro Rodriguez', phone: '809-555-0103', category: 'Cobrador', createdAt: Date.now() },
-    { id: 'c-4', name: 'Ana Martinez', phone: '809-555-0104', category: 'Administrador', createdAt: Date.now() },
-    { id: 'c-5', name: 'Luis Sanchez', phone: '809-555-0105', category: 'Jugador', createdAt: Date.now() },
+    { id: 'c-1', name: 'Juan Perez', phone: '809-555-0101', category: 'Jugador', createdAt: Date.now(), creditLimit: 5000, creditUsed: 1200, isActive: true },
+    { id: 'c-2', name: 'Maria Garcia', phone: '809-555-0102', category: 'Jugador', createdAt: Date.now(), creditLimit: 3000, creditUsed: 0, isActive: true },
+    { id: 'c-3', name: 'Pedro Rodriguez', phone: '809-555-0103', category: 'Jugador', createdAt: Date.now(), creditLimit: 10000, creditUsed: 4500, isActive: true },
+    { id: 'c-4', name: 'Ana Martinez', phone: '809-555-0104', category: 'Jugador', createdAt: Date.now(), creditLimit: 2000, creditUsed: 1800, isActive: true },
+    { id: 'c-5', name: 'Luis Sanchez', phone: '809-555-0105', category: 'Jugador', createdAt: Date.now(), creditLimit: 8000, creditUsed: 2500, isActive: true },
+    { id: 'c-6', name: 'Carlos Reyes', phone: '809-555-0106', category: 'Jugador', createdAt: Date.now(), creditLimit: 1500, creditUsed: 0, isActive: true },
+    { id: 'c-7', name: 'Diana Lopez', phone: '809-555-0107', category: 'Jugador', createdAt: Date.now(), creditLimit: 6000, creditUsed: 3200, isActive: true },
+    { id: 'c-8', name: 'Roberto Diaz', phone: '809-555-0108', category: 'Jugador', createdAt: Date.now(), creditLimit: 4000, creditUsed: 3900, isActive: true },
   ];
   setItem(STORAGE_KEYS.CONTACTS, contacts);
   return contacts;
@@ -319,6 +450,15 @@ export function seedInitialData(): void {
   const existingContacts = localStorage.getItem(STORAGE_KEYS.CONTACTS);
   if (!existingContacts) {
     seedContacts();
+  } else {
+    // Migrate existing contacts to have credit fields
+    const contacts: Contact[] = JSON.parse(existingContacts);
+    let migrated = false;
+    const updated = contacts.map((c) => {
+      if (c.creditLimit === undefined) { migrated = true; return { ...c, creditLimit: 0, creditUsed: 0, isActive: true }; }
+      return c;
+    });
+    if (migrated) setItem(STORAGE_KEYS.CONTACTS, updated);
   }
 
   const existingSettings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
@@ -511,6 +651,7 @@ export function createTicket(ticket: Omit<Ticket, 'id' | 'createdAt'>): Ticket {
   const randomNum = Math.floor(Math.random() * 900000 + 100000);
   const newTicket: Ticket = {
     ...ticket,
+    paymentType: ticket.paymentType || 'cash',
     id: `MMW-003-${randomNum}`,
     createdAt: Date.now(),
   };

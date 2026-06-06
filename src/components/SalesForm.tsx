@@ -2,11 +2,12 @@ import { useRef, useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   User, Calendar, Clock, Trash2, RefreshCw, Calculator, Check, AlertCircle,
+  ChevronDown, UserCircle,
 } from 'lucide-react';
-import { formatAmount, formatDate, formatTime } from '@/lib/storage';
+import { formatAmount, formatDate, formatTime, getContacts } from '@/lib/storage';
 import { findTeamByCode, findPlayCode, isValidPlayCode, PLAY_CODES } from '@/lib/playCodes';
 import TicketReceipt from './TicketReceipt';
-import type { Ticket } from '@/lib/storage';
+import type { Ticket, Contact } from '@/lib/storage';
 
 interface SalesFormProps {
   currentTime: Date;
@@ -32,6 +33,10 @@ interface SalesFormProps {
   onCalc: () => void;
   onAddPlayFromForm?: (teamCode: string, playCode: string) => void;
   createdTicket?: Ticket | null;
+  onCustomerChange?: (id: string | null, name: string | null) => void;
+  selectedCustomerId?: string | null;
+  isCredit?: boolean;
+  setIsCredit?: (v: boolean) => void;
 }
 
 function CheckIcon() {
@@ -66,9 +71,14 @@ export default function SalesForm({
   onCalc,
   onAddPlayFromForm,
   createdTicket,
+  onCustomerChange,
+  selectedCustomerId,
+  isCredit,
+  setIsCredit,
 }: SalesFormProps) {
   const equipoInputRef = useRef<HTMLInputElement>(null);
   const jugadaInputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [internalEquipo, setInternalEquipo] = useState(equipo);
   const [internalJugada, setInternalJugada] = useState(jugada);
   const [internalCantidad, setInternalCantidad] = useState(cantidad);
@@ -78,6 +88,28 @@ export default function SalesForm({
   // Play code lookup: shows description below input
   const [foundPlay, setFoundPlay] = useState<string | null>(null);
   const [playError, setPlayError] = useState(false);
+  // Customer dropdown
+  const [customers, setCustomers] = useState<Contact[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  // Load customers
+  useEffect(() => {
+    setCustomers(getContacts().filter((c) => c.isActive !== false));
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const selectedCustomer = customers.find((c) => c.id === selectedCustomerId);
+  const creditAvailable = selectedCustomer ? selectedCustomer.creditLimit - selectedCustomer.creditUsed : 0;
 
   // Sync with parent when values come from external (like clicking a line)
   useEffect(() => { setInternalEquipo(equipo); }, [equipo]);
@@ -196,6 +228,73 @@ export default function SalesForm({
           </button>
         ))}
       </div>
+
+      {/* Customer Selector */}
+      <div className="relative" ref={dropdownRef}>
+        <button
+          onClick={() => setShowDropdown(!showDropdown)}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm border transition-all"
+          style={{
+            background: selectedCustomerId ? 'rgba(41,147,234,0.08)' : '#FFFFFF',
+            borderColor: selectedCustomerId ? '#2993EA' : '#E0E0E0',
+            color: selectedCustomerId ? '#2993EA' : '#555555',
+          }}
+        >
+          <span className="flex items-center gap-2">
+            <UserCircle size={16} />
+            {selectedCustomer ? `${selectedCustomer.name} (Cred: $${creditAvailable.toFixed(0)})` : 'Seleccionar cliente...'}
+          </span>
+          <ChevronDown size={14} />
+        </button>
+        {showDropdown && (
+          <div className="absolute z-20 w-full mt-1 rounded-lg border shadow-lg overflow-hidden" style={{ background: '#FFFFFF', borderColor: '#E0E0E0' }}>
+            <button
+              onClick={() => { onCustomerChange?.(null, null); setShowDropdown(false); }}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 transition-colors"
+              style={{ color: '#555555' }}
+            >
+              Cash (sin cliente)
+            </button>
+            {customers.map((c) => {
+              const avail = c.creditLimit - c.creditUsed;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => { onCustomerChange?.(c.id, c.name); setShowDropdown(false); }}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 transition-colors flex justify-between items-center"
+                  style={{ color: '#191919' }}
+                >
+                  <span>{c.name}</span>
+                  <span className="text-xs" style={{ color: avail < c.creditLimit * 0.2 ? '#E53935' : avail < c.creditLimit * 0.5 ? '#FF9800' : '#00C853' }}>
+                    ${avail.toFixed(0)}/${c.creditLimit.toFixed(0)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Cash / Credit Toggle */}
+      {selectedCustomer && (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsCredit?.(false)}
+            className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-all ${!isCredit ? 'bg-[#00C853] text-white' : 'bg-gray-100 text-gray-500'}`}
+          >
+            CASH
+          </button>
+          <button
+            onClick={() => {
+              if (creditAvailable <= 0) { alert('Cliente sin credito disponible'); return; }
+              setIsCredit?.(true);
+            }}
+            className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-all ${isCredit ? 'bg-[#FF9808] text-white' : 'bg-gray-100 text-gray-500'}`}
+          >
+            CREDITO (${creditAvailable.toFixed(0)} disp.)
+          </button>
+        </div>
+      )}
 
       {/* Compact Form Fields - 2 column grid */}
       <div className="space-y-2">

@@ -7,13 +7,14 @@ import {
   X,
   Pencil,
   Trash2,
+  DollarSign,
   Phone,
   User,
   Save,
   MessageSquare,
 } from 'lucide-react';
 import type { Contact } from '@/lib/storage';
-import { getContacts, addContact } from '@/lib/storage';
+import { getContacts, addContact, addAbono } from '@/lib/storage';
 
 const STORAGE_KEY = 'fsb_contacts';
 
@@ -21,10 +22,10 @@ function getStoredContacts(): Contact[] {
   const existing = getContacts();
   if (existing.length === 0) {
     const seeded: Contact[] = [
-      { id: 'c-1', name: 'Juan Perez', phone: '809-555-0101', category: 'Jugador', createdAt: Date.now() },
-      { id: 'c-2', name: 'Maria Garcia', phone: '809-555-0102', category: 'Jugador', createdAt: Date.now() },
-      { id: 'c-3', name: 'Pedro Rodriguez', phone: '809-555-0103', category: 'Cobrador', createdAt: Date.now() },
-      { id: 'c-4', name: 'Ana Martinez', phone: '809-555-0104', category: 'Administrador', createdAt: Date.now() },
+      { id: 'c-1', name: 'Juan Perez', phone: '809-555-0101', category: 'Jugador', createdAt: Date.now(), creditLimit: 5000, creditUsed: 1200, isActive: true },
+      { id: 'c-2', name: 'Maria Garcia', phone: '809-555-0102', category: 'Jugador', createdAt: Date.now(), creditLimit: 3000, creditUsed: 0, isActive: true },
+      { id: 'c-3', name: 'Pedro Rodriguez', phone: '809-555-0103', category: 'Cobrador', createdAt: Date.now(), creditLimit: 0, creditUsed: 0, isActive: true },
+      { id: 'c-4', name: 'Ana Martinez', phone: '809-555-0104', category: 'Administrador', createdAt: Date.now(), creditLimit: 0, creditUsed: 0, isActive: true },
     ];
     localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
     return seeded;
@@ -101,6 +102,9 @@ export default function Directorio() {
         phone,
         category: 'Jugador',
         notes: '',
+        creditLimit: 0,
+        creditUsed: 0,
+        isActive: true,
       });
       const updated = [...contacts, newContact];
       setContacts(updated);
@@ -125,6 +129,16 @@ export default function Directorio() {
     const updated = contacts.filter((c) => c.id !== id);
     setContacts(updated);
     saveContacts(updated);
+  };
+
+  const handleAbono = (contact: Contact) => {
+    const amount = parseFloat(prompt(`Registrar abono para ${contact.name}\nCredito usado: $${contact.creditUsed.toFixed(2)}\nLimite: $${contact.creditLimit.toFixed(2)}\n\nMonto del abono:`, '0') || '0');
+    if (amount > 0) {
+      addAbono(contact.id, amount);
+      // Refresh contacts
+      setContacts(getContacts());
+      alert(`Abono de $${amount.toFixed(2)} registrado para ${contact.name}`);
+    }
   };
 
   const formatPhoneInput = (value: string) => {
@@ -362,11 +376,34 @@ export default function Directorio() {
                             {contact.phone}
                           </span>
                         </div>
+                        {contact.creditLimit > 0 && (
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{
+                              background: (contact.creditLimit - contact.creditUsed) < contact.creditLimit * 0.2
+                                ? 'rgba(229,57,53,0.1)' : (contact.creditLimit - contact.creditUsed) < contact.creditLimit * 0.5
+                                ? 'rgba(255,152,0,0.1)' : 'rgba(0,200,83,0.1)',
+                              color: (contact.creditLimit - contact.creditUsed) < contact.creditLimit * 0.2
+                                ? '#E53935' : (contact.creditLimit - contact.creditUsed) < contact.creditLimit * 0.5
+                                ? '#FF9800' : '#00C853',
+                            }}>
+                              Cred: ${(contact.creditLimit - contact.creditUsed).toFixed(0)} / ${contact.creditLimit.toFixed(0)}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     {/* Actions */}
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                      {contact.creditLimit > 0 && (
+                        <button
+                          onClick={() => handleAbono(contact)}
+                          className="w-8 h-8 flex items-center justify-center rounded-md bg-[rgba(0,200,83,0.08)] hover:bg-[rgba(0,200,83,0.15)] text-text-secondary hover:text-[#00C853] transition-colors"
+                          title="Registrar abono"
+                        >
+                          <DollarSign size={14} />
+                        </button>
+                      )}
                       <button
                         onClick={() => handleEdit(contact)}
                         className="w-8 h-8 flex items-center justify-center rounded-md bg-[rgba(148,163,184,0.06)] hover:bg-[rgba(148,163,184,0.12)] text-text-secondary hover:text-text-primary transition-colors"

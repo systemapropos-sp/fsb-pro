@@ -25,6 +25,7 @@ import {
   addTransaction,
   formatDate,
   getTicketById,
+  useCustomerCredit,
   type Play,
   type BettingLine,
   type Ticket,
@@ -59,6 +60,9 @@ export default function Dashboard() {
   const [processingTicket, setProcessingTicket] = useState(false);
   const [successTicket, setSuccessTicket] = useState<string | null>(null);
   const [createdTicket, setCreatedTicket] = useState<Ticket | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [selectedCustomerName, setSelectedCustomerName] = useState<string | null>(null);
+  const [isCredit, setIsCredit] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const linesScrollRef = useRef<HTMLDivElement>(null);
 
@@ -262,6 +266,9 @@ export default function Dashboard() {
     setCantidad('');
     setSuccessTicket(null);
     setCreatedTicket(null);
+    setSelectedCustomerId(null);
+    setSelectedCustomerName(null);
+    setIsCredit(false);
   };
 
   const handleProcessTicket = () => {
@@ -277,7 +284,15 @@ export default function Dashboard() {
         payout: pago,
         profit: ganancia,
         status: 'pendiente',
+        customerId: selectedCustomerId || undefined,
+        customerName: selectedCustomerName || undefined,
+        paymentType: isCredit ? 'credit' : 'cash',
       });
+
+      // If credit ticket, charge customer's credit
+      if (isCredit && selectedCustomerId) {
+        useCustomerCredit(selectedCustomerId, cantidadNum);
+      }
 
       addTransaction({
         ticketId: ticket.id,
@@ -285,7 +300,7 @@ export default function Dashboard() {
         amount: cantidadNum,
         date: formatDate(new Date()),
         seller: 'mmw03',
-        description: `Venta de ticket ${ticket.id} (${selectedPlays.length} jugadas)`,
+        description: `${isCredit ? 'Credito' : 'Cash'} - ${selectedCustomerName || 'Venta'} - Ticket ${ticket.id} (${selectedPlays.length} jugadas)`,
       });
 
       setSuccessTicket(ticket.id);
@@ -625,6 +640,13 @@ export default function Dashboard() {
     onCalc: () => setShowCalc(true),
     onAddPlayFromForm: handleAddPlayFromForm,
     createdTicket,
+    onCustomerChange: (id: string | null, name: string | null) => {
+      setSelectedCustomerId(id);
+      setSelectedCustomerName(name);
+    },
+    selectedCustomerId,
+    isCredit,
+    setIsCredit,
   };
 
   // --- Render ---

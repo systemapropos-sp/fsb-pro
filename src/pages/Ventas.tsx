@@ -17,6 +17,7 @@ import {
   getTransactions,
   formatAmount,
   formatDate,
+  getCreditSummary,
 } from '@/lib/storage';
 import type { Transaction, Ticket as TicketType } from '@/lib/storage';
 import TicketReceipt from '@/components/TicketReceipt';
@@ -131,6 +132,7 @@ export default function Ventas() {
   const [searchWinners, setSearchWinners] = useState('');
   const [viewingTicket, setViewingTicket] = useState<TicketType | null>(null);
   const [detailTx, setDetailTx] = useState<Transaction & { balance: number } | null>(null);
+  const creditSummary = getCreditSummary();
 
   useEffect(() => {
     const load = () => {
@@ -427,6 +429,26 @@ export default function Ventas() {
         <div className="text-right">
           <p className="text-xs text-text-tertiary uppercase tracking-wider">Monto Pendiente</p>
           <p className="text-2xl md:text-3xl font-bold font-mono text-accent-amber">{formatAmount(dailyStats.neto)}</p>
+        </div>
+      </motion.div>
+
+      {/* ====== Cash vs Credit Summary ====== */}
+      <motion.div variants={itemAnim} className="grid grid-cols-2 gap-3">
+        <div className="gradient-card rounded-lg border border-border-subtle p-4 relative overflow-hidden">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-2 h-2 rounded-full bg-[#00C853]" />
+            <p className="text-xs text-text-tertiary uppercase tracking-wider">Cash</p>
+          </div>
+          <p className="text-xl font-bold font-mono text-text-primary">{formatAmount(creditSummary.cashTotal)}</p>
+          <p className="text-[10px] text-text-tertiary mt-1">Tickets pagados al contado</p>
+        </div>
+        <div className="gradient-card rounded-lg border border-border-subtle p-4 relative overflow-hidden">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-2 h-2 rounded-full bg-[#FF9808]" />
+            <p className="text-xs text-text-tertiary uppercase tracking-wider">Credito</p>
+          </div>
+          <p className="text-xl font-bold font-mono text-text-primary">{formatAmount(creditSummary.creditTotal)}</p>
+          <p className="text-[10px] text-text-tertiary mt-1">Usado: {formatAmount(creditSummary.creditUsed)} / Disp: {formatAmount(creditSummary.creditAvailable)}</p>
         </div>
       </motion.div>
 
