@@ -76,8 +76,9 @@ function PinInput({
     if (index < 3) {
       inputsRef.current[index + 1]?.focus();
     } else {
+      // Auto-submit when 4th digit is entered — immediate
       inputsRef.current[index]?.blur();
-      setTimeout(() => onSubmit(), 200);
+      onSubmit();
     }
   };
 
@@ -106,7 +107,7 @@ function PinInput({
       const newPin = pasted.split('');
       onPinChange(newPin);
       inputsRef.current[3]?.focus();
-      setTimeout(() => onSubmit(), 300);
+      onSubmit();
     }
   };
 

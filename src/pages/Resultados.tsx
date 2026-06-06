@@ -4,7 +4,7 @@ import {
   Printer, RefreshCw, Wifi,
   WifiOff, Clock, Trophy,
 } from 'lucide-react';
-import { useLiveScores, type GameResult } from '@/lib/sportsApi';
+import { useLiveScores, getSavedApiKey, type GameResult } from '@/lib/sportsApi';
 
 const SPORTS = [
   { key: 'all', label: 'Todos' },
@@ -96,12 +96,14 @@ export default function Resultados() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const { games, loading, error, lastUpdated, refresh } = useLiveScores(selectedSport, 60);
 
+  // Filter by selected date first, then by sport
+  const dateFilteredGames = games.filter(g => g.date === selectedDate);
   const filteredGames = selectedSport === 'all'
-    ? games
-    : games.filter(g => g.sport === selectedSport);
+    ? dateFilteredGames
+    : dateFilteredGames.filter(g => g.sport === selectedSport);
 
   return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto" style={{ background: '#D5D8DC', minHeight: '100%' }}>
+    <div className="p-4 md:p-6 max-w-7xl mx-auto" style={{ background: '#F0F2F5', minHeight: '100%' }}>
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
         <div>
@@ -129,6 +131,7 @@ export default function Resultados() {
             <RefreshCw size={14} /> Actualizar
           </button>
           <button
+            onClick={() => window.print()}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold border transition-all active:scale-95"
             style={{ background: '#FFFFFF', borderColor: '#E0E0E0', color: '#191919' }}
           >
@@ -190,5 +193,4 @@ export default function Resultados() {
   );
 }
 
-// Helper
-import { getSavedApiKey } from '@/lib/sportsApi';
+
