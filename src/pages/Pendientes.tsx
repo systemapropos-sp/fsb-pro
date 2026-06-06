@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import type { Ticket } from '@/lib/storage';
 import { updateTicketStatus, formatAmount } from '@/lib/storage';
 import { motion, AnimatePresence } from 'framer-motion';
+import TicketReceipt from '@/components/TicketReceipt';
 import {
   CreditCard,
   Pencil,
@@ -464,6 +465,11 @@ export default function Pendientes() {
                           </span>
                         </td>
                         <td className="px-3 py-2.5">
+                          {payingId === ticket.id && (
+                            <div className="my-3 rounded-lg border border-dashed overflow-hidden" style={{ borderColor: 'rgba(255,193,7,0.3)', background: '#FFFFFF' }}>
+                              <TicketReceipt ticket={ticket} copyLabel="*** COPIA ***" />
+                            </div>
+                          )}
                           <div className="flex items-center justify-center gap-1">
                             <button
                               onClick={() => handlePay(ticket.id, ticket.payout)}
@@ -548,6 +554,13 @@ export default function Pendientes() {
                           <p className="text-lg font-mono font-bold text-accent-amber">{formatAmount(ticket.payout)}</p>
                         </div>
                       </div>
+
+                      {/* Ticket Receipt */}
+                      {payingId === ticket.id && (
+                        <div className="my-3 rounded-lg border border-dashed overflow-hidden" style={{ borderColor: 'rgba(255,193,7,0.3)', background: '#FFFFFF' }}>
+                          <TicketReceipt ticket={ticket} copyLabel="*** COPIA ***" />
+                        </div>
+                      )}
 
                       {/* Pay Button */}
                       <button

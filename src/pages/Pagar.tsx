@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Ticket } from '@/lib/storage';
 import { getTicketById, updateTicketStatus, formatAmount } from '@/lib/storage';
 import { motion, AnimatePresence } from 'framer-motion';
+import TicketReceipt from '@/components/TicketReceipt';
 import {
   Search,
   CreditCard,
@@ -10,9 +11,6 @@ import {
   AlertCircle,
   Info,
   X,
-  Calendar,
-  DollarSign,
-  Trophy,
 } from 'lucide-react';
 
 // ── Confetti particle type ─────────────────────────────────
@@ -389,41 +387,12 @@ export default function Pagar() {
               {/* Divider */}
               <div className="border-t border-border-subtle" />
 
-              {/* Ticket Number */}
-              <div className="text-center">
-                <p className="text-xs text-text-tertiary uppercase tracking-wider mb-1">Ticket</p>
-                <p className="font-mono text-xl md:text-2xl text-accent-blue font-bold">{ticket.id}</p>
-              </div>
+              <TicketReceipt ticket={ticket} copyLabel="*** ORIGINAL ***" />
 
-              {/* Info Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="bg-bg-primary/50 rounded-md p-3 border border-border-subtle">
-                  <div className="flex items-center gap-1.5 text-text-tertiary text-xs mb-1">
-                    <Calendar size={12} />
-                    Fecha
-                  </div>
-                  <p className="text-sm text-text-primary font-medium">
-                    {fmtDate(ticket.createdAt)}
-                  </p>
-                </div>
-                <div className="bg-bg-primary/50 rounded-md p-3 border border-border-subtle">
-                  <div className="flex items-center gap-1.5 text-text-tertiary text-xs mb-1">
-                    <DollarSign size={12} />
-                    Monto
-                  </div>
-                  <p className="font-mono text-mono text-text-primary font-semibold">
-                    {formatAmount(ticket.amount)}
-                  </p>
-                </div>
-                <div className="col-span-2 bg-bg-primary/50 rounded-md p-4 border border-border-subtle text-center">
-                  <div className="flex items-center justify-center gap-1.5 text-text-tertiary text-xs mb-1">
-                    <Trophy size={14} />
-                    Premio / A pagar
-                  </div>
-                  <p className="font-mono text-mono-lg text-accent-green font-bold">
-                    {formatAmount(ticket.payout)}
-                  </p>
-                </div>
+              {/* Share buttons */}
+              <div className="flex gap-2 mt-3">
+                <button onClick={() => { const el = document.querySelector('.ticket-receipt'); if (el) { navigator.clipboard?.writeText(el.textContent || '').then(() => alert('Ticket copiado')); } }} className="flex-1 py-2 rounded-md text-xs font-bold" style={{ background: 'rgba(0,176,255,0.1)', color: '#0288D1', border: '1px solid rgba(0,176,255,0.2)' }}>Copiar Texto</button>
+                <button onClick={() => { const el = document.querySelector('.ticket-receipt'); if (el) { window.open(`https://wa.me/?text=${encodeURIComponent(el.textContent || '')}`, '_blank'); } }} className="flex-1 py-2 rounded-md text-xs font-bold" style={{ background: 'rgba(37,211,102,0.1)', color: '#128C7E', border: '1px solid rgba(37,211,102,0.2)' }}>WhatsApp</button>
               </div>
 
               {/* Plays list */}

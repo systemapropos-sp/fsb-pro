@@ -6,6 +6,7 @@ import {
   formatAmount,
 } from '@/lib/storage';
 import { motion, AnimatePresence } from 'framer-motion';
+import TicketReceipt from '@/components/TicketReceipt';
 import {
   Search,
   Calendar,
@@ -102,6 +103,7 @@ export default function Tickets() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [refreshSpin, setRefreshSpin] = useState(false);
+  const [viewingTicket, setViewingTicket] = useState<Ticket | null>(null);
 
   // Load data on mount + listen for ticket creation events + focus refresh
   useEffect(() => {
@@ -493,6 +495,7 @@ export default function Tickets() {
                         <div className="flex items-center justify-center gap-1">
                           <button
                             title="Ver ticket"
+                            onClick={() => setViewingTicket(ticket)}
                             className="p-1.5 rounded-md bg-white/[0.04] text-accent-blue hover:bg-white/[0.1] transition-colors"
                           >
                             <Eye size={14} />
@@ -603,7 +606,7 @@ export default function Tickets() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2">
-                      <button className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] px-3 py-2 rounded-md bg-accent-blue/10 text-accent-blue text-xs font-semibold border border-accent-blue/25">
+                      <button onClick={() => setViewingTicket(ticket)} className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] px-3 py-2 rounded-md bg-accent-blue/10 text-accent-blue text-xs font-semibold border border-accent-blue/25">
                         <Eye size={14} /> Ver
                       </button>
                       <button className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] px-3 py-2 rounded-md bg-accent-purple/10 text-accent-purple text-xs font-semibold border border-accent-purple/25">
@@ -690,6 +693,36 @@ export default function Tickets() {
           </div>
         )}
       </motion.div>
+
+      {/* Ticket Detail Modal */}
+      <AnimatePresence>
+        {viewingTicket && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.7)' }}
+            onClick={() => setViewingTicket(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative max-w-[400px] w-full max-h-[90vh] overflow-y-auto rounded-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center p-3 rounded-t-xl" style={{ background: '#FFFFFF' }}>
+                <span className="text-sm font-bold text-black">Ticket {viewingTicket.id}</span>
+                <button onClick={() => setViewingTicket(null)} className="p-1 rounded hover:bg-gray-100">
+                  <X size={16} className="text-gray-500" />
+                </button>
+              </div>
+              <TicketReceipt ticket={viewingTicket} copyLabel="*** COPIA ***" />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
