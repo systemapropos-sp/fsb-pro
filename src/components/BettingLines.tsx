@@ -43,8 +43,8 @@ const GameCard = memo(function GameCard({
     <div
       className="rounded-lg overflow-hidden transition-all duration-150 shadow-sm hover:shadow-md hover:-translate-y-px"
       style={{
-        background: flash ? '#E3F2FD' : '#F5F5F5',
-        border: flash ? '1px solid #00B0FF' : '1px solid #D0D0D0',
+        background: flash ? '#E3F2FD' : '#E8E8E8',
+        border: flash ? '1px solid #00B0FF' : '1px solid #CCCCCC',
       }}
     >
       {/* Cyan Header */}
