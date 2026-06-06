@@ -24,8 +24,10 @@ import {
   createTicket,
   addTransaction,
   formatDate,
+  getTicketById,
   type Play,
   type BettingLine,
+  type Ticket,
 } from '@/lib/storage';
 import confetti from 'canvas-confetti';
 import { toast } from 'react-hot-toast';
@@ -56,6 +58,7 @@ export default function Dashboard() {
   const [showCalc, setShowCalc] = useState(false);
   const [processingTicket, setProcessingTicket] = useState(false);
   const [successTicket, setSuccessTicket] = useState<string | null>(null);
+  const [createdTicket, setCreatedTicket] = useState<Ticket | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const linesScrollRef = useRef<HTMLDivElement>(null);
 
@@ -257,6 +260,8 @@ export default function Dashboard() {
     setSelectedPlays([]);
     setShowConfirmClear(false);
     setCantidad('');
+    setSuccessTicket(null);
+    setCreatedTicket(null);
   };
 
   const handleProcessTicket = () => {
@@ -286,6 +291,10 @@ export default function Dashboard() {
       setSuccessTicket(ticket.id);
       setProcessingTicket(false);
 
+      // Fetch the full ticket object for the receipt view
+      const fullTicket = getTicketById(ticket.id);
+      if (fullTicket) setCreatedTicket(fullTicket);
+
       // Notify other pages (Tickets, Pendientes) that a new ticket was created
       window.dispatchEvent(new CustomEvent('fsb:ticketCreated'));
 
@@ -299,8 +308,7 @@ export default function Dashboard() {
 
       setTimeout(() => {
         handleClearAll();
-        setSuccessTicket(null);
-      }, 3000);
+      }, 5000);
     }, 600);
   };
 
@@ -616,6 +624,7 @@ export default function Dashboard() {
     onClearAll: handleClearAll,
     onCalc: () => setShowCalc(true),
     onAddPlayFromForm: handleAddPlayFromForm,
+    createdTicket,
   };
 
   // --- Render ---

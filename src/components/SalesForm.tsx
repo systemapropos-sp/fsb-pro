@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import { formatAmount, formatDate, formatTime } from '@/lib/storage';
 import { findTeamByCode, findPlayCode, isValidPlayCode, PLAY_CODES } from '@/lib/playCodes';
+import TicketReceipt from './TicketReceipt';
+import type { Ticket } from '@/lib/storage';
 
 interface SalesFormProps {
   currentTime: Date;
@@ -29,6 +31,7 @@ interface SalesFormProps {
   onClearAll: () => void;
   onCalc: () => void;
   onAddPlayFromForm?: (teamCode: string, playCode: string) => void;
+  createdTicket?: Ticket | null;
 }
 
 function CheckIcon() {
@@ -62,6 +65,7 @@ export default function SalesForm({
   onClearAll,
   onCalc,
   onAddPlayFromForm,
+  createdTicket,
 }: SalesFormProps) {
   const equipoInputRef = useRef<HTMLInputElement>(null);
   const jugadaInputRef = useRef<HTMLInputElement>(null);
@@ -405,6 +409,52 @@ export default function SalesForm({
           'PROCESAR TICKET'
         )}
       </button>
+
+      {/* Ticket Receipt — shows after ticket creation */}
+      <AnimatePresence>
+        {createdTicket && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
+            className="overflow-hidden"
+          >
+            <div className="mt-3 rounded-lg border-2 border-dashed overflow-hidden" style={{ borderColor: '#E0E0E0', background: '#FFFFFF' }}>
+              <TicketReceipt ticket={createdTicket} copyLabel="*** COPIA ***" />
+            </div>
+            {/* Share actions */}
+            <div className="flex gap-2 mt-2">
+              <button
+                onClick={() => {
+                  const el = document.querySelector('.ticket-receipt');
+                  if (el) {
+                    const text = el.textContent || '';
+                    navigator.clipboard?.writeText(text).then(() => alert('Ticket copiado al portapapeles'));
+                  }
+                }}
+                className="flex-1 py-2 rounded-md text-xs font-bold transition-colors"
+                style={{ background: 'rgba(0,176,255,0.1)', color: '#0288D1', border: '1px solid rgba(0,176,255,0.2)' }}
+              >
+                Copiar Texto
+              </button>
+              <button
+                onClick={() => {
+                  const el = document.querySelector('.ticket-receipt');
+                  if (el) {
+                    const text = encodeURIComponent(el.textContent || '');
+                    window.open(`https://wa.me/?text=${text}`, '_blank');
+                  }
+                }}
+                className="flex-1 py-2 rounded-md text-xs font-bold transition-colors"
+                style={{ background: 'rgba(37,211,102,0.1)', color: '#128C7E', border: '1px solid rgba(37,211,102,0.2)' }}
+              >
+                WhatsApp
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
