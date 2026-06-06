@@ -14,7 +14,7 @@ function PinInput({
 }: {
   pin: string[];
   onPinChange: (newPin: string[]) => void;
-  onSubmit: () => void;
+  onSubmit: (submittedPin: string[]) => void;
   error: boolean;
   success: boolean;
 }) {
@@ -76,9 +76,9 @@ function PinInput({
     if (index < 3) {
       inputsRef.current[index + 1]?.focus();
     } else {
-      // Auto-submit when 4th digit is entered — immediate
+      // Auto-submit when 4th digit is entered — pass PIN directly to avoid async state issue
       inputsRef.current[index]?.blur();
-      onSubmit();
+      onSubmit(newPin);
     }
   };
 
@@ -96,7 +96,7 @@ function PinInput({
       }
     }
     if (e.key === 'Enter' && pin.every((d) => d)) {
-      onSubmit();
+      onSubmit(pin);
     }
   };
 
@@ -107,7 +107,7 @@ function PinInput({
       const newPin = pasted.split('');
       onPinChange(newPin);
       inputsRef.current[3]?.focus();
-      onSubmit();
+      onSubmit(newPin);
     }
   };
 
@@ -253,12 +253,13 @@ export default function Login() {
     }
   }, [error]);
 
-  const handlePinSubmit = () => {
-    if (pin.some((d) => !d)) return;
+  const handlePinSubmit = (submittedPin?: string[]) => {
+    const pinToCheck = submittedPin || pin;
+    if (pinToCheck.some((d) => !d)) return;
     if (checkRateLimit()) return;
 
     setLoading(true);
-    const pinStr = pin.join('');
+    const pinStr = pinToCheck.join('');
 
     setTimeout(() => {
       const ok = loginWithPin(pinStr);
@@ -505,7 +506,7 @@ export default function Login() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            onClick={usePassword ? handlePasswordSubmit : handlePinSubmit}
+            onClick={usePassword ? handlePasswordSubmit : () => handlePinSubmit()}
             disabled={loading || success}
             className={`w-full h-12 rounded-md font-semibold text-sm tracking-[0.1em] transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm ${
               success
