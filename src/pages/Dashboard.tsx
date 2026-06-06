@@ -569,7 +569,7 @@ export default function Dashboard() {
       </div>
 
       {/* Game Cards */}
-      <div ref={linesScrollRef} className="flex-1 overflow-y-auto min-h-0 py-2">
+      <div ref={linesScrollRef} className="flex-1 overflow-y-auto min-h-0 py-2" style={{ overscrollBehavior: 'contain' }}>
         {lines.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 md:h-64 text-center px-8">
             <CalendarIcon size={48} className="text-text-muted/30 mb-3" />
@@ -680,14 +680,9 @@ export default function Dashboard() {
           </motion.div>
 
           {/* Right Panel */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.3 }}
-            className="gradient-panel overflow-hidden"
-          >
+          <div className="gradient-panel overflow-hidden h-full">
             <BettingLines />
-          </motion.div>
+          </div>
         </div>
 
         {/* Tablet Layout: 2 columns */}
@@ -715,14 +710,9 @@ export default function Dashboard() {
           </div>
 
           {/* Right Panel (Lines) */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-            className="gradient-panel overflow-hidden"
-          >
+          <div className="gradient-panel overflow-hidden h-full">
             <BettingLines />
-          </motion.div>
+          </div>
         </div>
 
         {/* Mobile Layout: Tab-based single column */}
@@ -793,11 +783,10 @@ function GameCard({
 
   return (
     <motion.div
-      whileHover={{ y: -1 }}
-      className="rounded-lg overflow-hidden transition-all duration-150 shadow-md hover:shadow-lg"
+      className="rounded-lg overflow-hidden transition-all duration-150 shadow-md hover:shadow-lg hover:-translate-y-px"
       style={{
-        background: flash ? '#37474F' : '#2D2D2D',
-        border: flash ? '1px solid #00B0FF' : '1px solid #3A3A3A',
+        background: flash ? '#37474F' : '#424242',
+        border: flash ? '1px solid #00B0FF' : '1px solid #505050',
       }}
     >
       {/* Cyan Header */}
