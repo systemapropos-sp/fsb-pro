@@ -115,6 +115,30 @@ export default function SalesForm({
   useEffect(() => { setInternalEquipo(equipo); }, [equipo]);
   useEffect(() => { setInternalJugada(jugada); }, [jugada]);
 
+  // Keyboard: Enter to process/jump, Escape to clear
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClearAll();
+        return;
+      }
+      if (e.key === 'Enter') {
+        const active = document.activeElement;
+        if (active === equipoInputRef.current && internalEquipo.length === 4) {
+          jugadaInputRef.current?.focus();
+        } else if (active === jugadaInputRef.current && foundPlay) {
+          // Enter on jugada with valid play → focus cantidad
+          const cantidadInput = document.querySelector('input[placeholder="50.00"]') as HTMLInputElement;
+          cantidadInput?.focus();
+        } else if (active?.getAttribute('placeholder') === '50.00' && selectedPlaysCount > 0 && parseFloat((active as HTMLInputElement).value) > 0) {
+          onProcessTicket();
+        }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [internalEquipo, foundPlay, selectedPlaysCount, onClearAll, onProcessTicket]);
+
   const handleEquipoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Only digits, max 4 characters
     const val = e.target.value.replace(/\D/g, '').slice(0, 4);

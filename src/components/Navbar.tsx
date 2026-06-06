@@ -73,10 +73,10 @@ function NavItem({
       }}
       onMouseEnter={(e) => {
         if (!active) {
-          e.currentTarget.style.color = '#FFFFFF';
-          e.currentTarget.style.background = '#FF3008';
-          e.currentTarget.style.boxShadow = '0 4px 12px rgba(248,125,46,0.4)';
-          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.color = '#FF3008';
+          e.currentTarget.style.background = 'rgba(255,48,8,0.08)';
+          e.currentTarget.style.boxShadow = 'none';
+          e.currentTarget.style.transform = 'translateY(-1px)';
         }
       }}
       onMouseLeave={(e) => {
@@ -84,7 +84,7 @@ function NavItem({
           e.currentTarget.style.color = '#444444';
           e.currentTarget.style.background = 'rgba(255,255,255,0.25)';
           e.currentTarget.style.boxShadow = 'none';
-          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.transform = 'translateY(0)';;
         }
       }}
     >

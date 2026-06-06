@@ -119,6 +119,27 @@ export default function Directorio() {
     setContacts(getStoredContacts());
   }, []);
 
+  /* -- keyboard: Enter to apply, Escape to close -- */
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setEditModalOpen(false);
+        setDeleteModalOpen(false);
+        setAbonoModalOpen(false);
+        setSmsModalOpen(false);
+        return;
+      }
+      if (e.key === 'Enter') {
+        if (editModalOpen) { handleEditSave(); return; }
+        if (deleteModalOpen && deletePin.every((d) => d)) { confirmDelete(); return; }
+        if (abonoModalOpen) { handleAbonoSave(); return; }
+        if (smsModalOpen) { handleSmsSend(); return; }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [editModalOpen, deleteModalOpen, abonoModalOpen, smsModalOpen, deletePin, editName, editPhone, editCreditLimit, abonoAmount, smsMessage]);
+
   const filteredContacts = contacts.filter((c) => {
     const q = search.toLowerCase().trim();
     if (!q) return true;
