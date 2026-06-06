@@ -20,6 +20,7 @@ import {
   ChevronRight,
   TicketIcon,
   SearchX,
+  Check,
 } from 'lucide-react';
 
 // ── Status config ──────────────────────────────────────────
@@ -40,6 +41,8 @@ const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
   { key: 'pendiente', label: 'Pendientes' },
   { key: 'cancelado', label: 'Cancelados' },
 ];
+
+const EDITABLE_STATUSES: Ticket['status'][] = ['pendiente', 'ganador', 'perdedor', 'cancelado', 'pagado'];
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
@@ -104,6 +107,8 @@ export default function Tickets() {
   const [pageSize, setPageSize] = useState(10);
   const [refreshSpin, setRefreshSpin] = useState(false);
   const [viewingTicket, setViewingTicket] = useState<Ticket | null>(null);
+  const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
+  const [editStatus, setEditStatus] = useState<Ticket['status']>('pendiente');
 
   // Load data on mount + listen for ticket creation events + focus refresh
   useEffect(() => {
@@ -212,6 +217,28 @@ export default function Tickets() {
     []
   );
 
+  const handleOpenEdit = useCallback((ticket: Ticket) => {
+    setEditingTicket(ticket);
+    setEditStatus(ticket.status);
+  }, []);
+
+  const handleSaveEdit = useCallback(() => {
+    if (!editingTicket) return;
+    const id = editingTicket.id;
+    const updated = updateTicketStatus(id, editStatus);
+    if (updated) {
+      setAllTickets((prev) =>
+        prev.map((t) =>
+          t.id === id
+            ? { ...t, status: editStatus, ...(editStatus === 'pagado' ? { paidAt: Date.now() } : {}) }
+            : t
+        )
+      );
+      window.dispatchEvent(new CustomEvent('fsb:ticketCreated'));
+    }
+    setEditingTicket(null);
+  }, [editingTicket, editStatus]);
+
   const handlePageChange = useCallback(
     (page: number) => {
       if (page >= 1 && page <= totalPages) setCurrentPage(page);
@@ -259,10 +286,16 @@ export default function Tickets() {
               className="input-standard pl-9 pr-3 h-12 md:h-10 text-sm cursor-pointer w-full sm:w-auto"
             />
           </div>
-          <button className="gradient-accent text-white text-sm font-semibold px-5 min-h-[44px] rounded-md hover:brightness-110 transition-all active:scale-[0.98] w-full sm:w-auto">
+          <button
+            onClick={() => alert(`Buscando tickets del ${dateFilter || 'todos los dias'}...`)}
+            className="gradient-accent text-white text-sm font-semibold px-5 min-h-[44px] rounded-md hover:brightness-110 transition-all active:scale-[0.98] w-full sm:w-auto"
+          >
             Buscar tickets
           </button>
-          <button className="flex items-center gap-2 px-4 min-h-[44px] rounded-md text-sm font-semibold border border-border-default text-text-secondary hover:bg-white/5 transition-all">
+          <button
+            onClick={handlePrint}
+            className="flex items-center gap-2 px-4 min-h-[44px] rounded-md text-sm font-semibold border border-border-default text-text-secondary hover:bg-white/5 transition-all"
+          >
             <Download size={15} />
             Imprimir pendientes de pago
           </button>
@@ -502,6 +535,7 @@ export default function Tickets() {
                           </button>
                           <button
                             title="Editar ticket"
+                            onClick={() => handleOpenEdit(ticket)}
                             className="p-1.5 rounded-md bg-white/[0.04] text-text-secondary hover:bg-white/[0.1] hover:text-text-primary transition-colors"
                           >
                             <Pencil size={14} />
@@ -609,7 +643,7 @@ export default function Tickets() {
                       <button onClick={() => setViewingTicket(ticket)} className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] px-3 py-2 rounded-md bg-accent-blue/10 text-accent-blue text-xs font-semibold border border-accent-blue/25">
                         <Eye size={14} /> Ver
                       </button>
-                      <button className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] px-3 py-2 rounded-md bg-accent-purple/10 text-accent-purple text-xs font-semibold border border-accent-purple/25">
+                      <button onClick={() => handleOpenEdit(ticket)} className="flex-1 flex items-center justify-center gap-1.5 min-h-[44px] px-3 py-2 rounded-md bg-accent-purple/10 text-accent-purple text-xs font-semibold border border-accent-purple/25">
                         <Pencil size={14} /> Editar
                       </button>
                       {(ticket.status === 'ganador' || ticket.status === 'pendiente') && (
@@ -723,6 +757,100 @@ export default function Tickets() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Ticket Edit Status Modal */}
+      <AnimatePresence>
+        {editingTicket && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.7)' }}
+            onClick={() => setEditingTicket(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative bg-bg-primary border border-border-subtle rounded-xl p-6 max-w-sm w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-lg font-semibold text-text-primary">Editar Ticket</h3>
+                <button onClick={() => setEditingTicket(null)} className="p-1.5 rounded-md hover:bg-white/5 transition-colors">
+                  <X size={18} className="text-text-muted" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Ticket info */}
+                <div className="bg-bg-secondary/50 rounded-lg p-3 border border-border-subtle">
+                  <p className="text-xs text-text-tertiary uppercase tracking-wider mb-1">Numero de ticket</p>
+                  <p className="text-sm font-mono text-accent-blue font-semibold">{editingTicket.id}</p>
+                  <div className="flex items-center gap-4 mt-2">
+                    <div>
+                      <span className="text-xs text-text-tertiary">Monto: </span>
+                      <span className="text-xs font-mono text-text-primary">{formatAmount(editingTicket.amount)}</span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-text-tertiary">Vendedor: </span>
+                      <span className="text-xs text-text-secondary">{editingTicket.seller}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status selector */}
+                <div>
+                  <label className="block text-sm text-text-secondary mb-2 font-medium">Cambiar estado</label>
+                  <div className="grid grid-cols-1 gap-1.5">
+                    {EDITABLE_STATUSES.map((status) => {
+                      const isSelected = editStatus === status;
+                      return (
+                        <button
+                          key={status}
+                          onClick={() => setEditStatus(status)}
+                          className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all border ${
+                            isSelected
+                              ? 'border-accent-blue bg-accent-blue/10 text-accent-blue'
+                              : 'border-border-subtle bg-bg-secondary/30 text-text-secondary hover:bg-white/5 hover:text-text-primary'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <StatusBadge status={status} />
+                          </div>
+                          {isSelected && <Check size={16} className="text-accent-blue" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex items-center gap-2 pt-2">
+                  <button
+                    onClick={() => setEditingTicket(null)}
+                    className="flex-1 min-h-[44px] px-4 py-2 rounded-md text-sm font-semibold border border-border-default text-text-secondary hover:bg-white/5 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleSaveEdit}
+                    className="flex-1 min-h-[44px] px-4 py-2 rounded-md text-sm font-semibold bg-accent-blue text-white hover:brightness-110 transition-all"
+                  >
+                    Guardar cambios
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
+}
+
+// ── Print handler ──────────────────────────────────────────
+function handlePrint() {
+  window.print();
 }

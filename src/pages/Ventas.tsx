@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar,
   Eye,
@@ -19,6 +19,7 @@ import {
   formatDate,
 } from '@/lib/storage';
 import type { Transaction, Ticket as TicketType } from '@/lib/storage';
+import TicketReceipt from '@/components/TicketReceipt';
 
 const containerAnim = {
   hidden: { opacity: 0 },
@@ -37,17 +38,43 @@ const itemAnim = {
   },
 };
 
-/* ---------- mock data helpers ---------- */
+/* ---------- date helpers ---------- */
 const today = new Date();
 const todayStr = formatDate(today);
 
+function parseFormattedDate(dateStr: string): Date {
+  const [day, month, year] = dateStr.split('/').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function getDateDaysAgo(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return formatDate(d);
+}
+
+const yesterdayStr = getDateDaysAgo(1);
+const threeDaysAgoStr = getDateDaysAgo(3);
+const fiveDaysAgoStr = getDateDaysAgo(5);
+const sixDaysAgoStr = getDateDaysAgo(6);
+const sevenDaysAgoStr = getDateDaysAgo(7);
+const tenDaysAgoStr = getDateDaysAgo(10);
+const twelveDaysAgoStr = getDateDaysAgo(12);
+const fifteenDaysAgoStr = getDateDaysAgo(15);
+const twentyDaysAgoStr = getDateDaysAgo(20);
+const twentyFiveDaysAgoStr = getDateDaysAgo(25);
+
+/* ---------- richer mock data ---------- */
 const MOCK_WINNERS: TicketType[] = [
   { id: 'MMW-003-482931', seller: 'mmw03', date: todayStr, plays: [], amount: 500, payout: 950, profit: 450, status: 'ganador', createdAt: Date.now() - 86400000 },
   { id: 'MMW-003-482945', seller: 'mmw03', date: todayStr, plays: [], amount: 1200, payout: 2280, profit: 1080, status: 'ganador', createdAt: Date.now() - 72000000 },
   { id: 'MMW-003-482967', seller: 'mmw03', date: todayStr, plays: [], amount: 300, payout: 570, profit: 270, status: 'pagado', createdAt: Date.now() - 36000000, paidAt: Date.now() - 18000000 },
+  { id: 'MMW-003-482978', seller: 'sportmmwmaster', date: yesterdayStr, plays: [], amount: 800, payout: 1520, profit: 720, status: 'ganador', createdAt: Date.now() - 172800000 },
+  { id: 'MMW-003-482989', seller: 'admin01', date: threeDaysAgoStr, plays: [], amount: 2000, payout: 3800, profit: 1800, status: 'pagado', createdAt: Date.now() - 259200000, paidAt: Date.now() - 250000000 },
 ];
 
 const MOCK_TX: Transaction[] = [
+  // Today
   { id: 'tx-1', ticketId: 'MMW-003-482931', type: 'venta', amount: 500, date: todayStr, seller: 'mmw03', description: 'Venta de ticket', createdAt: Date.now() - 90000000 },
   { id: 'tx-2', ticketId: 'MMW-003-482945', type: 'venta', amount: 1200, date: todayStr, seller: 'mmw03', description: 'Venta de ticket', createdAt: Date.now() - 85000000 },
   { id: 'tx-3', ticketId: '-', type: 'pago', amount: -950, date: todayStr, seller: 'mmw03', description: 'Pago a ganador', createdAt: Date.now() - 80000000 },
@@ -58,6 +85,40 @@ const MOCK_TX: Transaction[] = [
   { id: 'tx-8', ticketId: '-', type: 'pago', amount: -3200, date: todayStr, seller: 'mmw03', description: 'Recarga de cliente', createdAt: Date.now() - 30000000 },
   { id: 'tx-9', ticketId: 'MMW-003-483048', type: 'venta', amount: 1500, date: todayStr, seller: 'mmw03', description: 'Venta de ticket', createdAt: Date.now() - 20000000 },
   { id: 'tx-10', ticketId: 'MMW-003-483052', type: 'venta', amount: 2000, date: todayStr, seller: 'mmw03', description: 'Venta de ticket', createdAt: Date.now() - 10000000 },
+  // Yesterday
+  { id: 'tx-11', ticketId: 'MMW-003-483101', type: 'venta', amount: 3500, date: yesterdayStr, seller: 'sportmmwmaster', description: 'Venta de ticket', createdAt: Date.now() - 100000000 },
+  { id: 'tx-12', ticketId: '-', type: 'pago', amount: -2100, date: yesterdayStr, seller: 'sportmmwmaster', description: 'Pago premio', createdAt: Date.now() - 99000000 },
+  { id: 'tx-13', ticketId: 'MMW-003-483115', type: 'venta', amount: 900, date: yesterdayStr, seller: 'admin01', description: 'Apuesta directa', createdAt: Date.now() - 98000000 },
+  { id: 'tx-14', ticketId: 'MMW-003-483128', type: 'venta', amount: 4500, date: yesterdayStr, seller: 'mmw03', description: 'Parlay combinado', createdAt: Date.now() - 97000000 },
+  { id: 'tx-15', ticketId: '-', type: 'cancelacion', amount: -750, date: yesterdayStr, seller: 'mmw03', description: 'Cancelacion por error', createdAt: Date.now() - 96000000 },
+  // 3 days ago
+  { id: 'tx-16', ticketId: 'MMW-003-483201', type: 'venta', amount: 1800, date: threeDaysAgoStr, seller: 'vendedor02', description: 'Venta de ticket', createdAt: Date.now() - 200000000 },
+  { id: 'tx-17', ticketId: '-', type: 'pago', amount: -3400, date: threeDaysAgoStr, seller: 'vendedor02', description: 'Pago multiple', createdAt: Date.now() - 199000000 },
+  { id: 'tx-18', ticketId: 'MMW-003-483215', type: 'venta', amount: 600, date: threeDaysAgoStr, seller: 'mmw03', description: 'Apuesta MLB', createdAt: Date.now() - 198000000 },
+  // 5 days ago
+  { id: 'tx-19', ticketId: 'MMW-003-483301', type: 'venta', amount: 4200, date: fiveDaysAgoStr, seller: 'sportmmwmaster', description: 'Venta NBA finales', createdAt: Date.now() - 300000000 },
+  { id: 'tx-20', ticketId: '-', type: 'pago', amount: -1500, date: fiveDaysAgoStr, seller: 'sportmmwmaster', description: 'Cobro semanal', createdAt: Date.now() - 299000000 },
+  { id: 'tx-21', ticketId: '-', type: 'cancelacion', amount: -300, date: fiveDaysAgoStr, seller: 'admin01', description: 'Cancelacion duplicado', createdAt: Date.now() - 298000000 },
+  { id: 'tx-22', ticketId: 'MMW-003-483318', type: 'venta', amount: 1100, date: fiveDaysAgoStr, seller: 'mmw03', description: 'Apuesta NFL', createdAt: Date.now() - 297000000 },
+  // 6 days ago
+  { id: 'tx-23', ticketId: 'MMW-003-483401', type: 'venta', amount: 5500, date: sixDaysAgoStr, seller: 'mmw03', description: 'Parlay grande', createdAt: Date.now() - 350000000 },
+  { id: 'tx-24', ticketId: '-', type: 'pago', amount: -4200, date: sixDaysAgoStr, seller: 'mmw03', description: 'Pago parlay ganador', createdAt: Date.now() - 349000000 },
+  // 7 days ago
+  { id: 'tx-25', ticketId: 'MMW-003-483502', type: 'venta', amount: 750, date: sevenDaysAgoStr, seller: 'vendedor02', description: 'Apuesta rapida', createdAt: Date.now() - 400000000 },
+  // 10 days ago
+  { id: 'tx-26', ticketId: 'MMW-003-483601', type: 'venta', amount: 3200, date: tenDaysAgoStr, seller: 'mmw03', description: 'Venta de ticket', createdAt: Date.now() - 500000000 },
+  { id: 'tx-27', ticketId: '-', type: 'pago', amount: -2800, date: tenDaysAgoStr, seller: 'mmw03', description: 'Liquidacion diaria', createdAt: Date.now() - 499000000 },
+  // 12 days ago
+  { id: 'tx-28', ticketId: 'MMW-003-483701', type: 'venta', amount: 4800, date: twelveDaysAgoStr, seller: 'sportmmwmaster', description: 'Parlay combinado NBA', createdAt: Date.now() - 600000000 },
+  { id: 'tx-29', ticketId: '-', type: 'cancelacion', amount: -1200, date: twelveDaysAgoStr, seller: 'sportmmwmaster', description: 'Cancelacion cliente', createdAt: Date.now() - 599000000 },
+  // 15 days ago
+  { id: 'tx-30', ticketId: 'MMW-003-483801', type: 'venta', amount: 2200, date: fifteenDaysAgoStr, seller: 'admin01', description: 'Apuesta MLB', createdAt: Date.now() - 700000000 },
+  { id: 'tx-31', ticketId: '-', type: 'pago', amount: -5600, date: fifteenDaysAgoStr, seller: 'admin01', description: 'Pago acumulado', createdAt: Date.now() - 699000000 },
+  // 20 days ago
+  { id: 'tx-32', ticketId: 'MMW-003-483901', type: 'venta', amount: 1500, date: twentyDaysAgoStr, seller: 'mmw03', description: 'Venta de ticket', createdAt: Date.now() - 800000000 },
+  // 25 days ago
+  { id: 'tx-33', ticketId: 'MMW-003-484001', type: 'venta', amount: 3800, date: twentyFiveDaysAgoStr, seller: 'vendedor02', description: 'Apuesta especial', createdAt: Date.now() - 900000000 },
+  { id: 'tx-34', ticketId: '-', type: 'pago', amount: -1900, date: twentyFiveDaysAgoStr, seller: 'vendedor02', description: 'Cobro parcial', createdAt: Date.now() - 899000000 },
 ];
 
 /* ---------- component ---------- */
@@ -68,6 +129,8 @@ export default function Ventas() {
   const [winnerTickets] = useState<TicketType[]>(MOCK_WINNERS);
   const [searchTx, setSearchTx] = useState('');
   const [searchWinners, setSearchWinners] = useState('');
+  const [viewingTicket, setViewingTicket] = useState<TicketType | null>(null);
+  const [detailTx, setDetailTx] = useState<Transaction & { balance: number } | null>(null);
 
   useEffect(() => {
     const load = () => {
@@ -76,7 +139,6 @@ export default function Ventas() {
     };
     load();
 
-    // Refresh when new tickets are created (transactions are added too)
     window.addEventListener('fsb:ticketCreated', load);
     window.addEventListener('focus', load);
 
@@ -86,27 +148,91 @@ export default function Ventas() {
     };
   }, []);
 
-  const filteredTransactions = useMemo(() => {
-    const q = searchTx.trim().toLowerCase();
-    if (!q) return transactions;
-    return transactions.filter(
-      (tx) =>
-        tx.description.toLowerCase().includes(q) ||
-        tx.type.toLowerCase().includes(q) ||
-        tx.ticketId.toLowerCase().includes(q)
-    );
-  }, [transactions, searchTx]);
+  /* ---- period filter handler ---- */
+  const handlePeriodFilter = useCallback((p: 'Hoy' | 'Semana' | 'Mes') => {
+    setPeriodFilter(p);
+    const now = new Date();
+    if (p === 'Hoy') {
+      setSelectedDate(formatDate(now));
+    } else if (p === 'Semana') {
+      const weekAgo = new Date(now.getTime() - 7 * 86400000);
+      setSelectedDate(formatDate(weekAgo));
+    } else if (p === 'Mes') {
+      const monthAgo = new Date(now.getTime() - 30 * 86400000);
+      setSelectedDate(formatDate(monthAgo));
+    }
+  }, []);
 
+  /* ---- filtered transactions ---- */
+  const filteredTransactions = useMemo(() => {
+    let result = transactions;
+
+    // Filter by date based on period selection
+    if (periodFilter === 'Hoy' && selectedDate) {
+      result = result.filter((t) => t.date === selectedDate);
+    } else if (periodFilter === 'Semana' && selectedDate) {
+      const start = parseFormattedDate(selectedDate);
+      const now = new Date();
+      result = result.filter((t) => {
+        const d = parseFormattedDate(t.date);
+        return d >= start && d <= now;
+      });
+    } else if (periodFilter === 'Mes' && selectedDate) {
+      const start = parseFormattedDate(selectedDate);
+      const now = new Date();
+      result = result.filter((t) => {
+        const d = parseFormattedDate(t.date);
+        return d >= start && d <= now;
+      });
+    }
+
+    // Filter by search
+    if (searchTx.trim()) {
+      const q = searchTx.trim().toLowerCase();
+      result = result.filter(
+        (t) =>
+          t.description.toLowerCase().includes(q) ||
+          t.type.toLowerCase().includes(q) ||
+          t.ticketId.toLowerCase().includes(q)
+      );
+    }
+
+    return result;
+  }, [transactions, selectedDate, searchTx, periodFilter]);
+
+  /* ---- filtered winners ---- */
   const filteredWinners = useMemo(() => {
+    let result = winnerTickets;
+
+    // Filter winners by the same date range
+    if (periodFilter === 'Hoy' && selectedDate) {
+      result = result.filter((t) => t.date === selectedDate);
+    } else if (periodFilter === 'Semana' && selectedDate) {
+      const start = parseFormattedDate(selectedDate);
+      const now = new Date();
+      result = result.filter((t) => {
+        const d = parseFormattedDate(t.date);
+        return d >= start && d <= now;
+      });
+    } else if (periodFilter === 'Mes' && selectedDate) {
+      const start = parseFormattedDate(selectedDate);
+      const now = new Date();
+      result = result.filter((t) => {
+        const d = parseFormattedDate(t.date);
+        return d >= start && d <= now;
+      });
+    }
+
     const q = searchWinners.trim().toLowerCase();
-    if (!q) return winnerTickets;
-    return winnerTickets.filter(
+    if (!q) return result;
+    return result.filter(
       (ticket) =>
         ticket.id.toLowerCase().includes(q) ||
         ticket.seller.toLowerCase().includes(q)
     );
-  }, [winnerTickets, searchWinners]);
+  }, [winnerTickets, searchWinners, selectedDate, periodFilter]);
 
+  /* ---- running balance ---- */
   const runningBalance = useMemo(() => {
     let bal = 0;
     return filteredTransactions.map((tx) => {
@@ -115,29 +241,64 @@ export default function Ventas() {
     }).reverse();
   }, [filteredTransactions]);
 
-  const dailyStats = {
-    ventas: 14320.00,
-    premios: 6500.00,
-    neto: 7820.00,
-    balanceCorte: 0.00,
-    rojoCorte: -7781.00,
-    balanceDia: 0.00,
-    rojoDia: -7781.00,
-    totalTickets: 47,
-    pendientes: 12,
-    perdedores: 18,
-    ganadores: 8,
-  };
+  /* ---- computed stats from filtered data ---- */
+  const dailyStats = useMemo(() => {
+    const ventas = filteredTransactions
+      .filter((t) => t.type === 'venta')
+      .reduce((sum, t) => sum + t.amount, 0);
+    const premios = Math.abs(
+      filteredTransactions
+        .filter((t) => t.type === 'pago')
+        .reduce((sum, t) => sum + t.amount, 0)
+    );
+    const cancelaciones = Math.abs(
+      filteredTransactions
+        .filter((t) => t.type === 'cancelacion')
+        .reduce((sum, t) => sum + t.amount, 0)
+    );
+    const neto = ventas - premios - cancelaciones;
+    const totalTickets = filteredTransactions.filter((t) => t.type === 'venta').length;
+    const pendientes = filteredWinners.filter((t) => t.status === 'ganador').length;
+    const perdedores = 0; // not tracked in tx
+    const ganadores = filteredWinners.length;
 
-  const weeklyData = [
-    { day: 'Lun', venta: 18200.00, premios: 8200.00, neto: 10000.00, comision: 910.00, final: 9090.00, balance: 1200.00, rojo: -500.00 },
-    { day: 'Mar', venta: 15400.00, premios: 7100.00, neto: 8300.00, comision: 770.00, final: 7530.00, balance: 800.00, rojo: -1200.00 },
-    { day: 'Mie', venta: 21300.00, premios: 9500.00, neto: 11800.00, comision: 1065.00, final: 10735.00, balance: 2100.00, rojo: -300.00 },
-    { day: 'Jue', venta: 12800.00, premios: 6200.00, neto: 6600.00, comision: 640.00, final: 5960.00, balance: -400.00, rojo: -2800.00 },
-    { day: 'Vie', venta: 24500.00, premios: 11200.00, neto: 13300.00, comision: 1225.00, final: 12075.00, balance: 3500.00, rojo: -100.00 },
-    { day: 'Sab', venta: 32100.00, premios: 15800.00, neto: 16300.00, comision: 1605.00, final: 14695.00, balance: 4800.00, rojo: 0.00 },
-    { day: 'Dom', venta: 9870.00, premios: 5200.00, neto: 4670.00, comision: 493.50, final: 4176.50, balance: -200.00, rojo: -1500.00 },
-  ];
+    return {
+      ventas,
+      premios,
+      neto,
+      balanceCorte: 0,
+      rojoCorte: -cancelaciones,
+      balanceDia: neto,
+      rojoDia: neto >= 0 ? 0 : neto,
+      totalTickets,
+      pendientes,
+      perdedores,
+      ganadores,
+    };
+  }, [filteredTransactions, filteredWinners]);
+
+  /* ---- weekly data (from all transactions) ---- */
+  const weeklyData = useMemo(() => {
+    const days = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
+    const now = new Date();
+    return days.map((day, i) => {
+      const d = new Date(now.getTime() - (6 - i) * 86400000);
+      const dStr = formatDate(d);
+      const dayTxs = transactions.filter((t) => t.date === dStr);
+      const venta = dayTxs
+        .filter((t) => t.type === 'venta')
+        .reduce((s, t) => s + t.amount, 0);
+      const premios = Math.abs(
+        dayTxs.filter((t) => t.type === 'pago').reduce((s, t) => s + t.amount, 0)
+      );
+      const neto = venta - premios;
+      const comision = venta * 0.05;
+      const final = neto - comision;
+      const balance = final;
+      const rojo = neto < 0 ? neto : 0;
+      return { day, venta, premios, neto, comision, final, balance, rojo };
+    });
+  }, [transactions]);
 
   const weeklyTotals = {
     venta: weeklyData.reduce((s, d) => s + d.venta, 0),
@@ -171,6 +332,16 @@ export default function Ventas() {
     }
   };
 
+  /* ---- view transaction detail ---- */
+  const handleViewTx = useCallback((tx: Transaction & { balance: number }) => {
+    setDetailTx(tx);
+  }, []);
+
+  /* ---- print ---- */
+  const handlePrint = useCallback(() => {
+    window.print();
+  }, []);
+
   return (
     <motion.div
       variants={containerAnim}
@@ -194,6 +365,7 @@ export default function Ventas() {
             onChange={(e) => {
               const d = new Date(e.target.value);
               setSelectedDate(formatDate(d));
+              setPeriodFilter('Hoy');
             }}
             className="bg-bg-tertiary/60 border border-border-default rounded-md pl-9 pr-3 h-12 md:h-10 text-sm text-text-primary focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/20 outline-none transition-all w-full md:w-auto"
           />
@@ -203,7 +375,7 @@ export default function Ventas() {
           {(['Hoy', 'Semana', 'Mes'] as const).map((p) => (
             <button
               key={p}
-              onClick={() => setPeriodFilter(p)}
+              onClick={() => handlePeriodFilter(p)}
               className={`px-4 py-2 min-h-[44px] rounded-full text-sm font-medium transition-all duration-200 ${
                 periodFilter === p
                   ? 'bg-accent-blue/15 text-accent-blue border border-accent-blue/30'
@@ -216,16 +388,28 @@ export default function Ventas() {
         </div>
 
         <div className="flex flex-wrap gap-2 w-full md:w-auto md:ml-auto">
-          <button className="flex items-center gap-2 px-4 min-h-[44px] rounded-md bg-accent-blue/10 text-accent-blue text-sm font-semibold border border-accent-blue/25 hover:bg-accent-blue/20 transition-all">
+          <button
+            onClick={() => alert(`Mostrando transacciones: ${periodFilter}${selectedDate ? ` desde ${selectedDate}` : ''}`)}
+            className="flex items-center gap-2 px-4 min-h-[44px] rounded-md bg-accent-blue/10 text-accent-blue text-sm font-semibold border border-accent-blue/25 hover:bg-accent-blue/20 transition-all"
+          >
             <Eye size={16} /> Ver ventas
           </button>
-          <button className="flex items-center gap-2 px-4 min-h-[44px] rounded-md bg-accent-green/10 text-accent-green text-sm font-semibold border border-accent-green/25 hover:bg-accent-green/20 transition-all">
+          <button
+            onClick={() => window.location.hash = '#/jugadas'}
+            className="flex items-center gap-2 px-4 min-h-[44px] rounded-md bg-accent-green/10 text-accent-green text-sm font-semibold border border-accent-green/25 hover:bg-accent-green/20 transition-all"
+          >
             <TicketIcon size={16} /> Vender tickets
           </button>
-          <button className="flex items-center gap-2 px-4 min-h-[44px] rounded-md bg-bg-tertiary text-text-secondary text-sm font-semibold border border-border-default hover:bg-bg-quaternary transition-all">
+          <button
+            onClick={handlePrint}
+            className="flex items-center gap-2 px-4 min-h-[44px] rounded-md bg-bg-tertiary text-text-secondary text-sm font-semibold border border-border-default hover:bg-bg-quaternary transition-all"
+          >
             <Printer size={16} /> Imprimir
           </button>
-          <button className="flex items-center gap-2 px-4 min-h-[44px] rounded-md bg-bg-tertiary text-text-secondary text-sm font-semibold border border-border-default hover:bg-bg-quaternary transition-all">
+          <button
+            onClick={() => alert('Resumen de la semana anterior')}
+            className="flex items-center gap-2 px-4 min-h-[44px] rounded-md bg-bg-tertiary text-text-secondary text-sm font-semibold border border-border-default hover:bg-bg-quaternary transition-all"
+          >
             <BarChart3 size={16} /> Resumen semana anterior
           </button>
         </div>
@@ -242,7 +426,7 @@ export default function Ventas() {
         </div>
         <div className="text-right">
           <p className="text-xs text-text-tertiary uppercase tracking-wider">Monto Pendiente</p>
-          <p className="text-2xl md:text-3xl font-bold font-mono text-accent-amber">$14,327.00</p>
+          <p className="text-2xl md:text-3xl font-bold font-mono text-accent-amber">{formatAmount(dailyStats.neto)}</p>
         </div>
       </motion.div>
 
@@ -292,7 +476,7 @@ export default function Ventas() {
               <div
                 key={i}
                 className="flex-1 bg-accent-purple/40 rounded-t-sm"
-                style={{ height: `${(d.venta / 35000) * 100}%` }}
+                style={{ height: `${Math.max(5, (d.venta / 35000) * 100)}%` }}
               />
             ))}
           </div>
@@ -465,7 +649,10 @@ export default function Ventas() {
                 </button>
               )}
             </div>
-            <button className="text-xs text-accent-blue hover:text-accent-blue-bright transition-colors flex items-center gap-1 min-h-[44px] shrink-0">
+            <button
+              onClick={() => alert(`Total ganadores pendientes: ${filteredWinners.filter(w => w.status === 'ganador').length}`)}
+              className="text-xs text-accent-blue hover:text-accent-blue-bright transition-colors flex items-center gap-1 min-h-[44px] shrink-0"
+            >
               Ver todos <ChevronRight size={14} />
             </button>
           </div>
@@ -480,6 +667,7 @@ export default function Ventas() {
                 <th className="px-4 py-2.5 text-right text-xs text-text-secondary font-semibold uppercase tracking-wider">Monto</th>
                 <th className="px-4 py-2.5 text-right text-xs text-text-secondary font-semibold uppercase tracking-wider">A pagar</th>
                 <th className="px-4 py-2.5 text-center text-xs text-text-secondary font-semibold uppercase tracking-wider">Estado</th>
+                <th className="px-4 py-2.5 text-center text-xs text-text-secondary font-semibold uppercase tracking-wider">Accion</th>
               </tr>
             </thead>
             <tbody>
@@ -502,11 +690,19 @@ export default function Ventas() {
                       {ticket.status === 'pagado' ? 'Pagado' : 'Pendiente'}
                     </span>
                   </td>
+                  <td className="px-4 py-2.5 text-center">
+                    <button
+                      onClick={() => setViewingTicket(ticket)}
+                      className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-accent-blue/10 text-accent-blue text-xs font-semibold border border-accent-blue/25 hover:bg-accent-blue/20 transition-all"
+                    >
+                      <Eye size={12} /> Ver Ticket
+                    </button>
+                  </td>
                 </tr>
               ))}
               {filteredWinners.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center">
+                  <td colSpan={7} className="px-4 py-12 text-center">
                     <Receipt size={48} className="mx-auto text-text-muted/30 mb-3" />
                     <p className="text-body-lg text-text-tertiary">
                       {searchWinners ? 'No se encontraron resultados' : 'No hay tickets ganadores'}
@@ -548,7 +744,10 @@ export default function Ventas() {
                 </button>
               )}
             </div>
-            <button className="text-xs text-accent-blue hover:text-accent-blue-bright transition-colors flex items-center gap-1 min-h-[44px] shrink-0">
+            <button
+              onClick={() => alert(`Total transacciones filtradas: ${filteredTransactions.length}`)}
+              className="text-xs text-accent-blue hover:text-accent-blue-bright transition-colors flex items-center gap-1 min-h-[44px] shrink-0"
+            >
               Ver todas <ArrowRight size={14} />
             </button>
           </div>
@@ -563,6 +762,7 @@ export default function Ventas() {
                 <th className="px-4 py-2.5 text-right text-xs text-text-secondary font-semibold uppercase tracking-wider">Debito</th>
                 <th className="px-4 py-2.5 text-right text-xs text-text-secondary font-semibold uppercase tracking-wider">Credito</th>
                 <th className="px-4 py-2.5 text-right text-xs text-text-secondary font-semibold uppercase tracking-wider">Balance</th>
+                <th className="px-4 py-2.5 text-center text-xs text-text-secondary font-semibold uppercase tracking-wider">Accion</th>
               </tr>
             </thead>
             <tbody>
@@ -589,12 +789,20 @@ export default function Ventas() {
                     <td className={`px-4 py-2.5 text-sm font-mono text-right font-medium ${tx.balance >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
                       {formatAmount(tx.balance)}
                     </td>
+                    <td className="px-4 py-2.5 text-center">
+                      <button
+                        onClick={() => handleViewTx(tx)}
+                        className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-accent-blue/10 text-accent-blue text-xs font-semibold border border-accent-blue/25 hover:bg-accent-blue/20 transition-all"
+                      >
+                        <Eye size={12} /> Ver
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
               {runningBalance.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center">
+                  <td colSpan={7} className="px-4 py-12 text-center">
                     <Receipt size={48} className="mx-auto text-text-muted/30 mb-3" />
                     <p className="text-body-lg text-text-tertiary">
                       {searchTx ? 'No se encontraron resultados' : 'No hay transacciones'}
@@ -618,8 +826,10 @@ export default function Ventas() {
         <div className="px-5 py-4 flex items-center justify-between">
           <div>
             <p className="text-sm text-text-tertiary">Pendientes de Pago</p>
-            <p className="text-xl md:text-2xl font-bold font-mono text-accent-amber mt-1">$14,327.00</p>
-            <p className="text-xs text-text-tertiary mt-1 hidden sm:block">7 tickets ganadores sin pagar</p>
+            <p className="text-xl md:text-2xl font-bold font-mono text-accent-amber mt-1">
+              {formatAmount(filteredWinners.filter(w => w.status === 'ganador').reduce((s, w) => s + w.payout, 0))}
+            </p>
+            <p className="text-xs text-text-tertiary mt-1 hidden sm:block">{filteredWinners.filter(w => w.status === 'ganador').length} tickets ganadores sin pagar</p>
           </div>
           <a
             href="#/pendientes"
@@ -629,6 +839,101 @@ export default function Ventas() {
           </a>
         </div>
       </motion.div>
+
+      {/* ====== Transaction Detail Modal ====== */}
+      <AnimatePresence>
+        {detailTx && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.7)' }}
+            onClick={() => setDetailTx(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative bg-bg-primary border border-border-subtle rounded-xl p-6 max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-text-primary">Detalle de Transaccion</h3>
+                <button onClick={() => setDetailTx(null)} className="p-1 rounded hover:bg-white/5">
+                  <X size={18} className="text-text-muted" />
+                </button>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm text-text-tertiary">ID</span>
+                  <span className="text-sm font-mono text-text-primary">{detailTx.id}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-text-tertiary">Ticket</span>
+                  <span className="text-sm font-mono text-accent-blue">{detailTx.ticketId}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-text-tertiary">Tipo</span>
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${typeBadge(detailTx.type)}`}>
+                    {typeLabel(detailTx.type)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-text-tertiary">Descripcion</span>
+                  <span className="text-sm text-text-secondary">{detailTx.description}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-text-tertiary">Fecha</span>
+                  <span className="text-sm font-mono text-text-secondary">{detailTx.date}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-text-tertiary">Monto</span>
+                  <span className={`text-sm font-mono font-semibold ${detailTx.amount >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
+                    {formatAmount(Math.abs(detailTx.amount))}
+                  </span>
+                </div>
+                <div className="flex justify-between border-t border-border-subtle pt-3">
+                  <span className="text-sm text-text-tertiary font-medium">Balance acumulado</span>
+                  <span className={`text-sm font-mono font-bold ${detailTx.balance >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
+                    {formatAmount(detailTx.balance)}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ====== Ticket Receipt Modal ====== */}
+      <AnimatePresence>
+        {viewingTicket && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.7)' }}
+            onClick={() => setViewingTicket(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative max-w-[400px] w-full max-h-[90vh] overflow-y-auto rounded-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center p-3 rounded-t-xl" style={{ background: '#FFFFFF' }}>
+                <span className="text-sm font-bold text-black">Ticket {viewingTicket.id}</span>
+                <button onClick={() => setViewingTicket(null)} className="p-1 rounded hover:bg-gray-100">
+                  <X size={16} className="text-gray-500" />
+                </button>
+              </div>
+              <TicketReceipt ticket={viewingTicket} copyLabel="*** COPIA ***" />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
