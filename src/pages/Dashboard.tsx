@@ -1,18 +1,14 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import SalesForm from '@/components/SalesForm';
+import BettingLines from '@/components/BettingLines';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Trash2,
-  Printer,
-  RefreshCw,
-  ChevronUp,
-  ChevronDown,
   X,
   ClipboardList,
 } from 'lucide-react';
 import {
   formatOdds,
-  formatTime,
   getLines,
   seedLines,
   getSports,
@@ -64,7 +60,6 @@ export default function Dashboard() {
   const [selectedCustomerName, setSelectedCustomerName] = useState<string | null>(null);
   const [isCredit, setIsCredit] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const linesScrollRef = useRef<HTMLDivElement>(null);
 
   // --- Load data ---
   useEffect(() => {
@@ -488,129 +483,6 @@ export default function Dashboard() {
     </div>
   );
 
-  // --- Betting Lines Content (shared) ---
-  const BettingLines = () => (
-    <div className="flex flex-col h-full overflow-hidden">
-      {/* Sticky Header */}
-      <div className="shrink-0 bg-bg-secondary/95 backdrop-blur-lg border-b border-border-subtle z-10">
-        {/* View Toggle + Refresh */}
-        <div className="flex items-center justify-between px-3 md:px-4 py-2">
-          <div className="flex gap-1">
-            {(
-              [
-                ['lineas', 'Lineas'],
-                ['resultados', 'Resultados'],
-              ] as const
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                onClick={() => setLineView(key)}
-                className={`px-3 py-1.5 rounded text-xs font-medium transition-colors min-h-[36px] active:scale-95 ${
-                  lineView === key
-                    ? 'bg-accent-blue/15 text-accent-blue'
-                    : 'text-text-muted hover:text-text-secondary'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-1.5 md:gap-2">
-            <span className="text-[10px] md:text-xs text-text-tertiary font-mono hidden sm:inline">
-              Actualizado: {formatTime(currentTime)}
-            </span>
-            <button
-              onClick={handleRefresh}
-              className={`w-10 h-10 md:w-8 md:h-8 rounded-md flex items-center justify-center hover:bg-black/5 text-text-secondary transition-colors active:scale-95 ${
-                refreshing ? 'animate-spin-once' : ''
-              }`}
-            >
-              <RefreshCw size={15} />
-            </button>
-            <button className="w-10 h-10 md:w-8 md:h-8 rounded-md flex items-center justify-center hover:bg-black/5 text-text-secondary transition-colors active:scale-95">
-              <Printer size={15} />
-            </button>
-          </div>
-        </div>
-
-        {/* Sport Filter */}
-        <div className="flex gap-1.5 px-3 md:px-4 py-2 overflow-x-auto no-scrollbar">
-          {sports.map((sport) => (
-            <button
-              key={sport}
-              onClick={() => setSelectedSport(sport)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all min-h-[36px] active:scale-95 ${
-                selectedSport === sport
-                  ? 'bg-accent-blue/15 text-accent-blue border border-accent-blue/25'
-                  : 'text-text-muted hover:text-text-secondary hover:bg-white/[0.02]'
-              }`}
-            >
-              {sport}
-            </button>
-          ))}
-        </div>
-
-        {/* Period Filter */}
-        <div className="flex gap-4 px-3 md:px-4 py-1.5 overflow-x-auto">
-          {getPeriods().map((period) => (
-            <button
-              key={period}
-              onClick={() => setSelectedPeriod(period)}
-              className={`pb-1 text-xs font-medium transition-colors whitespace-nowrap min-h-[28px] active:scale-95 ${
-                selectedPeriod === period
-                  ? 'text-accent-blue border-b-2 border-accent-blue'
-                  : 'text-text-muted hover:text-text-secondary'
-              }`}
-            >
-              {period}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Game Cards */}
-      <div ref={linesScrollRef} className="flex-1 overflow-y-auto min-h-0 py-2" style={{ overscrollBehavior: 'contain' }}>
-        {lines.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-48 md:h-64 text-center px-8">
-            <CalendarIcon size={48} className="text-text-muted/30 mb-3" />
-            <p className="text-sm text-text-tertiary">
-              No hay juegos disponibles
-            </p>
-            <p className="text-xs text-text-muted mt-1">
-              Seleccione otro deporte o periodo
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-2 px-2 md:px-4">
-            {lines.map((line) => (
-              <GameCard
-                key={line.id}
-                line={line}
-                onAddPlay={handleAddPlay}
-                setEquipo={setEquipo}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Scroll buttons */}
-      <div className="shrink-0 flex justify-end gap-1 p-2 border-t border-border-subtle">
-        <button
-          onClick={() => linesScrollRef.current?.scrollBy({ top: -200, behavior: 'smooth' })}
-          className="w-9 h-9 md:w-7 md:h-7 rounded flex items-center justify-center hover:bg-black/5 text-text-secondary active:scale-95"
-        >
-          <ChevronUp size={14} />
-        </button>
-        <button
-          onClick={() => linesScrollRef.current?.scrollBy({ top: 200, behavior: 'smooth' })}
-          className="w-9 h-9 md:w-7 md:h-7 rounded flex items-center justify-center hover:bg-black/5 text-text-secondary active:scale-95"
-        >
-          <ChevronDown size={14} />
-        </button>
-      </div>
-    </div>
-  );
 
   // showCalc is used via setShowCalc in salesFormProps
   void showCalc;
@@ -681,7 +553,14 @@ export default function Dashboard() {
 
           {/* Right Panel */}
           <div className="gradient-panel overflow-hidden h-full">
-            <BettingLines />
+            <BettingLines
+              lines={lines} sports={sports}
+              selectedSport={selectedSport} onSelectSport={setSelectedSport}
+              selectedPeriod={selectedPeriod} onSelectPeriod={setSelectedPeriod}
+              lineView={lineView} onSetLineView={setLineView}
+              currentTime={currentTime} refreshing={refreshing} onRefresh={handleRefresh}
+              onAddPlay={handleAddPlay} setEquipo={setEquipo} getPeriods={getPeriods}
+            />
           </div>
         </div>
 
@@ -711,7 +590,14 @@ export default function Dashboard() {
 
           {/* Right Panel (Lines) */}
           <div className="gradient-panel overflow-hidden h-full">
-            <BettingLines />
+            <BettingLines
+              lines={lines} sports={sports}
+              selectedSport={selectedSport} onSelectSport={setSelectedSport}
+              selectedPeriod={selectedPeriod} onSelectPeriod={setSelectedPeriod}
+              lineView={lineView} onSetLineView={setLineView}
+              currentTime={currentTime} refreshing={refreshing} onRefresh={handleRefresh}
+              onAddPlay={handleAddPlay} setEquipo={setEquipo} getPeriods={getPeriods}
+            />
           </div>
         </div>
 
@@ -751,7 +637,14 @@ export default function Dashboard() {
                 transition={{ duration: 0.15 }}
                 className="gradient-panel h-full flex flex-col"
               >
-                <BettingLines />
+                <BettingLines
+                  lines={lines} sports={sports}
+                  selectedSport={selectedSport} onSelectSport={setSelectedSport}
+                  selectedPeriod={selectedPeriod} onSelectPeriod={setSelectedPeriod}
+                  lineView={lineView} onSetLineView={setLineView}
+                  currentTime={currentTime} refreshing={refreshing} onRefresh={handleRefresh}
+                  onAddPlay={handleAddPlay} setEquipo={setEquipo} getPeriods={getPeriods}
+                />
               </motion.div>
             )}
           </AnimatePresence>
@@ -761,142 +654,3 @@ export default function Dashboard() {
   );
 }
 
-// --- Sub-components ---
-
-function GameCard({
-  line,
-  onAddPlay,
-  setEquipo,
-}: {
-  line: BettingLine;
-  onAddPlay: (line: BettingLine, type: string, value: number, points?: number, teamCode?: string) => void;
-  setEquipo: (v: string) => void;
-}) {
-  const [flash, setFlash] = useState(false);
-
-  const handleCellClick = (type: string, value: number, teamCode: string, teamName: string, points?: number) => {
-    setFlash(true);
-    setTimeout(() => setFlash(false), 200);
-    setEquipo(`${teamCode} - ${teamName}`);
-    onAddPlay(line, type, value, points, teamCode);
-  };
-
-  return (
-    <motion.div
-      className="rounded-lg overflow-hidden transition-all duration-150 shadow-md hover:shadow-lg hover:-translate-y-px"
-      style={{
-        background: flash ? '#37474F' : '#424242',
-        border: flash ? '1px solid #00B0FF' : '1px solid #505050',
-      }}
-    >
-      {/* Cyan Header */}
-      <div className="flex items-center justify-between px-3 py-1.5" style={{ background: '#00B0FF' }}>
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-bold text-white">{line.sport}</span>
-          <span className="text-[11px] text-white/80">{line.time}</span>
-        </div>
-        <span className="text-[10px] text-white/70 uppercase tracking-wider">{line.period}</span>
-      </div>
-
-      {/* Lines Table */}
-      <div className="p-2">
-        <div className="grid gap-1" style={{ gridTemplateColumns: '100px 1fr 1fr 1fr 1fr 1fr' }}>
-          {/* Column Headers */}
-          <div></div>
-          {['M.L', 'R.L', 'SPREAD', 'SOLO', 'PUNTOS'].map((h) => (
-            <div key={h} className="text-[9px] font-bold text-center uppercase py-1" style={{ color: '#90A4AE' }}>{h}</div>
-          ))}
-
-          {/* Away Team Row */}
-          <div className="flex items-center gap-1 px-1 py-1">
-            <span className="font-mono text-[11px] font-bold" style={{ color: '#00B0FF' }}>{line.awayTeamCode}</span>
-            <span className="text-[10px]" style={{ color: '#757575' }}>-</span>
-            <span className="text-[11px] font-semibold text-white">{line.awayTeam}</span>
-          </div>
-          <DarkLineCell value={line.moneyLine.away} onClick={() => handleCellClick('ML', line.moneyLine.away, line.awayTeamCode, line.awayTeam)} type="odds" />
-          <DarkLineCell value={`${line.runLine.away >= 0 ? '+' : ''}${line.runLine.away}`} onClick={() => handleCellClick('RL', line.runLine.away, line.awayTeamCode, line.awayTeam)} />
-          <DarkLineCell value={`${line.spread.away >= 0 ? '+' : ''}${line.spread.away}`} onClick={() => handleCellClick('Spread', line.spread.away, line.awayTeamCode, line.awayTeam, line.spread.away)} />
-          <DarkLineCell value={line.solo.away} onClick={() => handleCellClick('Solo', line.solo.away, line.awayTeamCode, line.awayTeam)} type="odds" />
-          <DarkLineCell value={`O ${line.points.over}`} onClick={() => handleCellClick('Over', line.points.over, line.awayTeamCode, line.awayTeam, line.points.value)} type="over" />
-
-          {/* Home Team Row */}
-          <div className="flex items-center gap-1 px-1 py-1" style={{ background: 'rgba(255,255,255,0.03)' }}>
-            <span className="font-mono text-[11px] font-bold" style={{ color: '#00B0FF' }}>{line.homeTeamCode}</span>
-            <span className="text-[10px]" style={{ color: '#757575' }}>-</span>
-            <span className="text-[11px] font-semibold text-white">{line.homeTeam}</span>
-          </div>
-          <DarkLineCell value={line.moneyLine.home} onClick={() => handleCellClick('ML', line.moneyLine.home, line.homeTeamCode, line.homeTeam)} type="odds" />
-          <DarkLineCell value={`${line.runLine.home >= 0 ? '+' : ''}${line.runLine.home}`} onClick={() => handleCellClick('RL', line.runLine.home, line.homeTeamCode, line.homeTeam)} />
-          <DarkLineCell value={`${line.spread.home >= 0 ? '+' : ''}${line.spread.home}`} onClick={() => handleCellClick('Spread', line.spread.home, line.homeTeamCode, line.homeTeam, line.spread.home)} />
-          <DarkLineCell value={line.solo.home} onClick={() => handleCellClick('Solo', line.solo.home, line.homeTeamCode, line.homeTeam)} type="odds" />
-          <DarkLineCell value={`U ${line.points.under}`} onClick={() => handleCellClick('Under', line.points.under, line.homeTeamCode, line.homeTeam, line.points.value)} type="under" />
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-function DarkLineCell({
-  value,
-  onClick,
-  type = 'normal',
-}: {
-  value: string | number;
-  onClick: () => void;
-  type?: 'normal' | 'odds' | 'over' | 'under';
-}) {
-  const numVal = typeof value === 'string' ? parseFloat(value.replace(/[OU+\s]/g, '')) : value;
-  const display = typeof value === 'string' ? value : formatOdds(value);
-
-  let textColor = '#FFFFFF';
-  if (type === 'odds') {
-    textColor = numVal >= 0 ? '#00C853' : '#E53935';
-  } else if (type === 'over') {
-    textColor = '#00C853';
-  } else if (type === 'under') {
-    textColor = '#E53935';
-  }
-
-  return (
-    <button
-      onClick={onClick}
-      className="py-1.5 rounded font-mono text-[11px] flex items-center justify-center transition-all duration-150"
-      style={{
-        background: 'rgba(255,255,255,0.08)',
-        color: textColor,
-        border: '1px solid rgba(255,255,255,0.1)',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = 'rgba(0,176,255,0.25)';
-        e.currentTarget.style.borderColor = 'rgba(0,176,255,0.5)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
-        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-      }}
-    >
-      {display}
-    </button>
-  );
-}
-
-function CalendarIcon({ size, className }: { size: number; className?: string }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-  );
-}
