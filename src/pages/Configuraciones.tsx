@@ -82,7 +82,7 @@ function SegmentedButton({
   onChange: (value: string) => void;
 }) {
   return (
-    <div className="inline-flex w-full md:w-auto bg-[rgba(17,24,39,0.8)] rounded-md p-1 gap-1">
+    <div className="inline-flex w-full md:w-auto bg-[#EDEDED] rounded-md p-1 gap-1">
       {options.map((opt) => {
         const isActive = value === opt.value;
         return (
@@ -255,7 +255,7 @@ function ChangePasswordModal({
                   type="text"
                   value="mmw03"
                   readOnly
-                  className="w-full px-3.5 h-12 md:h-10 py-2.5 rounded-md bg-[rgba(30,41,59,0.6)] border border-border-default text-text-secondary text-sm font-mono cursor-not-allowed"
+                  className="w-full px-3.5 h-12 md:h-10 py-2.5 rounded-md bg-[#EDEDED] border border-border-default text-text-secondary text-sm font-mono cursor-not-allowed"
                 />
               </div>
 
@@ -273,7 +273,7 @@ function ChangePasswordModal({
                       setError('');
                     }}
                     placeholder="Minimo 4 caracteres"
-                    className="w-full px-3.5 h-12 md:h-10 py-2.5 pr-10 rounded-md bg-[rgba(30,41,59,0.6)] border border-border-default text-text-primary text-sm placeholder:text-text-tertiary focus:border-accent-blue focus:outline-none transition-colors"
+                    className="w-full px-3.5 h-12 md:h-10 py-2.5 pr-10 rounded-md bg-[#EDEDED] border border-border-default text-text-primary text-sm placeholder:text-text-tertiary focus:border-accent-blue focus:outline-none transition-colors"
                   />
                   <button
                     onClick={() => setShowPassword(!showPassword)}
@@ -321,7 +321,7 @@ function ChangePasswordModal({
                       setError('');
                     }}
                     placeholder="Repite la contraseña"
-                    className="w-full px-3.5 h-12 md:h-10 py-2.5 pr-10 rounded-md bg-[rgba(30,41,59,0.6)] border border-border-default text-text-primary text-sm placeholder:text-text-tertiary focus:border-accent-blue focus:outline-none transition-colors"
+                    className="w-full px-3.5 h-12 md:h-10 py-2.5 pr-10 rounded-md bg-[#EDEDED] border border-border-default text-text-primary text-sm placeholder:text-text-tertiary focus:border-accent-blue focus:outline-none transition-colors"
                   />
                   <button
                     onClick={() => setShowConfirm(!showConfirm)}

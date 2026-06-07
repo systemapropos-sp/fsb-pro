@@ -249,7 +249,7 @@ export default function Calculadora() {
                         updateRow(row.id, 'amount', formatAmountInput(e.target.value))
                       }
                       placeholder="0.00"
-                      className="w-full h-12 md:h-10 pl-7 pr-2.5 py-2 rounded-sm bg-[rgba(30,41,59,0.6)] border border-border-default text-text-primary text-sm font-mono text-right placeholder:text-text-tertiary focus:border-accent-blue focus:outline-none transition-colors"
+                      className="w-full h-12 md:h-10 pl-7 pr-2.5 py-2 rounded-sm bg-[#EDEDED] border border-border-default text-text-primary text-sm font-mono text-right placeholder:text-text-tertiary focus:border-accent-blue focus:outline-none transition-colors"
                     />
                   </div>
 
@@ -269,7 +269,7 @@ export default function Calculadora() {
                       }
                     }}
                     placeholder="+000"
-                    className={`w-full px-2.5 py-2 rounded-sm bg-[rgba(30,41,59,0.6)] border text-text-primary text-sm font-mono text-right placeholder:text-text-tertiary focus:outline-none transition-colors ${
+                    className={`w-full px-2.5 py-2 rounded-sm bg-[#EDEDED] border text-text-primary text-sm font-mono text-right placeholder:text-text-tertiary focus:outline-none transition-colors ${
                       row.odds && !isValidOdds(row.odds) && row.odds.trim() !== ''
                         ? 'border-accent-red'
                         : 'border-border-default focus:border-accent-blue'
@@ -294,7 +294,7 @@ export default function Calculadora() {
           </div>
 
           {/* Results summary */}
-          <div className="mt-2 mx-0 bg-[rgba(17,24,39,0.8)] border-t border-border-subtle px-4 md:px-6 py-4 md:py-5">
+          <div className="mt-2 mx-0 bg-[#EDEDED] border-t border-border-subtle px-4 md:px-6 py-4 md:py-5">
             {/* Apuesta Total */}
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-text-secondary">Apuesta Total</span>

@@ -282,7 +282,7 @@ export default function Pagar() {
           transition={{ delay: 0.3 }}
           className={`relative mb-5 ${errorShake ? 'animate-shake' : ''}`}
         >
-          <div className="flex items-center bg-[rgba(30,41,59,0.8)] border-2 border-border-default rounded-lg overflow-hidden focus-within:border-accent-green focus-within:shadow-[0_0_0_4px_rgba(34,197,94,0.2)] transition-all h-14 md:h-12">
+          <div className="flex items-center bg-[#EDEDED] border-2 border-border-default rounded-lg overflow-hidden focus-within:border-accent-green focus-within:shadow-[0_0_0_4px_rgba(34,197,94,0.2)] transition-all h-14 md:h-12">
             <span className="pl-4 pr-1 font-mono text-lg md:text-xl text-text-tertiary select-none whitespace-nowrap">
               MMW-003-
             </span>
@@ -489,7 +489,7 @@ export default function Pagar() {
         <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
           <table className="min-w-[640px] md:min-w-0 w-full text-sm">
             <thead>
-              <tr className="bg-[rgba(17,24,39,0.8)]">
+              <tr className="bg-[#EDEDED]">
                 <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
                   Ticket
                 </th>

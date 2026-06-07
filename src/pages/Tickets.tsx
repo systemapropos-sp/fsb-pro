@@ -426,7 +426,7 @@ export default function Tickets() {
           <table className="min-w-[800px] w-full text-sm">
             {/* Table Header */}
             <thead className="sticky top-0 z-10">
-              <tr className="bg-[rgba(17,24,39,0.95)] backdrop-blur-lg">
+              <tr className="bg-[#EDEDED] backdrop-blur-lg">
                 <th className="px-3 py-3 text-center text-xs font-semibold text-text-secondary uppercase tracking-wider w-[5%]">
                   #
                 </th>

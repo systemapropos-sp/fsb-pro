@@ -142,7 +142,7 @@ export default function Jugadas() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar por codigo o descripcion..."
-          className="w-full h-12 md:h-10 pl-9 pr-9 py-2.5 bg-[rgba(30,41,59,0.6)] border border-border-default rounded-md text-sm text-text-primary placeholder-text-tertiary outline-none transition-all duration-200 focus:border-accent-blue focus:ring-[0_0_0_3px_rgba(59,130,246,0.2)]"
+          className="w-full h-12 md:h-10 pl-9 pr-9 py-2.5 bg-[#EDEDED] border border-border-default rounded-md text-sm text-text-primary placeholder-text-tertiary outline-none transition-all duration-200 focus:border-accent-blue focus:ring-[0_0_0_3px_rgba(59,130,246,0.2)]"
         />
         {search && (
           <button
@@ -209,7 +209,7 @@ export default function Jugadas() {
         className="gradient-panel rounded-lg border border-border-subtle overflow-hidden"
       >
         {/* Table Header */}
-        <div className="hidden md:grid grid-cols-[60px_1fr_100px_140px] gap-0 bg-[rgba(17,24,39,0.8)] backdrop-blur-sm border-b border-border-subtle">
+        <div className="hidden md:grid grid-cols-[60px_1fr_100px_140px] gap-0 bg-[#EDEDED] backdrop-blur-sm border-b border-border-subtle">
           <div className="px-4 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider">
             #
           </div>
