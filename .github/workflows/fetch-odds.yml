@@ -1,0 +1,30 @@
+name: Fetch & Upload Daily Odds
+
+on:
+  # 11:00 AM Eastern Time = 15:00 UTC
+  schedule:
+    - cron: '0 15 * * *'
+
+  # Allow running manually from GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  fetch-odds:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch odds & upload to Supabase
+        env:
+          ODDS_API_KEY:         ${{ secrets.ODDS_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: node scripts/fetch-odds.mjs
