@@ -1,12 +1,12 @@
 // ============================================
 // FSB Pro - Sports API Client
 // APIs: The Odds API (odds/lines) + API-SPORTS (scores)
-// API Key: 2e8540ac64be25785e2e664858da7807
+// API Key: 4438da50f0c328b5a126888c41ee2ffa
 // ============================================
 
 import { useState, useEffect, useCallback } from 'react';
 
-const DEFAULT_ODDS_API_KEY = '2e8540ac64be25785e2e664858da7807';
+const DEFAULT_ODDS_API_KEY = '4438da50f0c328b5a126888c41ee2ffa';
 const THE_ODDS_API_BASE = 'https://api.the-odds-api.com/v4';
 
 export interface GameResult {
@@ -61,15 +61,29 @@ function getOddsApiKey(): string {
   } catch { return DEFAULT_ODDS_API_KEY; }
 }
 
-/** Fetch betting lines from The Odds API */
+// Today's date range in UTC for ET timezone
+function getTodayRangeET(): { from: string; to: string } {
+  const now = new Date();
+  const etOffset = 4 * 60 * 60 * 1000;
+  const etNow = new Date(now.getTime() - etOffset);
+  const start = new Date(etNow); start.setUTCHours(0, 0, 0, 0);
+  const end   = new Date(etNow); end.setUTCHours(23, 59, 59, 0);
+  return {
+    from: new Date(start.getTime() + etOffset).toISOString().replace('.000Z', 'Z'),
+    to:   new Date(end.getTime()   + etOffset).toISOString().replace('.000Z', 'Z'),
+  };
+}
+
+/** Fetch betting lines from The Odds API — today only (ET) */
 export async function fetchOddsLines(
   sportKey: string,
   markets: string = 'h2h,spreads,totals'
 ): Promise<ApiBettingLine[] | null> {
   const key = getOddsApiKey();
+  const { from, to } = getTodayRangeET();
   try {
     const res = await fetch(
-      `${THE_ODDS_API_BASE}/sports/${sportKey}/odds/?apiKey=${key}&regions=us&markets=${markets}&oddsFormat=american`
+      `${THE_ODDS_API_BASE}/sports/${sportKey}/odds/?apiKey=${key}&regions=us&markets=${markets}&oddsFormat=american&commenceTimeFrom=${from}&commenceTimeTo=${to}`
     );
     if (!res.ok) {
       if (res.status === 401) throw new Error('API key invalid');
