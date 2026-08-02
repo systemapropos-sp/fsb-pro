@@ -5,9 +5,14 @@
 // Schedule: GitHub Actions runs this daily at 11am ET (15:00 UTC)
 // ============================================================
 
-const ODDS_API_KEY  = process.env.ODDS_API_KEY  || '4438da50f0c328b5a126888c41ee2ffa';
+const ODDS_API_KEY  = process.env.ODDS_API_KEY;
 const SUPABASE_URL  = process.env.SUPABASE_URL  || 'https://byulmtsffimwvejfoppk.supabase.co';
 const SERVICE_KEY   = process.env.SUPABASE_SERVICE_KEY || '';
+
+if (!ODDS_API_KEY) {
+  console.error('❌ Falta la variable de entorno ODDS_API_KEY. Configúrala en Settings → Secrets → Actions del repo.');
+  process.exit(1);
+}
 
 const ODDS_BASE = 'https://api.the-odds-api.com/v4';
 
