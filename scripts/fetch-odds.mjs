@@ -5,12 +5,33 @@
 // Schedule: GitHub Actions runs this daily at 11am ET (15:00 UTC)
 // ============================================================
 
-const ODDS_API_KEY  = process.env.ODDS_API_KEY;
-const SUPABASE_URL  = process.env.SUPABASE_URL  || 'https://byulmtsffimwvejfoppk.supabase.co';
-const SERVICE_KEY   = process.env.SUPABASE_SERVICE_KEY || '';
+// Los secrets de GitHub Actions a veces quedan con basura pegada por error
+// (comillas, "NOMBRE=" copiado de un .env, saltos de línea) — se limpia acá
+// para no fallar en silencio con un "Invalid URL" difícil de diagnosticar.
+function cleanSecret(raw, envName) {
+  if (!raw) return raw;
+  let v = raw.trim();
+  if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+    v = v.slice(1, -1).trim();
+  }
+  const prefix = `${envName}=`;
+  if (v.startsWith(prefix)) v = v.slice(prefix.length).trim();
+  return v;
+}
+
+const ODDS_API_KEY  = cleanSecret(process.env.ODDS_API_KEY, 'ODDS_API_KEY');
+const SUPABASE_URL  = cleanSecret(process.env.SUPABASE_URL, 'SUPABASE_URL') || 'https://byulmtsffimwvejfoppk.supabase.co';
+const SERVICE_KEY   = cleanSecret(process.env.SUPABASE_SERVICE_KEY, 'SUPABASE_SERVICE_KEY') || '';
 
 if (!ODDS_API_KEY) {
   console.error('❌ Falta la variable de entorno ODDS_API_KEY. Configúrala en Settings → Secrets → Actions del repo.');
+  process.exit(1);
+}
+
+try {
+  new URL(SUPABASE_URL);
+} catch {
+  console.error(`❌ SUPABASE_URL no es una URL válida: "${SUPABASE_URL}". Revisa el secret en Settings → Secrets → Actions (debe ser solo https://xxxx.supabase.co, sin comillas ni texto extra).`);
   process.exit(1);
 }
 
