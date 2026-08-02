@@ -1,13 +1,14 @@
 // ============================================
 // FSB Pro - Sports API Client
 // APIs: The Odds API (odds/lines) + API-SPORTS (scores)
-// API Key: 2e8540ac64be25785e2e664858da7807
+// La API key se configura por usuario en Configuraciones (BYOK) —
+// nunca se hardcodea aquí, para no exponer una key real en el bundle.
 // ============================================
 
 import { useState, useEffect, useCallback } from 'react';
 
-const DEFAULT_ODDS_API_KEY = '2e8540ac64be25785e2e664858da7807';
 const THE_ODDS_API_BASE = 'https://api.the-odds-api.com/v4';
+const ODDS_DATA_URL = 'https://byulmtsffimwvejfoppk.supabase.co/storage/v1/object/public/odds-data/games.json';
 
 export interface GameResult {
   id: number;
@@ -37,6 +38,39 @@ export interface ApiBettingLine {
   }[];
 }
 
+// ── Juegos del día — datos subidos por el workflow diario ──
+// (.github/workflows/fetch-odds.yml → scripts/fetch-odds.mjs → Storage
+// público `odds-data/games.json`). Sin API key en el cliente: el bucket
+// es público y solo lo escribe la Action con su propio secret.
+
+export interface StoredGame {
+  id: string;
+  time: string;
+  away: { name: string };
+  home: { name: string };
+  odds: {
+    ml?: [number, number];
+    rl?: [{ line: string; odds: number }, { line: string; odds: number }];
+    ou?: [{ line: number; over: number; under: number }];
+  };
+}
+
+export interface StoredGamesFile {
+  last_updated: string;
+  games: Record<string, StoredGame[]>;
+}
+
+export async function fetchStoredGames(): Promise<StoredGamesFile | null> {
+  try {
+    const res = await fetch(`${ODDS_DATA_URL}?t=${Date.now()}`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    console.warn('fetchStoredGames error:', err);
+    return null;
+  }
+}
+
 // ── The Odds API — Betting Lines ───────────────────────────
 
 export const THE_ODDS_SPORTS = [
@@ -55,10 +89,10 @@ export const THE_ODDS_SPORTS = [
 ];
 
 function getOddsApiKey(): string {
-  try {
-    const settings = JSON.parse(localStorage.getItem('fsb_settings_v2') || '{}');
-    return settings.odds_api_key || DEFAULT_ODDS_API_KEY;
-  } catch { return DEFAULT_ODDS_API_KEY; }
+  // Unificado con el campo que guarda Configuraciones.tsx (sports_api_key) —
+  // antes leía una clave distinta ('odds_api_key') y por eso nunca veía la
+  // key que el usuario guardaba ahí, cayendo siempre a la key por defecto.
+  return getSavedApiKey() || '';
 }
 
 /** Fetch betting lines from The Odds API */
@@ -67,6 +101,7 @@ export async function fetchOddsLines(
   markets: string = 'h2h,spreads,totals'
 ): Promise<ApiBettingLine[] | null> {
   const key = getOddsApiKey();
+  if (!key) return null;
   try {
     const res = await fetch(
       `${THE_ODDS_API_BASE}/sports/${sportKey}/odds/?apiKey=${key}&regions=us&markets=${markets}&oddsFormat=american`
@@ -153,6 +188,7 @@ export interface LiveScore {
 
 export async function fetchLiveScoresFromOddsApi(sportKey: string): Promise<LiveScore[] | null> {
   const key = getOddsApiKey();
+  if (!key) return null;
   try {
     const res = await fetch(
       `${THE_ODDS_API_BASE}/sports/${sportKey}/scores/?apiKey=${key}&daysFrom=3`
@@ -344,21 +380,6 @@ export function useLiveScores(sport: string = 'all', refreshInterval = 60) {
 }
 
 // ── Settings helpers ───────────────────────────────────────
-
-export function saveOddsApiKey(key: string): void {
-  try {
-    const settings = JSON.parse(localStorage.getItem('fsb_settings_v2') || '{}');
-    settings.odds_api_key = key;
-    localStorage.setItem('fsb_settings_v2', JSON.stringify(settings));
-  } catch { /* ignore */ }
-}
-
-export function getSavedOddsApiKey(): string {
-  try {
-    const settings = JSON.parse(localStorage.getItem('fsb_settings_v2') || '{}');
-    return settings.odds_api_key || DEFAULT_ODDS_API_KEY;
-  } catch { return DEFAULT_ODDS_API_KEY; }
-}
 
 export function saveApiKey(key: string): void {
   try {
