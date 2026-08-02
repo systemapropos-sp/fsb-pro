@@ -10,7 +10,8 @@
 // para no fallar en silencio con un "Invalid URL" difícil de diagnosticar.
 function cleanSecret(raw, envName) {
   if (!raw) return raw;
-  let v = raw.trim();
+  // Quita BOM y caracteres de ancho cero que dejan algunos copy-paste (Notepad/Word)
+  let v = raw.replace(/[​-‍﻿]/g, '').trim();
   if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
     v = v.slice(1, -1).trim();
   }
@@ -19,8 +20,18 @@ function cleanSecret(raw, envName) {
   return v;
 }
 
+// Para la URL, en vez de confiar en que el secret venga "limpio", se extrae
+// directamente el patrón https://... de adentro del valor crudo — así no
+// importa qué basura haya quedado pegada antes/después.
+function extractUrl(raw, fallback) {
+  const cleaned = cleanSecret(raw, 'SUPABASE_URL');
+  if (!cleaned) return fallback;
+  const match = cleaned.match(/https?:\/\/[^\s"'<>]+/);
+  return match ? match[0].replace(/[/"']+$/, '') : fallback;
+}
+
 const ODDS_API_KEY  = cleanSecret(process.env.ODDS_API_KEY, 'ODDS_API_KEY');
-const SUPABASE_URL  = cleanSecret(process.env.SUPABASE_URL, 'SUPABASE_URL') || 'https://byulmtsffimwvejfoppk.supabase.co';
+const SUPABASE_URL  = extractUrl(process.env.SUPABASE_URL, 'https://byulmtsffimwvejfoppk.supabase.co');
 const SERVICE_KEY   = cleanSecret(process.env.SUPABASE_SERVICE_KEY, 'SUPABASE_SERVICE_KEY') || '';
 
 if (!ODDS_API_KEY) {
