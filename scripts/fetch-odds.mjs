@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // ============================================================
 // fetch-odds.mjs
-// Fetches live odds from The Odds API → uploads to Supabase Storage
-// Schedule: GitHub Actions runs this daily at 11am ET (15:00 UTC)
+// Fetches live odds + scores from The Odds API → uploads to Supabase Storage
+// Schedule: GitHub Actions runs this every 2 hours (see .github/workflows/fetch-odds.yml)
 // ============================================================
 
 // Los secrets de GitHub Actions a veces quedan con basura pegada por error
@@ -63,6 +63,12 @@ function fmtTime(isoStr) {
     hour: '2-digit', minute: '2-digit', hour12: true,
     timeZone: 'America/New_York',
   });
+}
+
+// "2026-08-03T15:00:00Z" → "2026-08-03" en hora del Este (para filtrar por día en Resultados)
+function fmtDate(isoStr) {
+  const d = new Date(isoStr);
+  return d.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
 }
 
 function parseMarkets(game) {
@@ -137,6 +143,43 @@ function transformGames(sportKey, rawGames) {
   }));
 }
 
+// ── Scores (marcador + estado) — endpoint separado de odds ──────────────────
+async function fetchScores(sportKey) {
+  const url = `${ODDS_BASE}/sports/${sportKey}/scores/?apiKey=${ODDS_API_KEY}&daysFrom=3&dateFormat=iso`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const body = await res.text();
+    console.warn(`[${sportKey}] scores HTTP ${res.status}: ${body}`);
+    return [];
+  }
+  const data = await res.json();
+  console.log(`[${sportKey}] Got ${data.length} score entries. Remaining requests: ${res.headers.get('x-requests-remaining')}`);
+  return data;
+}
+
+function transformScores(sportKey, rawGames) {
+  return rawGames.map((g, idx) => {
+    const scores = g.scores || [];
+    const awayEntry = scores.find(s => s.name === g.away_team);
+    const homeEntry = scores.find(s => s.name === g.home_team);
+    const awayScore = awayEntry ? Number(awayEntry.score) : null;
+    const homeScore = homeEntry ? Number(homeEntry.score) : null;
+
+    let status = 'NS';
+    if (g.completed) status = 'FT';
+    else if (awayScore !== null || homeScore !== null) status = 'LIVE';
+
+    return {
+      id: `${sportKey}-${g.id?.slice(0, 8) || idx}`,
+      time: fmtTime(g.commence_time),
+      date: fmtDate(g.commence_time),
+      away: { name: g.away_team, score: awayScore },
+      home: { name: g.home_team, score: homeScore },
+      status,
+    };
+  });
+}
+
 async function uploadToSupabase(data) {
   if (!SERVICE_KEY) {
     console.warn('⚠️  No SUPABASE_SERVICE_KEY — skipping upload (dry run)');
@@ -169,7 +212,9 @@ async function main() {
   console.log(`   API Key: ${ODDS_API_KEY.slice(0, 8)}...`);
 
   const gamesMap = {};
+  const resultsMap = {};
   let totalGames = 0;
+  let totalResults = 0;
 
   for (const { code, key, markets } of SPORT_MAP) {
     try {
@@ -182,14 +227,26 @@ async function main() {
       console.warn(`   ⚠️  ${code} failed: ${err.message}`);
       gamesMap[code] = [];
     }
+
+    try {
+      const rawScores = await fetchScores(key);
+      const results = transformScores(code, rawScores);
+      resultsMap[code] = results;
+      totalResults += results.length;
+      console.log(`   ${code}: ${results.length} results`);
+    } catch (err) {
+      console.warn(`   ⚠️  ${code} scores failed: ${err.message}`);
+      resultsMap[code] = [];
+    }
   }
 
   const output = {
     last_updated: new Date().toISOString(),
     games: gamesMap,
+    results: resultsMap,
   };
 
-  console.log(`\n📦 Total games: ${totalGames}`);
+  console.log(`\n📦 Total games: ${totalGames} | Total results: ${totalResults}`);
   await uploadToSupabase(output);
   console.log('🏁 Done\n');
 }
