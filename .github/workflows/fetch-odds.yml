@@ -1,9 +1,10 @@
 name: Fetch & Upload Daily Odds
 
 on:
-  # 11:00 AM Eastern Time = 15:00 UTC
+  # Cada 2 horas, las 24 horas — antes corría 1 vez/día a las 11am ET, dejando
+  # el bucket con los juegos/resultados de la corrida anterior toda la mañana.
   schedule:
-    - cron: '0 15 * * *'
+    - cron: '0 */2 * * *'
 
   # Allow running manually from GitHub Actions tab
   workflow_dispatch:
