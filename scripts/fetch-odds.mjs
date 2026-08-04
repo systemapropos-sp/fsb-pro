@@ -172,18 +172,35 @@ function transformGames(sportKey, rawGames) {
   }));
 }
 
-// ── Mercados por período — 1 llamada extra por juego (1 crédito c/u,
-// confirmado contra la API real, sin importar cuántos mercados se pidan a la
-// vez). Solo se llama para los deportes que tienen PERIOD_MARKETS mapeado.
-async function fetchEventPeriods(sportKey, eventId, awayTeam, homeTeam) {
-  const periodDefs = PERIOD_MARKETS[sportKey];
-  if (!periodDefs) return {};
+// Deportes con "Super Run Line"/"Run Line Alternativo" (MLB únicamente, igual
+// que en la tabla de referencia del dueño — NBA/WNBA/Soccer no muestran esas
+// dos columnas). Se leen del mismo mercado real `alternate_spreads` (la
+// escalera completa de líneas alternas), tomando puntos específicos:
+//   SRL = el siguiente incremento por encima de la línea estándar (±2.5)
+//   RLA = la línea estándar (±1.5) pero del lado contrario (equipo dado
+//         vuelta) — "qué pasaría si el desvalido tomara la línea del favorito"
+const SRL_RLA_SPORTS = new Set(['baseball_mlb']);
 
-  const allMarketKeys = [...new Set(
-    Object.values(periodDefs).flatMap(m => [m.ml, m.rl, m.ou].filter(Boolean))
-  )];
+function pickAlternatePoint(market, teamName, point) {
+  const o = market.outcomes.find((x) => x.name === teamName && Number(x.point) === point);
+  if (!o) return null;
+  return { line: point >= 0 ? `+${point}` : `${point}`, odds: Math.round(o.price) };
+}
+
+// ── Mercados extra por evento — período parcial (1ra mitad/tercia, cuartos),
+// SOLO equipo (team_totals, TODOS los deportes) y SRL/RLA (alternate_spreads,
+// solo MLB). Todo en UNA sola llamada por juego (1 crédito, sin importar
+// cuántos mercados se pidan juntos — confirmado contra la API real).
+async function fetchEventExtras(sportKey, eventId, awayTeam, homeTeam) {
+  const periodDefs = PERIOD_MARKETS[sportKey] || {};
+  const wantsAltSpreads = SRL_RLA_SPORTS.has(sportKey);
+
+  const marketKeys = new Set(['team_totals']);
+  for (const m of Object.values(periodDefs)) [m.ml, m.rl, m.ou].filter(Boolean).forEach((k) => marketKeys.add(k));
+  if (wantsAltSpreads) marketKeys.add('alternate_spreads');
+
   const url = `${ODDS_BASE}/sports/${sportKey}/events/${eventId}/odds/?`
-    + `apiKey=${ODDS_API_KEY}&regions=us&markets=${allMarketKeys.join(',')}&oddsFormat=american`;
+    + `apiKey=${ODDS_API_KEY}&regions=us&markets=${[...marketKeys].join(',')}&oddsFormat=american`;
 
   const res = await fetch(url);
   if (!res.ok) return {};
@@ -200,21 +217,24 @@ async function fetchEventPeriods(sportKey, eventId, awayTeam, homeTeam) {
     }
   }
 
+  const out = {};
+
+  // Períodos parciales
   const periods = {};
   for (const [periodKey, defs] of Object.entries(periodDefs)) {
-    const out = {};
+    const p = {};
     if (defs.ml && marketByKey[defs.ml]) {
       const m = marketByKey[defs.ml];
       const ao = m.outcomes.find(o => o.name === awayTeam)?.price;
       const ho = m.outcomes.find(o => o.name === homeTeam)?.price;
-      if (ao != null && ho != null) out.ml = [Math.round(ao), Math.round(ho)];
+      if (ao != null && ho != null) p.ml = [Math.round(ao), Math.round(ho)];
     }
     if (defs.rl && marketByKey[defs.rl]) {
       const m = marketByKey[defs.rl];
       const as = m.outcomes.find(o => o.name === awayTeam);
       const hs = m.outcomes.find(o => o.name === homeTeam);
       if (as && hs) {
-        out.rl = [
+        p.rl = [
           { line: as.point >= 0 ? `+${as.point}` : `${as.point}`, odds: Math.round(as.price) },
           { line: hs.point >= 0 ? `+${hs.point}` : `${hs.point}`, odds: Math.round(hs.price) },
         ];
@@ -224,11 +244,43 @@ async function fetchEventPeriods(sportKey, eventId, awayTeam, homeTeam) {
       const m = marketByKey[defs.ou];
       const ov = m.outcomes.find(o => o.name === 'Over');
       const un = m.outcomes.find(o => o.name === 'Under');
-      if (ov && un) out.ou = [{ line: ov.point, over: Math.round(ov.price), under: Math.round(un.price) }];
+      if (ov && un) p.ou = [{ line: ov.point, over: Math.round(ov.price), under: Math.round(un.price) }];
     }
-    if (Object.keys(out).length > 0) periods[periodKey] = out;
+    if (Object.keys(p).length > 0) periods[periodKey] = p;
   }
-  return periods;
+  if (Object.keys(periods).length > 0) out.periods = periods;
+
+  // SOLO equipo — team_totals real, away y home cada uno con su propia línea
+  // (no siempre coinciden entre sí, cada equipo tiene su propio total).
+  if (marketByKey.team_totals) {
+    const m = marketByKey.team_totals;
+    const awayOver = m.outcomes.find(o => o.name === 'Over' && o.description === awayTeam);
+    const awayUnder = m.outcomes.find(o => o.name === 'Under' && o.description === awayTeam);
+    const homeOver = m.outcomes.find(o => o.name === 'Over' && o.description === homeTeam);
+    const homeUnder = m.outcomes.find(o => o.name === 'Under' && o.description === homeTeam);
+    if (awayOver && homeOver) out.soloPos = [
+      { line: awayOver.point, odds: Math.round(awayOver.price) },
+      { line: homeOver.point, odds: Math.round(homeOver.price) },
+    ];
+    if (awayUnder && homeUnder) out.soloNeg = [
+      { line: awayUnder.point, odds: Math.round(awayUnder.price) },
+      { line: homeUnder.point, odds: Math.round(homeUnder.price) },
+    ];
+  }
+
+  // SRL / RLA — solo MLB, de la escalera real de alternate_spreads.
+  if (wantsAltSpreads && marketByKey.alternate_spreads) {
+    const m = marketByKey.alternate_spreads;
+    const srlAway = pickAlternatePoint(m, awayTeam, 2.5);
+    const srlHome = pickAlternatePoint(m, homeTeam, -2.5);
+    if (srlAway && srlHome) out.srl = [srlAway, srlHome];
+
+    const rlaAway = pickAlternatePoint(m, awayTeam, -1.5);
+    const rlaHome = pickAlternatePoint(m, homeTeam, 1.5);
+    if (rlaAway && rlaHome) out.rla = [rlaAway, rlaHome];
+  }
+
+  return out;
 }
 
 // ── Scores (marcador + estado) — endpoint separado de odds ──────────────────
@@ -309,17 +361,22 @@ async function main() {
       const raw = await fetchSport(key, markets);
       const games = transformGames(code, raw);
 
-      // Mercados por período — 1 llamada extra por juego (1 crédito c/u).
-      // `raw` y `games` quedan siempre alineados por índice (transformGames
-      // no filtra ninguno), así que se puede iterar en paralelo con zip.
+      // Mercados extra — período parcial + SOLO equipo (team_totals) + SRL/RLA
+      // en MLB. 1 llamada extra por juego (1 crédito c/u). `raw` y `games`
+      // quedan siempre alineados por índice (transformGames no filtra
+      // ninguno), así que se puede iterar en paralelo con zip.
       if (PERIOD_MARKETS[key]) {
-        console.log(`   Fetching period markets for ${games.length} ${code} games...`);
+        console.log(`   Fetching extra markets for ${games.length} ${code} games...`);
         for (let i = 0; i < games.length; i++) {
           try {
-            const periods = await fetchEventPeriods(key, raw[i].id, raw[i].away_team, raw[i].home_team);
-            if (Object.keys(periods).length > 0) games[i].periods = periods;
+            const extra = await fetchEventExtras(key, raw[i].id, raw[i].away_team, raw[i].home_team);
+            if (extra.periods) games[i].periods = extra.periods;
+            if (extra.soloPos) games[i].odds.soloPos = extra.soloPos;
+            if (extra.soloNeg) games[i].odds.soloNeg = extra.soloNeg;
+            if (extra.srl) games[i].odds.srl = extra.srl;
+            if (extra.rla) games[i].odds.rla = extra.rla;
           } catch (e) {
-            console.warn(`     ⚠️  period fetch failed for ${raw[i].away_team} @ ${raw[i].home_team}: ${e.message}`);
+            console.warn(`     ⚠️  extra markets fetch failed for ${raw[i].away_team} @ ${raw[i].home_team}: ${e.message}`);
           }
         }
       }
