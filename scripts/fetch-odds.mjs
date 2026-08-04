@@ -57,6 +57,35 @@ const SPORT_MAP = [
   // LMB / BPS / CPBL use mock data (no API key available)
 ];
 
+// Mercados por período parcial — confirmados en vivo contra la API real
+// (2026-08-04, 1 crédito por llamada sin importar cuántos mercados se pidan
+// juntos vía el endpoint /events/{id}/odds). Las llaves (primeraMitad/
+// segundaMitad/primeraTercia/periodo1-4) tienen que calzar con `periodTabs`
+// en src/data/mockData.ts del frontend y con las traducciones en
+// src/lib/i18n.ts — si se agrega un período acá hay que agregarlo ahí también.
+//
+// MLB no tiene "mitades" reales — "primeraMitad" se mapea a las primeras 5
+// entradas (el mercado más común después del juego completo) y
+// "primeraTercia" a las primeras 3. "extra" no tiene mercado pregame real en
+// the-odds-api — se deja sin datos a propósito, nunca se inventa un número.
+const PERIOD_MARKETS = {
+  baseball_mlb: {
+    primeraMitad:  { ml: 'h2h_1st_5_innings', rl: 'spreads_1st_5_innings', ou: 'totals_1st_5_innings' },
+    primeraTercia: { ml: 'h2h_1st_3_innings', rl: 'spreads_1st_3_innings', ou: 'totals_1st_3_innings' },
+  },
+  basketball_nba: {
+    primeraMitad: { ml: 'h2h_h1' }, segundaMitad: { ml: 'h2h_h2' },
+    periodo1: { ml: 'h2h_q1' }, periodo2: { ml: 'h2h_q2' }, periodo3: { ml: 'h2h_q3' }, periodo4: { ml: 'h2h_q4' },
+  },
+  basketball_wnba: {
+    primeraMitad: { ml: 'h2h_h1' }, segundaMitad: { ml: 'h2h_h2' },
+    periodo1: { ml: 'h2h_q1' }, periodo2: { ml: 'h2h_q2' }, periodo3: { ml: 'h2h_q3' }, periodo4: { ml: 'h2h_q4' },
+  },
+  soccer_usa_mls: {
+    primeraMitad: { ml: 'h2h_h1' }, segundaMitad: { ml: 'h2h_h2' },
+  },
+};
+
 function fmtTime(isoStr) {
   const d = new Date(isoStr);
   return d.toLocaleTimeString('en-US', {
@@ -143,6 +172,65 @@ function transformGames(sportKey, rawGames) {
   }));
 }
 
+// ── Mercados por período — 1 llamada extra por juego (1 crédito c/u,
+// confirmado contra la API real, sin importar cuántos mercados se pidan a la
+// vez). Solo se llama para los deportes que tienen PERIOD_MARKETS mapeado.
+async function fetchEventPeriods(sportKey, eventId, awayTeam, homeTeam) {
+  const periodDefs = PERIOD_MARKETS[sportKey];
+  if (!periodDefs) return {};
+
+  const allMarketKeys = [...new Set(
+    Object.values(periodDefs).flatMap(m => [m.ml, m.rl, m.ou].filter(Boolean))
+  )];
+  const url = `${ODDS_BASE}/sports/${sportKey}/events/${eventId}/odds/?`
+    + `apiKey=${ODDS_API_KEY}&regions=us&markets=${allMarketKeys.join(',')}&oddsFormat=american`;
+
+  const res = await fetch(url);
+  if (!res.ok) return {};
+  const body = await res.json();
+  if (!body?.bookmakers) return {};
+
+  // Junta los mercados de todas las casas — el primer bookmaker que traiga
+  // cada mercado gana (mismo criterio que parseMarkets con el mercado
+  // principal, que usa bookmakers[0]).
+  const marketByKey = {};
+  for (const bm of body.bookmakers) {
+    for (const m of bm.markets || []) {
+      if (!marketByKey[m.key]) marketByKey[m.key] = m;
+    }
+  }
+
+  const periods = {};
+  for (const [periodKey, defs] of Object.entries(periodDefs)) {
+    const out = {};
+    if (defs.ml && marketByKey[defs.ml]) {
+      const m = marketByKey[defs.ml];
+      const ao = m.outcomes.find(o => o.name === awayTeam)?.price;
+      const ho = m.outcomes.find(o => o.name === homeTeam)?.price;
+      if (ao != null && ho != null) out.ml = [Math.round(ao), Math.round(ho)];
+    }
+    if (defs.rl && marketByKey[defs.rl]) {
+      const m = marketByKey[defs.rl];
+      const as = m.outcomes.find(o => o.name === awayTeam);
+      const hs = m.outcomes.find(o => o.name === homeTeam);
+      if (as && hs) {
+        out.rl = [
+          { line: as.point >= 0 ? `+${as.point}` : `${as.point}`, odds: Math.round(as.price) },
+          { line: hs.point >= 0 ? `+${hs.point}` : `${hs.point}`, odds: Math.round(hs.price) },
+        ];
+      }
+    }
+    if (defs.ou && marketByKey[defs.ou]) {
+      const m = marketByKey[defs.ou];
+      const ov = m.outcomes.find(o => o.name === 'Over');
+      const un = m.outcomes.find(o => o.name === 'Under');
+      if (ov && un) out.ou = [{ line: ov.point, over: Math.round(ov.price), under: Math.round(un.price) }];
+    }
+    if (Object.keys(out).length > 0) periods[periodKey] = out;
+  }
+  return periods;
+}
+
 // ── Scores (marcador + estado) — endpoint separado de odds ──────────────────
 async function fetchScores(sportKey) {
   const url = `${ODDS_BASE}/sports/${sportKey}/scores/?apiKey=${ODDS_API_KEY}&daysFrom=3&dateFormat=iso`;
@@ -220,6 +308,22 @@ async function main() {
     try {
       const raw = await fetchSport(key, markets);
       const games = transformGames(code, raw);
+
+      // Mercados por período — 1 llamada extra por juego (1 crédito c/u).
+      // `raw` y `games` quedan siempre alineados por índice (transformGames
+      // no filtra ninguno), así que se puede iterar en paralelo con zip.
+      if (PERIOD_MARKETS[key]) {
+        console.log(`   Fetching period markets for ${games.length} ${code} games...`);
+        for (let i = 0; i < games.length; i++) {
+          try {
+            const periods = await fetchEventPeriods(key, raw[i].id, raw[i].away_team, raw[i].home_team);
+            if (Object.keys(periods).length > 0) games[i].periods = periods;
+          } catch (e) {
+            console.warn(`     ⚠️  period fetch failed for ${raw[i].away_team} @ ${raw[i].home_team}: ${e.message}`);
+          }
+        }
+      }
+
       gamesMap[code] = games;
       totalGames += games.length;
       console.log(`   ${code}: ${games.length} games`);
