@@ -117,6 +117,10 @@ function parseMarkets(game) {
     if (away && home) {
       odds.ml = [Math.round(away.price), Math.round(home.price)];
     }
+    // Empate (Draw) — solo existe en fútbol (soccer_usa_mls); MLB/NBA/WNBA
+    // no tienen este outcome en su mercado h2h real.
+    const draw = h2h.outcomes.find(o => o.name === 'Draw');
+    if (draw) odds.draw = Math.round(draw.price);
   }
 
   // RL (spreads): [{ line, odds }, { line, odds }]  away first
